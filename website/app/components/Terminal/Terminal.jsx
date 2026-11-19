@@ -49,7 +49,7 @@ export default function Terminal() {
           <p className={styles.installTitle}>Install</p>
           <pre className={styles.code}><code>{`curl -L ${CLI_RELEASE}/inbox2-cli-$(uname -s | tr A-Z a-z)-$(uname -m).tar.gz | tar xz
 ./inbox2/inbox2`}</code></pre>
-          <p className={styles.installNote}>One file per platform, built by GitHub Actions from <code>main</code>, with the sync engine inside. macOS on Apple silicon and Intel, Linux on x86_64 and arm64. Connect an account in the desktop app first; the CLI reuses it. <a href={CLI_RELEASE_PAGE} target="_blank" rel="noopener">All builds and the wheel</a>.</p>
+          <p className={styles.installNote}>One file per platform, built by GitHub Actions from <code>main</code>, with the sync engine inside. macOS on Apple silicon, Linux on x86_64 and arm64. Connect an account in the desktop app first; the CLI reuses it. <a href={CLI_RELEASE_PAGE} target="_blank" rel="noopener">All builds and the wheel</a>.</p>
         </div>
       </div>
 

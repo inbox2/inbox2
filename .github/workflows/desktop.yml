@@ -60,7 +60,9 @@ jobs:
         include:
           - { os: macos-15,      name: macos,   bundles: "app,dmg" }
           - { os: windows-2022,  name: windows, bundles: "nsis" }
-          - { os: ubuntu-22.04,  name: linux,   bundles: "deb" }   # glibc 2.35 floor
+          # glibc 2.39: ort's prebuilt ONNX Runtime needs 2.38+ (the old Docker
+          # build ran on Debian 13, glibc 2.41, so this is no new floor).
+          - { os: ubuntu-24.04,  name: linux,   bundles: "deb" }
     runs-on: ${{ matrix.os }}
     env:
       V: ${{ needs.version.outputs.v }}

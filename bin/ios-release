@@ -50,12 +50,6 @@ P8="$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
 ASC_AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$P8"
   -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID")
 
-# ── Regenerate the (gitignored) Xcode project from project.yml ───────────────
-if command -v xcodegen >/dev/null 2>&1; then
-  echo "▸ xcodegen generate"
-  (cd "$IOS_DIR" && xcodegen generate >/dev/null)
-fi
-
 # ── Optionally rebuild the Rust core xcframework ─────────────────────────────
 if [ "$DO_XCFRAMEWORK" = 1 ]; then
   echo "▸ rebuilding InboxCore.xcframework"
@@ -63,6 +57,14 @@ if [ "$DO_XCFRAMEWORK" = 1 ]; then
   GEN="$ROOT/ui/desktop/target/uniffi-swift/inbox2_core.swift"
   DST="$IOS_DIR/Sources/Generated/inbox2_core.swift"
   [ -f "$GEN" ] && cp "$GEN" "$DST" && echo "▸ synced UniFFI binding → Sources/Generated"
+fi
+
+# ── Regenerate the (gitignored) Xcode project from project.yml ───────────────
+# After the core step: a fresh checkout only has Sources/Generated once the
+# binding is synced, and xcodegen lists the files that exist when it runs.
+if command -v xcodegen >/dev/null 2>&1; then
+  echo "▸ xcodegen generate"
+  (cd "$IOS_DIR" && xcodegen generate >/dev/null)
 fi
 
 # ── Archive ──────────────────────────────────────────────────────────────────
