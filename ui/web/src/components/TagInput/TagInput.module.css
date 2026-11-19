@@ -1,0 +1,175 @@
+/* ═══════════════════════════════════════════════════════ */
+/* TagInput — inline tag chips + text input + autocomplete */
+/* ═══════════════════════════════════════════════════════ */
+
+.wrap {
+  flex: 1;
+  position: relative;
+  cursor: text;
+}
+
+.inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 24px;
+}
+
+/* ── Tags with gradient border ───────────────────── */
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-1h) var(--space-1) var(--space-2);
+  background: var(--overlay-6);
+  border-radius: var(--radius-full);
+  font-size: var(--text-2xs);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  position: relative;
+}
+
+.tag::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: var(--space-px);
+  background: var(--gradient-ring);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.tagLabel {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tagRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  padding: 0;
+}
+
+.tagRemove:hover {
+  background: rgba(220, 80, 80, 0.15);
+  color: rgba(220, 80, 80, 0.9);
+}
+
+/* ── Inline text input ───────────────────────────── */
+
+.input {
+  flex: 1;
+  min-width: 80px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-family: var(--font-ui);
+  outline: none;
+  padding: 0;
+}
+
+.input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ── Autocomplete dropdown ───────────────────────── */
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: var(--z-dropdown);
+  margin-top: var(--space-1);
+  background: var(--surface-raised, var(--surface-float));
+  border: 1px solid var(--overlay-15);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl), var(--acrylic-highlight);
+  overflow: hidden;
+  max-height: 320px;
+  overflow-y: auto;
+  animation: tagDropIn var(--duration-normal) var(--ease-out);
+}
+
+@keyframes tagDropIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--overlay-3);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--duration-fast);
+}
+
+.item:last-child { border-bottom: none; }
+
+.item:hover, .itemActive {
+  background: var(--overlay-8);
+  color: var(--text-primary);
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--accent-primary-dim);
+  border: 1px solid var(--overlay-12);
+  color: var(--accent-primary);
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: var(--tracking-tight);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.name {
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.email {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

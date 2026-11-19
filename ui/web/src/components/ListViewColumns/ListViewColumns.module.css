@@ -1,0 +1,293 @@
+/* ═══ LIST VIEW — per-account column layout ═══ */
+
+.columnsContainer {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  min-width: 340px;
+  flex: 1;
+  border-right: 1px solid var(--border-groove);
+  overflow: hidden;
+  position: relative;
+}
+
+.column:last-child {
+  border-right: none;
+}
+
+/* ═══ COLUMN SEPARATOR ═══ */
+/* A soft shadow hugging the right edge gives each column depth and a clear
+   boundary — reads as a layered panel rather than a flat 1px divider. Sits
+   above the column content (z-index 2) so it stays visible over cards. */
+.column::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  pointer-events: none;
+  z-index: 2;
+  background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--ink) 9%, transparent) 100%);
+}
+
+.column:last-child::before {
+  display: none;
+}
+
+/* Light mode goes for a crisp macOS split-view instead: the 1px column border
+   does the dividing, so the soft edge wash and the dot-grid haze both go. */
+:global([data-theme="light"]) .column::before,
+:global([data-theme="light"]) .column::after {
+  display: none;
+}
+
+/* ═══ PER-COLUMN ATMOSPHERE ═══ */
+/* Mirrors the grid view's Eisenhower-quadrant gradients so adjacent account
+   columns read as distinct surfaces instead of one flat field. The four
+   recipes cycle across columns via :nth-child. */
+
+.column:nth-child(4n + 1) {
+  background:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent-danger) 5%, transparent) 0%, transparent 45%),
+    linear-gradient(165deg, rgba(14, 15, 21, 0.96) 0%, rgba(10, 11, 16, 0.98) 100%);
+}
+.column:nth-child(4n + 2) {
+  background:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent-primary) 5%, transparent) 0%, transparent 50%),
+    linear-gradient(190deg, rgba(13, 14, 20, 0.96) 0%, rgba(10, 11, 16, 0.98) 100%);
+}
+.column:nth-child(4n + 3) {
+  background:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent-teal) 5%, transparent) 0%, transparent 50%),
+    linear-gradient(170deg, rgba(12, 13, 18, 0.96) 0%, rgba(9, 10, 15, 0.98) 100%);
+}
+.column:nth-child(4n) {
+  background:
+    linear-gradient(180deg, rgba(10, 11, 15, 0.97) 0%, rgba(8, 9, 12, 0.99) 100%);
+}
+
+/* Operational dot-grid texture — matches the grid view's quadrants */
+.column::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.35;
+  background-image:
+    radial-gradient(circle, color-mix(in srgb, var(--accent-primary) 8%, transparent) 0.6px, transparent 0.6px);
+  background-size: 16px 16px;
+  background-position: 8px 8px;
+  mask-image: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.5) 0%, transparent 80%);
+}
+
+.columnHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-groove);
+  background: var(--overlay-3);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+:global([data-theme="light"]) .columnHeader {
+  background: var(--header-surface);
+  border-bottom-color: var(--border-default);
+  box-shadow: var(--header-edge);
+}
+
+/* macOS names a mailbox as it reads — mixed case, no micro-caps tracking. */
+:global([data-theme="light"]) .columnTitle {
+  color: var(--text-secondary);
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-semibold);
+}
+
+:global([data-theme="light"]) .columnCount {
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+}
+
+:global([data-theme="light"]) .columnUnreadDot {
+  background: var(--glow-blue);
+  box-shadow: none;
+}
+
+.columnUnreadDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--glow-blue) 75%, transparent);
+  flex-shrink: 0;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--glow-blue) 35%, transparent);
+  margin-right: calc(-1 * var(--space-1));
+}
+
+.columnTitle {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.columnCount {
+  margin-left: auto;
+  font-size: var(--text-4xs);
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.columnBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-1) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-px);
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.columnBody:hover {
+  scrollbar-color: var(--border-default) transparent;
+}
+
+/* Per-row wrapper — clips content while the row collapses on delete
+   (motion exit animates height to 0). */
+.cardWrap {
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Light mode is a macOS split-view list: rows run edge to edge (so the hover
+   and selection bands fill the lane) separated by a hairline, instead of
+   floating as inset chips. */
+:global([data-theme="light"]) .columnBody {
+  padding: 0;
+  gap: 0;
+}
+
+:global([data-theme="light"]) .cardWrap + .cardWrap {
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ═══ PER-COLUMN EMPTY STATE ═══ */
+/* Positions the shared ChannelEmptyState copy centered over this column's
+   ghost rows. Typography + dark-mode legibility live in ChannelEmptyState. */
+.columnEmpty {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  pointer-events: none;
+}
+
+/* ═══ NO-UNREAD STATE ═══ */
+/* Fills the strip where the mail lanes would be when the unread filter matches
+   nothing. Deliberately without column chrome — it isn't a lane. */
+.noUnread {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+/* The empty state's dark-theme text-shadow would otherwise bleed into the label. */
+.showAll {
+  margin-top: var(--space-3);
+  text-shadow: none;
+}
+
+/* ═══ LIGHT MODE — one lane colour ═══ */
+/* Every mail lane is the same content white, macOS-style; the 1px column
+   border does all the dividing. (Alternating tones read as striping, not as
+   separate panels.) */
+:global([data-theme="light"]) .column {
+  background: var(--bg-raised);
+}
+
+/* The calendar rail is the app's sidebar — same flat system grey as every
+   other sidebar, and out of the lane colouring. */
+:global([data-theme="light"]) .column.columnAside {
+  background: var(--surface-sidebar-grad);
+}
+
+
+/* ═══ LEADING NON-MAIL COLUMN (calendar rail) ═══ */
+/* Same column chrome as a mail lane, but it holds a fixed-width widget rather
+   than a list — so it doesn't take an equal share of the strip. */
+.columnAside {
+  flex: 0 0 288px;
+  min-width: 288px;
+  overflow-y: auto;
+}
+
+/* Not pinned: the rail collapses to its edge strip (CalendarRail owns the
+   mode via usePaneMode). Overflow stays visible so the floating pane can
+   hang out over the mail lanes. */
+.columnAside:has([data-pane-strip]) {
+  flex-basis: 34px;
+  min-width: 34px;
+  overflow: visible;
+}
+
+/* Placeholder for a lane the unread filter hid — takes the same flex share as
+   a lane but draws nothing. */
+.laneGap {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ═══ GROOVEBOX — each lane is its own floating panel (tokens.css) ═══ */
+:global([data-theme-variant="groovebox"]) .columnsContainer {
+  gap: var(--gb-gutter);
+}
+
+:global([data-theme-variant="groovebox"]) .column {
+  background: var(--bg-panel);
+  border: 0;
+  border-radius: var(--gb-panel-radius);
+  box-shadow: var(--gb-panel-shadow);
+  overflow: hidden;
+}
+
+/* Same specificity as the rule above, so restate it: the collapsed calendar
+   rail must not clip its floating pane. */
+:global([data-theme-variant="groovebox"]) .columnAside:has([data-pane-strip]) {
+  overflow: visible;
+}
+
+/* The "no unread" state gets its own panel instead of sitting on the grid. */
+:global([data-theme-variant="groovebox"]) .noUnread {
+  background: var(--bg-panel);
+  border-radius: var(--gb-panel-radius);
+  box-shadow: var(--gb-panel-shadow);
+}
+

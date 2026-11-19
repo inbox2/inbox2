@@ -1,0 +1,29 @@
+# Cargo workspace for the desktop client. `inbox2-core` is the shared,
+# host-agnostic sync engine (also the future iOS/Android core); `src-tauri` is the
+# Tauri desktop shell that depends on it.
+[workspace]
+resolver = "2"
+members = ["core", "src-tauri"]
+
+# Multi-installer auto-update (deb/rpm/AppImage + NSIS) reads the
+# `__TAURI_BUNDLE_TYPE` symbol the CLI embeds into the binary to know which
+# installer produced the running app. Stripping the release binary removes that
+# symbol and the wrong (or no) update artifact is selected. Keep strip OFF.
+[profile.release]
+strip = false
+
+# macOS 27 / Xcode 27: dyld refuses a *stripped* proc-macro dylib ("mis-aligned
+# LINKEDIT string pool"), so every build died loading sqlx_macros. Cargo strips
+# build-time artifacts (proc macros, build scripts) whenever their debuginfo is
+# off — the default for build-override, and for every dependency under a
+# `[profile.dev.package."*"] debug = false` (a common ~/.cargo/config.toml size
+# trim, which outranks build-override). Never strip them; the shipped release
+# binary already isn't stripped (above).
+[profile.dev.build-override]
+strip = false
+
+[profile.dev.package."*"]
+strip = false
+
+[profile.release.build-override]
+strip = false

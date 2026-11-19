@@ -1,0 +1,4 @@
+node_modules
+
+# Cargo build output now lives at the workspace root (core + src-tauri).
+/target/

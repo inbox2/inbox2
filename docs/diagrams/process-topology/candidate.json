@@ -1,0 +1,354 @@
+{
+ "schema_version": 1,
+ "diagram_type": "architecture",
+ "meta": {
+  "title": "Processes and windows on the Mac",
+  "output": "docs/diagrams/process-topology/process-topology.html",
+  "quality_profile": "showcase",
+  "legend": {
+   "entries": {
+    "frontend": {
+     "label": "Windows & people"
+    },
+    "backend": {
+     "label": "Rust / native process"
+    },
+    "database": {
+     "label": "SQLite"
+    },
+    "messagebus": {
+     "label": "Bus & workers"
+    },
+    "external": {
+     "label": "Spawned CLI agents"
+    }
+   }
+  }
+ },
+ "components": [
+  {
+   "id": "tray",
+   "type": "frontend",
+   "label": "tray window",
+   "sublabel": "/tray NSPanel popover, 620\u00d7780",
+   "pos": [
+    40,
+    40
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "main",
+   "type": "frontend",
+   "label": "main window",
+   "sublabel": "React UI, 1440\u00d7900 overlay chrome",
+   "pos": [
+    300,
+    40
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "notif",
+   "type": "frontend",
+   "label": "notification window",
+   "sublabel": "non-activating NSPanel",
+   "pos": [
+    560,
+    40
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "mcp_http",
+   "type": "backend",
+   "label": "MCP HTTP thread",
+   "sublabel": "tiny_http 127.0.0.1:8765",
+   "pos": [
+    40,
+    200
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "host",
+   "type": "backend",
+   "label": "Rust shell = engine HOST",
+   "sublabel": "src-tauri + inbox2-core SyncEngine",
+   "pos": [
+    300,
+    200
+   ],
+   "size": [
+    170,
+    80
+   ]
+  },
+  {
+   "id": "runner",
+   "type": "messagebus",
+   "label": "AgentRunner",
+   "sublabel": "5 s poll over agent_runs",
+   "pos": [
+    560,
+    200
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "llama",
+   "type": "backend",
+   "label": "llama-server",
+   "sublabel": "sidecar, GGUF model",
+   "pos": [
+    820,
+    110
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "fm",
+   "type": "backend",
+   "label": "FoundationModelsBridge",
+   "sublabel": "Swift, JSON over stdin/stdout",
+   "pos": [
+    820,
+    290
+   ],
+   "size": [
+    190,
+    68
+   ]
+  },
+  {
+   "id": "db",
+   "type": "database",
+   "label": "inbox2.db",
+   "sublabel": "SQLite, WAL",
+   "pos": [
+    40,
+    340
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "cli",
+   "type": "frontend",
+   "label": "Python CLI",
+   "sublabel": "Textual, bus CLIENT",
+   "pos": [
+    40,
+    470
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "bus",
+   "type": "messagebus",
+   "label": "engine.sock",
+   "sublabel": "<data_dir>/engine.sock, mode 0600",
+   "pos": [
+    300,
+    470
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "agents",
+   "type": "external",
+   "label": "CLI agents",
+   "sublabel": "claude-code, codex, opencode, gemini",
+   "pos": [
+    560,
+    470
+   ],
+   "size": [
+    190,
+    68
+   ]
+  },
+  {
+   "id": "daemon",
+   "type": "backend",
+   "label": "engine_daemon",
+   "sublabel": "headless alternative HOST",
+   "pos": [
+    300,
+    620
+   ],
+   "size": [
+    170,
+    68
+   ]
+  }
+ ],
+ "boundaries": [
+  {
+   "kind": "region",
+   "label": "Inbox2 app process (com.inbox2.desktop)",
+   "wraps": [
+    "tray",
+    "main",
+    "notif",
+    "mcp_http",
+    "host",
+    "runner"
+   ]
+  }
+ ],
+ "connections": [
+  {
+   "id": "tray-main",
+   "from": "tray",
+   "to": "main",
+   "label": "navigate"
+  },
+  {
+   "id": "notif-main",
+   "from": "notif",
+   "to": "main",
+   "label": "navigate"
+  },
+  {
+   "id": "main-host",
+   "from": "main",
+   "to": "host",
+   "label": "invoke / events",
+   "variant": "emphasis"
+  },
+  {
+   "id": "host-mcp",
+   "from": "host",
+   "to": "mcp_http",
+   "label": "mcp-http thread"
+  },
+  {
+   "id": "host-runner",
+   "from": "host",
+   "to": "runner",
+   "label": "spawns"
+  },
+  {
+   "id": "host-llama",
+   "from": "host",
+   "to": "llama",
+   "label": "sidecar"
+  },
+  {
+   "id": "host-fm",
+   "from": "host",
+   "to": "fm",
+   "label": "sidecar"
+  },
+  {
+   "id": "runner-agents",
+   "from": "runner",
+   "to": "agents",
+   "label": "spawn per run"
+  },
+  {
+   "id": "host-db",
+   "from": "host",
+   "to": "db",
+   "label": "writes",
+   "variant": "emphasis"
+  },
+  {
+   "id": "host-bus",
+   "from": "host",
+   "to": "bus",
+   "label": "binds = HOST",
+   "variant": "emphasis"
+  },
+  {
+   "id": "cli-bus",
+   "from": "cli",
+   "to": "bus",
+   "label": "RPC + events"
+  },
+  {
+   "id": "cli-db",
+   "from": "cli",
+   "to": "db",
+   "label": "reads"
+  },
+  {
+   "id": "daemon-bus",
+   "from": "daemon",
+   "to": "bus",
+   "label": "binds if first",
+   "variant": "dashed"
+  }
+ ],
+ "cards": [
+  {
+   "dot": "amber",
+   "title": "Host election (ipc.rs start_or_attach)",
+   "items": [
+    "connect(engine.sock) succeeds \u2192 CLIENT",
+    "else delete stale socket, bind \u2192 HOST runs the SyncEngine",
+    "race \u2192 CLIENT; engine_daemon prints HOST or ATTACH",
+    "CLI reads inbox2.db directly, mutates over RPC",
+    "Non-Unix: no bus, engine runs in-process"
+   ]
+  },
+  {
+   "dot": "violet",
+   "title": "Windows",
+   "items": [
+    "main: 1440\u00d7900, transparent, hudWindow, backgroundThrottling off",
+    "tray: lazily created on menu-bar click, NSPanel that may become key",
+    "notification: created from JS, converted to a non-activating NSPanel",
+    "capabilities/default.json covers main, notification, tray"
+   ]
+  },
+  {
+   "dot": "slate",
+   "title": "Sidecars and workers",
+   "items": [
+    "llama-server: GGUF (default qwen2.5-1.5b-instruct)",
+    "FoundationModelsBridge: macOS 26 Swift subprocess",
+    "MCP server: off by default, bearer token in <data>/mcp-token",
+    "AgentRunner: scratch dir per run, result.json read back"
+   ]
+  },
+  {
+   "dot": "rose",
+   "title": "Dev vs prod identity",
+   "items": [
+    "prod com.inbox2.desktop / dev com.inbox2.desktop.dev",
+    "separate data dir, Keychain service, engine.sock, single-instance lock",
+    "deep-link scheme inbox2 vs inbox2-dev",
+    "dev talks to http://localhost:4000, prod to api.inbox2.com",
+    "both can run at once; they never see each other's mail"
+   ]
+  }
+ ]
+}

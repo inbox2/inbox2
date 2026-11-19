@@ -1,0 +1,32 @@
+From: Dave Attach <dave@example.com>
+To: support@acme.com
+Cc: info@acme.com
+Subject: Message with attachment
+Message-ID: <attach-001@example.com>
+Date: Sat, 24 May 2026 10:03:00 +0000
+Content-Type: multipart/mixed; boundary="boundary-mix-001"
+
+--boundary-mix-001
+Content-Type: multipart/alternative; boundary="boundary-alt-002"
+
+--boundary-alt-002
+Content-Type: text/plain; charset="UTF-8"
+
+Please see the attached document.
+
+--boundary-alt-002
+Content-Type: text/html; charset="UTF-8"
+
+<html><body><p>Please see the attached document.</p></body></html>
+
+--boundary-alt-002--
+
+--boundary-mix-001
+Content-Type: application/pdf; name="report.pdf"
+Content-Disposition: attachment; filename="report.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5k
+b2JqCg==
+
+--boundary-mix-001--

@@ -1,0 +1,25 @@
+*.iml
+.gradle/
+/local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+# The native core .so + generated Kotlin bindings are produced by
+# ui/desktop/core/build-android-jni.sh into ui/desktop/target/ (already gitignored)
+# and consumed in place by the :inboxcore module — nothing to track here.
+
+# The email-body WebView bundle is generated from the shared @inbox2/email-body
+# package by `bin/android bundle` (esbuild), like iOS's Resources/email-body.js —
+# a build artifact, not a hand-maintained copy.
+/app/src/main/assets/email-body.js
+
+# Kotlin incremental-compilation cache
+.kotlin/
+
+# Release upload key config (CI writes it from secrets)
+/key.properties

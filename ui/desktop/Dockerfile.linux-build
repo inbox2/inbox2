@@ -1,0 +1,28 @@
+# The Linux build environment for the desktop app. Tauri cannot cross-compile a
+# Linux bundle (it links webkit2gtk and runs linuxdeploy), so bin/release-desktop
+# runs the Linux step inside this image, as linux/amd64 under Docker Desktop's
+# emulation. Built once and cached; the Rust target dir and cargo registry live
+# in named volumes so a rebuild is incremental.
+#
+#   docker build --platform linux/amd64 -t inbox2-linux-builder -f ui/desktop/Dockerfile.linux-build ui/desktop
+#
+# trixie, not bookworm: the prebuilt ONNX Runtime that `ort-sys` downloads links
+# against glibc 2.38+ (`__isoc23_strtol`) and libstdc++ 13+, so bookworm's
+# toolchain cannot link the app. The .deb therefore needs a distro at that level
+# too (Ubuntu 24.04+, Debian 13+).
+FROM rust:1.90-trixie
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
+    libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev \
+    libayatana-appindicator3-dev librsvg2-dev patchelf ca-certificates xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+# Node only for the Tauri CLI: the web client is built on the Mac and mounted in.
+RUN curl -fsSL https://nodejs.org/dist/v24.18.0/node-v24.18.0-linux-x64.tar.xz \
+    | tar -xJ -C /usr/local --strip-components=1 \
+    && npm i -g @tauri-apps/cli@^2.11.4
+ENV NO_STRIP=true CARGO_TARGET_DIR=/target
+# Non-root. The named volumes (/target, cargo registry, cache) inherit this
+# ownership when first created.
+RUN useradd -m builder && mkdir -p /target /usr/local/cargo/registry /home/builder/.cache \
+    && chown -R builder /target /usr/local/cargo /usr/local/rustup /home/builder/.cache
+USER builder
+WORKDIR /src/ui/desktop

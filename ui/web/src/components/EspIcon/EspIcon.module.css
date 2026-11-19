@@ -1,0 +1,7 @@
+/* The inbox2 built-in brand mark — match the rounded-chip silhouette of the
+   drawn ESP glyphs. */
+.logo {
+  display: block;
+  border-radius: var(--radius-6);
+  object-fit: contain;
+}

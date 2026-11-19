@@ -1,0 +1,233 @@
+# Pushleft production for inbox2 (pushleft docs/robot-migration-plan.md, phase 3).
+# One image for every role (deploy/pushleft/Dockerfile), so the roles reach each
+# other by private name (<role>.inbox2.internal; deploy/pushleft/run maps them
+# and the managed database onto inbox2's own variable names).
+#
+# Deploy: `pl up --production` from the repository root (CI does this on main).
+# Secrets: the keys of the Rancher secret api-env, each set with
+# `pl secrets set NAME --production < file`; they arrive as files and `run`
+# exports them.
+#
+# mx (TCP 25), smtp (outbound, plus the Pushleft relay on 4465) and imap (IMAP
+# 993 and SMTP submission 465 for mail clients) are the `mail` role, on the
+# failover IP 138.201.227.97 (pl-app-1, PTR mx.inbox2.com). Pushleft issues and
+# renews the certificate for mx.inbox2.com and restarts the role with it.
+version: 1
+project: inbox2
+build: { dockerfile: deploy/pushleft/Dockerfile, context: . }
+production:
+  regions: [fsn1]
+# The operator back office is the Admin page of the Pushleft console: it calls
+# /_pushleft/admin on this role, every request signed (docs/SaaS.md).
+admin:
+  role: api
+env:
+  RAILS_ENV: production
+  RACK_ENV: production
+  RAILS_LOG_TO_STDOUT: "true"
+  API_PUBLIC_URL: https://api.inbox2.com
+  APP_URL: https://api.inbox2.com
+  CABLE_ALLOWED_ORIGINS: https://mail.inbox2.com,https://disk.inbox2.com,https://console.inbox2.com,http://localhost:1420,tauri://localhost,http://tauri.localhost,http://localhost:4173
+  DISK_APP_URL: https://disk.inbox2.com
+  DISK_S3_BUCKET: inbox2
+  DISK_S3_ENDPOINT: https://a2f39a0ff6f3ad71588b9314b563242a.eu.r2.cloudflarestorage.com
+  DISK_S3_FORCE_PATH_STYLE: "true"
+  DISK_S3_REGION: auto
+  DISK_STORAGE_PROVIDER: r2
+  FRONTEND_URL: https://mail.inbox2.com,https://disk.inbox2.com,https://console.inbox2.com
+  INVITE_ENABLED: "true"
+  PUSH_FREE_FOR_ALL: "1"
+  PUSH_WEBHOOK_BASE_URL: https://api.inbox2.com
+  # Attachments: a Pushleft bucket (pl storage), not a garage role: a role
+  # with a volume deploys stop-before-start (2026-11-17). Every garage object
+  # (83) was copied into it before this switch and checked (sizes, read-back);
+  # the bucket's key is already in the S3_ACCESS_KEY/S3_SECRET_KEY secrets.
+  S3_BUCKET: pl-205eb939-attachments-fb4e50cc
+  S3_ENDPOINT: https://s3.pushleft.dev
+  S3_FORCE_PATH_STYLE: "true"
+  S3_REGION: garage
+  WAITLIST_NOTIFY_EMAIL: waseem@sadiq.nl
+  WEBAUTHN_ORIGIN: https://mail.inbox2.com,https://disk.inbox2.com,https://console.inbox2.com
+  WEBAUTHN_RP_ID: inbox2.com
+  WEB_APP_URL: https://mail.inbox2.com
+  WEB_BOT_AUTH_AGENT: https://api.inbox2.com
+  MX_DOMAIN: mx.inbox2.com
+# Pushleft makes the Cloudflare Turnstile widget (waitlist on inbox2.com and
+# mail.inbox2.com, meet on visit.inbox2.com) and writes both keys as secrets.
+turnstile:
+  site_key: TURNSTILE_SITE_KEY
+  secret_key: TURNSTILE_SECRET
+  domains: [inbox2.com, mail.inbox2.com]
+data:
+  postgres:
+    plan: starter
+    databases: [{ name: inbox2 }]
+  # rspamd's bayes store (was a redis beside rspamd on a volume, 2026-11-17).
+  valkey:
+    plan: dev
+    databases: [{ name: rspamd }]
+roles:
+  release:
+    kind: release
+    # Solid Cache/Queue/Cable live in their own schemas of this database
+    # (config/database.yml); a new database has none, so db:prepare would fail
+    # with "no schema has been selected to create in".
+    command: >-
+      psql -v ON_ERROR_STOP=1 -qc 'CREATE SCHEMA IF NOT EXISTS solid_cache;
+      CREATE SCHEMA IF NOT EXISTS solid_queue; CREATE SCHEMA IF NOT EXISTS solid_cable'
+      && inbox2-run ./bin/rails db:prepare
+    databases: [inbox2]
+    secrets: &app_secrets
+      - APNS_KEY_ID
+      - APNS_KEY_P8
+      - APNS_SANDBOX_KEY_ID
+      - APNS_SANDBOX_KEY_P8
+      - APNS_TEAM_ID
+      - DESKTOP_S3_ACCESS_KEY
+      - DESKTOP_S3_SECRET_KEY
+      - DISK_S3_ACCESS_KEY
+      - DISK_S3_SECRET_KEY
+      - DKIM_PRIVATE_KEY
+      - FCM_PROJECT_ID
+      - FCM_SERVICE_ACCOUNT_JSON
+      - GMAIL_PUBSUB_TOPIC
+      - GMAIL_PUBSUB_VERIFICATION_TOKEN
+      - GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET
+      - GOOGLE_WEB_CLIENT_ID
+      - GOOGLE_WEB_CLIENT_SECRET
+      - INBOX2_THREADING_HMAC_KEY
+      - MESSY_API_KEY
+      - MICROSOFT_CLIENT_ID
+      - MICROSOFT_CLIENT_SECRET
+      - OPENAI_API_KEY
+      - RAILS_MASTER_KEY
+      - S3_ACCESS_KEY
+      - S3_SECRET_KEY
+      - TURNSTILE_SECRET
+      - TURNSTILE_SITE_KEY
+      - TYPESAFE_API_KEY
+      - WEB_BOT_AUTH_KEY
+    tmpfs: [{ path: /rails/tmp, size: 128MiB }, { path: /rails/log, size: 16MiB }]
+  api:
+    kind: web
+    command: inbox2-run bundle exec puma -C config/puma.rb
+    port: 4000
+    health: /up
+    startup_timeout: 180
+    # Desktop installers live in a Pushleft bucket (bin/release-desktop uploads,
+    # DesktopReleases redirects), not on a volume: a role with a volume deploys
+    # stop-before-start, which cost ~85 s of 503s on every push (2026-11-16).
+    env:
+      RAILS_MAX_THREADS: "10"
+      DESKTOP_S3_ENDPOINT: https://s3.pushleft.dev
+      DESKTOP_S3_REGION: garage
+      DESKTOP_S3_BUCKET: pl-205eb939-desktop-downloads-34b0b1f9
+    resources: { cpu: 1, memory: 2GiB }
+    databases: [inbox2]
+    secrets: *app_secrets
+    tmpfs: [{ path: /rails/tmp, size: 256MiB }, { path: /rails/log, size: 16MiB }]
+    route:
+      domains: [api.inbox2.com, visit.inbox2.com]
+      max_body: 64MiB
+      timeout: 3600
+  # The operator plane: /api/v1/saas is routed only here, and this role has no
+  # public route. The way in is `pl tunnel operator 4000 --production` (docs/SaaS.md).
+  operator:
+    kind: private
+    command: inbox2-run bundle exec puma -C config/puma.rb
+    port: 4000
+    health: /up
+    startup_timeout: 180
+    env: { SAAS_OPERATOR_PLANE: "1", SAAS_ALLOW_HEADER_AUTH: "1" }
+    resources: { cpu: 0.25, memory: 1GiB }
+    databases: [inbox2]
+    secrets: *app_secrets
+    tmpfs: [{ path: /rails/tmp, size: 128MiB }, { path: /rails/log, size: 16MiB }]
+  worker:
+    kind: worker
+    command: inbox2-run bundle exec rake solid_queue:start
+    resources: { cpu: 1, memory: 1GiB }
+    databases: [inbox2]
+    secrets: *app_secrets
+    tmpfs: [{ path: /rails/tmp, size: 128MiB }, { path: /rails/log, size: 16MiB }]
+  nats-subscriber:
+    kind: worker
+    command: inbox2-run bundle exec ruby lib/nats_subscriber.rb
+    resources: { cpu: 0.5, memory: 1GiB }
+    databases: [inbox2]
+    secrets: *app_secrets
+    tmpfs: [{ path: /rails/tmp, size: 128MiB }, { path: /rails/log, size: 16MiB }]
+  nats:
+    kind: private
+    command: [nats-server, -c, /etc/nats/nats.conf, --js, --store_dir, /data, --port, "4222", --http_port, "8222"]
+    # JetStream caps its store at 75% of this disk, and the streams reserve about
+    # 12.3 GB (MAIL_OUTBOUND alone 10 GB, mta/internal/outbound/types.go):
+    # 5 GiB failed with err 10047 (insufficient storage resources).
+    volumes: [{ name: nats, size: 20GiB, mount: /data }]
+  rspamd:
+    kind: private
+    # The bayes store is the managed Valkey; local.d/redis.conf includes the
+    # file written by rspamd/start (no volume: a role with one deploys
+    # stop-before-start). start also runs unbound, rspamd's own resolver: the
+    # DNSBLs refuse the shared one (rspamd/unbound.conf).
+    command: [inbox2-rspamd]
+    port: 11334
+    health: /ping
+    resources: { cpu: 0.5, memory: 1GiB }
+    databases: [rspamd]
+    tmpfs:
+      - { path: /var/lib/rspamd, size: 256MiB }
+      - { path: /run/rspamd, size: 16MiB }
+  # mx and smtp share one role: Pushleft sends a role's outbound traffic from an
+  # extra address only when that role is the target of a port on it, and smtp
+  # listens on nothing. Both exit when NATS cannot be reached, and the name of a
+  # role on another node can take a while to resolve here after it starts
+  # (2026-11-04: over 25 s), and its route longer ("no route to host"), so the
+  # role waits until NATS answers on 4222 first; smtp then
+  # restarts in place if it exits, so outbound mail never stops while mx keeps
+  # the role healthy.
+  # A worker, not private with `port:`: a port gets an HTTP health probe, which
+  # SMTP cannot answer; public port 25 still forwards to 2525 (target_port).
+  mail:
+    kind: worker
+    # imap (docs/Mail-Clients.md) needs neither NATS nor mx: it only calls the
+    # api role. It restarts in place like smtp.
+    command: inbox2-run sh -c 'while :; do imap; echo "imap exited $?, restarting" >&2; sleep 5; done & until ruby -rsocket -e "TCPSocket.new(ENV.fetch(%q(PUSHLEFT_ROLE_NATS_HOST)), 4222).close" 2>/dev/null; do sleep 2; done; while :; do smtp; echo "smtp exited $?, restarting" >&2; sleep 5; done & exec mx'
+    startup_timeout: 300
+    env:
+      MX_LISTEN: ":2525"
+      MX_DOMAIN: mx.inbox2.com
+      SMTP_DOMAIN: mx.inbox2.com
+      SMTP_PUBLIC_IP: 138.201.227.97
+      # The Pushleft relay (docs/Mail-Deliverability.md). It listens once
+      # RELAY_PASSWORD is set, and takes mail only once SMTP_WARMUP_START
+      # (YYYY-MM-DD, day 1 of the four-week ramp) is set here.
+      RELAY_LISTEN: ":4650"
+      RELAY_TLS_CERT: /run/secrets/certificates/mx.inbox2.com/fullchain.pem
+      RELAY_TLS_KEY: /run/secrets/certificates/mx.inbox2.com/privkey.pem
+      # IMAP and SMTP submission for mail clients (docs/Mail-Clients.md); each
+      # organization still has to switch it on.
+      MAILCLIENT_BACKEND_URL: http://api.inbox2.internal:4000/api/v1/mail-client
+      MAILCLIENT_TLS_CERT: /run/secrets/certificates/mx.inbox2.com/fullchain.pem
+      MAILCLIENT_TLS_KEY: /run/secrets/certificates/mx.inbox2.com/privkey.pem
+      IMAP_LISTEN: ":9930"
+      SUBMISSION_LISTEN: ":4651"
+    certificates: [mx.inbox2.com]
+    secrets: [MX_THREADING_HMAC_KEY, RELAY_PASSWORD]
+  # https://mx.inbox2.com → 301 https://inbox2.com. Spamhaus wants the EHLO
+  # host to serve a page (docs/Mail-Deliverability.md). Not a route.redirects
+  # rule: pl refuses a whole-site redirect while `admin:` is declared.
+  # ponytail: raw TCPServer, not a web server — 200 on /healthz, 301 otherwise.
+  mx-web:
+    kind: web
+    command: [ruby, -rsocket, -e, 's = TCPServer.new(8080); loop { Thread.new(s.accept) { |c| l = c.gets.to_s; c.write(l.split[1] == "/healthz" ? "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok" : "HTTP/1.1 301 Moved Permanently\r\nLocation: https://inbox2.com/\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"); c.close rescue nil } }']
+    port: 8080
+    health: /healthz
+    resources: { cpu: 0.25, memory: 256MiB }
+network:
+  public_ports:
+    - { port: 25, target_role: mail, target_port: 2525, address: 138.201.227.97 }
+    - { port: 993, target_role: mail, target_port: 9930, address: 138.201.227.97 }
+    - { port: 465, target_role: mail, target_port: 4651, address: 138.201.227.97 }
+    - { port: 4465, target_role: mail, target_port: 4650, address: 138.201.227.97 }

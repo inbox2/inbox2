@@ -1,0 +1,274 @@
+/* ═══════════════════════════════════════════════════════ */
+/* DropdownMenu — Portal-based floating menu              */
+/* Vista Aero glass, anchored to trigger                  */
+/* ═══════════════════════════════════════════════════════ */
+
+.triggerWrap {
+  display: inline-flex;
+}
+
+.menu {
+  position: fixed;
+  top: var(--menu-top);
+  z-index: var(--z-dropdown);
+  min-width: 160px;
+  padding: var(--space-1) 0;
+  background: var(--surface-float);
+  border: 1px solid var(--overlay-12);
+  border-radius: var(--radius-md);
+  box-shadow:
+    var(--shadow-lg),
+    var(--acrylic-highlight);
+  animation: menuIn var(--duration-fast) var(--ease-out);
+}
+
+.menu[data-align="right"] {
+  right: calc(100vw - var(--menu-left));
+}
+
+.menu[data-align="left"] {
+  left: var(--menu-left);
+}
+
+/* Upward-opening: anchor the bottom edge above the trigger instead. */
+.menu[data-direction="up"] {
+  top: auto;
+  bottom: var(--menu-bottom);
+  transform-origin: bottom;
+  animation-name: menuInUp;
+}
+
+@keyframes menuInUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Top edge glow */
+.menu::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--space-4);
+  right: var(--space-4);
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--overlay-8),
+    var(--overlay-4),
+    transparent
+  );
+}
+
+@keyframes menuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.separator {
+  height: 1px;
+  margin: var(--space-1) var(--space-2);
+  background: var(--overlay-6);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1h) var(--space-3);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all var(--duration-micro);
+  text-align: left;
+}
+
+.menuItem:hover {
+  background: var(--overlay-6);
+  color: var(--text-primary);
+}
+
+.menuItem:active {
+  background: var(--overlay-8);
+}
+
+.menuItemActive {
+  color: var(--text-primary);
+}
+
+.menuItemIcon {
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.menuItem:hover .menuItemIcon {
+  opacity: 0.8;
+}
+
+.menuItemLabel {
+  flex: 1;
+}
+
+.menuItemCheck {
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.menuItemShortcut {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding-left: var(--space-3);
+  color: var(--text-tertiary);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-ui);
+  letter-spacing: 0.02em;
+  opacity: 0.7;
+}
+
+.menuItem:hover .menuItemShortcut {
+  opacity: 0.9;
+}
+
+/* ═══ SUBMENU ═══ */
+.submenuWrap {
+  position: relative;
+}
+
+.submenuChevron {
+  opacity: 0.35;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.submenuWrap:hover > .submenu,
+.submenuWrap:focus-within > .submenu {
+  display: block;
+}
+
+.submenu {
+  display: none;
+  position: absolute;
+  top: calc(var(--space-1) * -1 - var(--submenu-shift, 0px));
+  left: 100%;
+  /* Sized to its longest item — a label never wraps ("Move to Space" did). */
+  width: max-content;
+  min-width: 180px;
+  padding: var(--space-1) 0;
+  background: var(--surface-float);
+  border: 1px solid var(--overlay-12);
+  border-radius: var(--radius-md);
+  box-shadow:
+    var(--shadow-lg),
+    var(--acrylic-highlight);
+  z-index: var(--z-popover);
+}
+
+/* Would run off the window's right edge (SubmenuItem measures on open): open leftwards. */
+.submenu .menuItemLabel {
+  white-space: nowrap;
+}
+
+.submenuWrap[data-flip] > .submenu {
+  left: auto;
+  right: 100%;
+}
+
+/* ── variant="light" — the management/console skin. The portal mounts on
+   <body>, outside .management, so the menu carries `data-m-tokens` and reads
+   the --m-* palette from management.css. ── */
+.menu[data-variant='light'] {
+  min-width: 232px; /* the Disk mockup's .ctx */
+  background: var(--m-surface);
+  border: 1.5px solid var(--m-line);
+  border-radius: var(--m-r-lg);
+  box-shadow: 0 10px 30px var(--m-shadow-ink);
+}
+.menu[data-variant='light']::before { display: none; }
+.menu[data-variant='light'] .separator { background: var(--m-line-soft); }
+.menu[data-variant='light'] .menuItem { color: var(--m-ink-soft); }
+.menu[data-variant='light'] .menuItem:hover { background: var(--m-wash); color: var(--m-ink); }
+.menu[data-variant='light'] .menuItem:active { background: var(--m-line-soft); }
+.menu[data-variant='light'] .menuItemActive { color: var(--m-ink); }
+.menu[data-variant='light'] .menuItemCheck { color: var(--m-accent); }
+.menu[data-variant='light'] .menuItemShortcut { color: var(--m-ink-faint); }
+.menu[data-variant='light'] .submenu {
+  background: var(--m-surface);
+  border: 1.5px solid var(--m-line);
+  border-radius: var(--m-r-lg);
+  box-shadow: 0 10px 30px var(--m-shadow-ink);
+}
+
+/* Destructive item (Delete) — always last in the menu, tinted red. */
+.menuItemDanger,
+.menuItemDanger .menuItemIcon {
+  color: var(--accent-danger);
+}
+
+.menuItemDanger:hover {
+  background: var(--accent-danger-dim);
+}
+
+.menuItemDanger:hover,
+.menuItemDanger:hover .menuItemIcon {
+  color: var(--accent-danger);
+}
+
+/* ── variant="glass" — for glass surfaces (Spaces dashboard). Literal values
+   mirror the dashboard's --glass-* tokens: the portal mounts on <body>,
+   outside the page's token scope. ── */
+.menu[data-variant='glass'] {
+  background: rgba(26, 26, 31, 0.55);
+  backdrop-filter: blur(39px) saturate(1.3);
+  -webkit-backdrop-filter: blur(39px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.menu[data-variant='glass']::before { display: none; }
+.menu[data-variant='glass'] .separator { background: rgba(255, 255, 255, 0.08); }
+.menu[data-variant='glass'] .menuItem { color: rgba(255, 255, 255, 0.82); }
+.menu[data-variant='glass'] .menuItem:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.menu[data-variant='glass'] .submenu {
+  background: rgba(26, 26, 31, 0.55);
+  backdrop-filter: blur(39px) saturate(1.3);
+  -webkit-backdrop-filter: blur(39px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Touch-only devices have no keyboard to press the hints with. */
+@media (hover: none) and (pointer: coarse) {
+  .menuItemShortcut { display: none; }
+}
+
+/* Keyboard focus (ContextMenu moves focus through its items). */
+.menuItem:focus-visible {
+  outline: none;
+  background: var(--overlay-6);
+  color: var(--text-primary);
+}
+.menu[data-variant='light'] .menuItem:focus-visible { background: var(--m-wash); color: var(--m-ink); }
+.menu[data-variant='light'] .menuItemDanger,
+.menu[data-variant='light'] .menuItemDanger .menuItemIcon { color: var(--m-pink); }
+.menu[data-variant='light'] .menuItemDanger:hover,
+.menu[data-variant='light'] .menuItemDanger:focus-visible { background: color-mix(in srgb, var(--m-pink) 8%, transparent); color: var(--m-pink); }
+
+/* A non-interactive label at the top of a ContextMenu ("3 items selected"). */
+.menuHeading { padding: var(--space-1h) var(--space-3) var(--space-1); font-size: var(--text-3xs); font-weight: 600; color: var(--text-tertiary); }
+.menu[data-variant='light'] .menuHeading { color: var(--m-ink-faint); }

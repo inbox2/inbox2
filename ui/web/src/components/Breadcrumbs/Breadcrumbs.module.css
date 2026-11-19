@@ -1,0 +1,89 @@
+/* DOS-style path. Lives inside a `.management` surface (--m-* tokens). */
+.crumbs {
+  container-type: inline-size;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  font: 500 var(--text-xs) var(--m-mono);
+  color: var(--m-ink-faint);
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list li {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.seg {
+  padding: 3px 7px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  font: inherit;
+  color: var(--m-accent-ink);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.seg:hover { background: color-mix(in srgb, var(--m-accent) 10%, transparent); }
+.seg:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 1px; }
+.seg[aria-current] { color: var(--m-ink); font-weight: 600; }
+
+.sep { padding: 0 1px; }
+
+.cursor {
+  color: var(--m-ink);
+  animation: blink 1.1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Folded middle: the "..." stands in for the middle segments on narrow bars. */
+.list .more { display: none; }
+@container (max-width: 480px) {
+  .list .more { display: inline-flex; }
+  .list .middle { display: none; }
+}
+
+.menu,
+.menu:global(.management) {
+  min-width: 180px;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: var(--space-1h);
+  background: var(--m-surface);
+  border: 1px solid var(--m-line);
+  border-radius: var(--m-r-lg);
+  box-shadow: 0 16px 40px rgba(24, 34, 66, 0.22);
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  padding: 7px var(--space-2h);
+  border: 0;
+  border-radius: var(--m-r-sm);
+  background: none;
+  font: 500 var(--text-2xs) var(--m-mono);
+  color: var(--m-ink);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menuItem:hover,
+.menuItem:focus-visible { background: var(--m-surface-2); outline: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor { animation: none; }
+}

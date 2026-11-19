@@ -1,0 +1,386 @@
+.hero {
+  background: var(--ink);
+  height: 1140px;
+  overflow: hidden;
+  position: relative;
+}
+
+.glowA,
+.glowB {
+  position: absolute;
+  pointer-events: none;
+  filter: blur(60px);
+}
+
+.glowA {
+  left: 40%;
+  top: 10%;
+  width: 1100px;
+  height: 700px;
+  background: radial-gradient(ellipse at center, var(--glow-a), transparent 65%);
+}
+
+.glowB {
+  left: -10%;
+  bottom: -10%;
+  width: 700px;
+  height: 500px;
+  background: radial-gradient(ellipse at center, var(--glow-b), transparent 65%);
+}
+
+/* ---- 3D layer: a fixed 1440×1140 stage centred in the hero ---- */
+.art {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 1440px;
+  height: 1140px;
+  margin-left: -720px;
+  pointer-events: none;
+}
+
+.pool {
+  position: absolute;
+  left: 40px;
+  top: 640px;
+  width: 780px;
+}
+
+/* Tray + the badges hand-placed on the envelopes baked into the render. */
+.tray {
+  display: block;
+  position: relative;
+}
+
+.trayImg {
+  display: block;
+  width: 100%;
+}
+
+.trayBadge {
+  position: absolute;
+  width: 5.8%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) rotate(var(--rot));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* The endless stream: each sprite rides an S-curve from off-screen right
+   into the tray, grows on approach, then sinks and fades as if stacking. */
+.sprite {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 180px;
+  height: 150px;
+  offset-path: path("M1560 60 C1340 40 1250 320 1080 420 S 820 720 500 980");
+  offset-rotate: 0deg;
+  offset-distance: 0%;
+  opacity: 0;
+  animation: fly 18s linear infinite;
+  will-change: offset-distance, opacity;
+}
+
+/* grow lives on a wrapper so the channel badge scales with the envelope */
+.grow {
+  display: block;
+  position: relative;
+  animation: grow 18s linear infinite;
+  filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.5));
+}
+
+.env {
+  display: block;
+  width: 100%;
+}
+
+/* Channel badge, printed straight onto the envelope's flap. */
+.badge {
+  position: absolute;
+  left: 47%;
+  top: 30%;
+  width: 26%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* Bright where they enter (top right, no copy under them), fading out as they
+   cross the headline and the CTAs so the text stays readable. */
+@keyframes fly {
+  0% { offset-distance: 0%; opacity: 0; }
+  6% { opacity: 0.95; }
+  26% { opacity: 0.8; }
+  48% { opacity: 0.46; }
+  70% { opacity: 0.24; }
+  88% { opacity: 0.14; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+/* Big early, while they are still bright, so the channel badge is legible. */
+@keyframes grow {
+  0% { transform: scale(0.4) rotate(-28deg); }
+  26% { transform: scale(0.82) rotate(12deg); }
+  60% { transform: scale(1) rotate(-6deg); }
+  100% { transform: scale(0.92) rotate(4deg) translateY(40px); }
+}
+
+/* The leaf: one green envelope drifting down past the headline, forever. */
+.leaf {
+  position: absolute;
+  display: block;
+  left: 760px;
+  top: -170px;
+  width: 150px;
+  filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.45));
+  animation: leaf 28s ease-in-out infinite;
+}
+
+/* windy: long sideways glides, a lift at the end of each glide, tilt follows the drift */
+@keyframes leaf {
+  0% { transform: translate(0, 0) rotate(-14deg); opacity: 0; }
+  6% { opacity: 0.5; }
+  14% { transform: translate(-90px, 150px) rotate(12deg); }
+  22% { transform: translate(-60px, 190px) rotate(22deg); }
+  36% { transform: translate(90px, 380px) rotate(-16deg); }
+  44% { transform: translate(120px, 420px) rotate(-24deg); }
+  55% { opacity: 0.28; }
+  58% { transform: translate(-70px, 620px) rotate(14deg); }
+  66% { transform: translate(-100px, 660px) rotate(20deg); }
+  80% { transform: translate(60px, 860px) rotate(-12deg); }
+  92% { opacity: 0.18; }
+  100% { transform: translate(20px, 1080px) rotate(-2deg); opacity: 0; }
+}
+
+/* small gust on every flying envelope */
+.sway {
+  display: block;
+  animation: sway 3.6s ease-in-out infinite alternate;
+}
+
+@keyframes sway {
+  from { transform: translate(-8px, -4px) rotate(-9deg); }
+  to { transform: translate(8px, 4px) rotate(9deg); }
+}
+
+/* ---- copy ---- */
+.copy {
+  position: relative;
+  padding-top: 128px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  align-items: flex-start;
+}
+
+.h1 {
+  font-size: clamp(48px, 8vw, 116px);
+  line-height: 0.9;
+  white-space: nowrap;
+  letter-spacing: -0.045em;
+}
+
+/* Same treatment as the home hero's typed word: brand gradient, accent caret. */
+.h1 em {
+  font-style: normal;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  --caret: var(--accent);
+}
+
+.lede {
+  font-size: clamp(17px, 1.45vw, 21px);
+  max-width: 34ch;
+  color: var(--mute-inv);
+}
+
+.code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.ctas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.poolMobile {
+  display: none;
+}
+
+/* ---- rule widget ---- */
+.widget {
+  position: absolute;
+  right: max(130px, calc(50% - 590px));
+  bottom: 72px;
+  width: 400px;
+  background: #fff;
+  color: var(--ink);
+  border-radius: var(--r);
+  padding: 24px;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transform: rotate(-2deg);
+}
+
+.widget h3 {
+  /* .on-dark h3 forces white — the widget is a light card inside the dark hero. */
+  color: var(--ink);
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+/* The fake customer this demo mailbox belongs to. */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.fav {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 9px;
+  background: var(--grad);
+}
+
+.wordmark {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+
+.field {
+  background: var(--grey);
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.field small {
+  display: block;
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.field b {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.tag {
+  background: var(--offset);
+  color: #fff;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.routes {
+  display: flex;
+  flex-direction: column;
+}
+
+.route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid #e9edf1;
+  font-size: 14px;
+}
+
+.route:last-child {
+  border-bottom: 0;
+}
+
+.to {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.to i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.accent { background: var(--accent); }
+.offset { background: var(--offset); }
+.ink { background: var(--ink); }
+.blue { background: #5dcbff; }
+
+.widgetBtn {
+  margin-top: 6px;
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .h1 { font-size: clamp(48px, 7.4vw, 90px); }
+  .widget { right: 40px; }
+}
+
+@media (max-width: 900px) {
+  .hero {
+    height: auto;
+    padding-bottom: 40px;
+  }
+  .art {
+    display: none;
+  }
+  .copy {
+    padding-top: 56px;
+    gap: 26px;
+  }
+  .h1 {
+    font-size: clamp(44px, 14vw, 60px);
+    white-space: normal;
+  }
+  .lede {
+    font-size: 16px;
+  }
+  .ctas {
+    flex-direction: column;
+    align-self: stretch;
+  }
+  .ctas > * {
+    width: 100%;
+  }
+  .poolMobile {
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    align-self: center;
+    margin: 10px 0 -10px;
+  }
+  .widget {
+    position: static;
+    width: auto;
+    margin: 24px var(--gutter) 0;
+    transform: none;
+  }
+}

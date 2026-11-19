@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Rust: the Tauri desktop sync engine (Gmail/Microsoft/IMAP adapters, store,
+  # OAuth, calendar, interactive ops). Runs the full suite, then the live IMAP
+  # integration tests against a Dovecot container.
+  # ---------------------------------------------------------------------------
+  desktop-rust:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: ui/desktop/src-tauri
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Tauri system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev \
+            libappindicator3-dev librsvg2-dev patchelf \
+            build-essential libssl-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ui/desktop/src-tauri
+
+      - name: Unit + integration tests (wiremock + in-memory SQLite, no network)
+        run: cargo test --all-targets
+
+      # The IMAP integration tests need a live server. GreenMail is a tiny,
+      # multi-arch test IMAP server that runs anywhere with zero config.
+      - name: Start GreenMail test server
+        run: |
+          docker compose -f docker/docker-compose.yml --profile test up -d
+          for i in $(seq 1 20); do
+            (echo > /dev/tcp/localhost/3993) >/dev/null 2>&1 && break
+            sleep 2
+          done
+
+      - name: IMAP integration tests (live GreenMail)
+        env:
+          INBOX2_IMAP_ACCEPT_INVALID_CERTS: "1"
+          IMAP_TEST_HOST: localhost
+          IMAP_TEST_PORT: "3993"
+        run: cargo test --test imap_integration -- --ignored
+
+      - name: Stop GreenMail
+        if: always()
+        run: docker compose -f docker/docker-compose.yml --profile test down -v
+
+      # The native ONNX Tier A engine (sentiment/intent/embeddings). These tests
+      # download ~180MB of quantized models from HuggingFace, so they're
+      # #[ignore]d in the fast pass and run here against a cached model dir.
+      - name: Cache AI models
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/ai-models
+          key: ai-models-v1-distilbert-sst2-nli-deberta-xsmall-minilm-l6-v2
+
+      - name: AI model-backed inference tests (native ONNX Runtime)
+        env:
+          INBOX2_AI_MODELS_DIR: ${{ runner.temp }}/ai-models
+        run: cargo test --test ai_inference -- --ignored --test-threads=1
+
+  # ---------------------------------------------------------------------------
+  # Frontend: lint + the remaining JS tests (AI tests; the sync JS tests were
+  # ported to Rust and removed).
+  # ---------------------------------------------------------------------------
+  web:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: ui/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: corepack enable
+      - run: yarn install --frozen-lockfile --ignore-scripts
+      - run: yarn lint
+      - name: JS unit tests (vitest, node project — excludes browser Storybook tests)
+        run: yarn vitest run --project unit
+
+  # ---------------------------------------------------------------------------
+  # API: Rails request specs.
+  # ---------------------------------------------------------------------------
+  api:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: api
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready" --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          working-directory: api
+          bundler-cache: true
+      - run: bin/rails db:create db:schema:load
+      - run: bundle exec rspec

@@ -1,0 +1,17 @@
+.card { border-radius: var(--m-r-xl); padding: var(--space-7); border: 1px solid var(--m-line); }
+
+.light {
+  background: var(--m-surface);
+  color: var(--m-ink);
+}
+
+.dark { background: var(--m-char); color: #fff; }
+
+.glass {
+  background: var(--m-glass);
+  backdrop-filter: var(--m-glass-blur);
+  -webkit-backdrop-filter: var(--m-glass-blur);
+  border: 1px solid var(--m-glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  color: var(--m-ink);
+}

@@ -1,0 +1,5 @@
+# Copy to terraform.tfvars (gitignored) and fill in.
+project_id         = "your-gcp-project"
+verification_token = "generate: openssl rand -hex 24"
+# push_endpoint    = "https://api.inbox2.com/api/v1/push/gmail"
+# topic_name       = "inbox2-gmail-watch"

@@ -1,0 +1,62 @@
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--space-1) 0;
+  font-size: var(--text-xs);
+  border-bottom: 1px solid var(--overlay-2);
+}
+
+.text { color: var(--text-secondary); }
+.name {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  color: var(--text-primary);
+  margin-right: 0.35em;
+}
+.textAccent { color: var(--accent-purple); }
+.time {
+  color: var(--text-muted);
+  font-size: var(--text-4xs);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.itemButton {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1h);
+  width: 100%;
+  padding: var(--space-1) var(--space-1h);
+  margin: 0 calc(-1 * var(--space-1h));
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: inherit;
+  transition: background var(--duration-fast);
+}
+
+.itemButton:hover { background: var(--overlay-3); }
+.itemButton:hover .text,
+.itemButton:hover .textAccent { color: var(--text-primary); }
+
+.itemButton .text,
+.itemButton .textAccent { flex: 1; }
+
+.itemButton .time {
+  flex-shrink: 0;
+  margin-left: var(--space-2);
+}
+
+.chevron {
+  color: var(--text-muted);
+  opacity: 0.5;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.itemButton:hover .chevron { opacity: 0.9; }

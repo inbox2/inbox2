@@ -1,0 +1,71 @@
+<%#
+  E2EE recovery-file backup email (docs/E2EE.md "Key loss & recovery",
+  Option A). Contains ONLY the passphrase-wrapped recovery blob — opaque
+  ciphertext, useless without the recovery passphrase, which never touches the
+  server or this email. On-brand with the other inbox2 transactional mail.
+  Locals: username (String), blob (String, base64 envelope), generated_at (Time).
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Your inbox2 encryption recovery file</title>
+  <style>@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');</style>
+</head>
+<body style="margin:0;padding:0;background:#000000;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#000000;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:560px;max-width:100%;background:#0c0d11;border:1px solid #ffffff;">
+          <tr>
+            <td style="padding:24px 28px;border-bottom:1px solid rgba(255,255,255,0.16);">
+              <span style="font:700 22px/1 'Chakra Petch',Arial,sans-serif;color:#ffffff;letter-spacing:-.01em;">inbox2</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:36px 28px 8px;">
+              <div style="font:600 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:#2f7ad6;padding-bottom:14px;">Encryption recovery backup</div>
+              <div style="font:700 26px/1.2 'Chakra Petch',Arial,sans-serif;color:#ffffff;">Keep this email, <%= username %>.</div>
+              <div style="font:400 15px/1.6 'Inter',Arial,sans-serif;color:#aab2c0;padding-top:14px;">
+                This is the encrypted backup of your inbox2 end-to-end encryption identity key,
+                generated <%= generated_at.strftime("%B %-d, %Y at %H:%M UTC") %>. Together with your
+                <strong style="color:#ffffff;">recovery passphrase</strong> — which only you have —
+                it restores access to your sealed mail if you ever forget your password.
+              </div>
+              <div style="font:400 15px/1.6 'Inter',Arial,sans-serif;color:#aab2c0;padding-top:14px;">
+                <strong style="color:#ffffff;">inbox2 cannot recover your key or reset your passphrase.</strong>
+                Without the passphrase this file is unreadable — by you, by us, by anyone. If you lose
+                the passphrase and no teammate can re-grant you access, sealed mail is permanently
+                unrecoverable. Store the passphrase in a password manager.
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 28px 8px;">
+              <div style="font:600 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:#aab2c0;padding-bottom:10px;">Recovery file — copy everything between the markers</div>
+              <div style="background:#000000;border:1px solid rgba(255,255,255,0.16);padding:16px;font:500 11px/1.6 'JetBrains Mono',ui-monospace,monospace;color:#8ee59a;word-break:break-all;">
+                -----BEGIN INBOX2 RECOVERY FILE-----<br>
+                <%= blob %><br>
+                -----END INBOX2 RECOVERY FILE-----
+              </div>
+              <div style="font:400 13px/1.6 'Inter',Arial,sans-serif;color:#aab2c0;padding-top:12px;">
+                To recover: sign in on any device, choose <em>Forgot password → Use recovery file</em>,
+                paste the block above, and enter your recovery passphrase.
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px;border-top:1px solid rgba(255,255,255,0.16);margin-top:24px;">
+              <div style="font:400 12px/1.6 'Inter',Arial,sans-serif;color:#6b7280;">
+                You received this because end-to-end encryption was set up for your inbox2 account.
+                If that wasn't you, change your password immediately.
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

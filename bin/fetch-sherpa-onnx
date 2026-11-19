@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Fetch the prebuilt sherpa-onnx iOS xcframeworks (sherpa-onnx + onnxruntime) that
+# the free-lane Kokoro TTS engine links against. They're large binaries, so they're
+# gitignored and fetched on demand rather than committed.
+#
+#   bin/fetch-sherpa-onnx            # download + extract the pinned version into ui/ios/Vendor/
+#   SHERPA_VERSION=v1.13.2 bin/fetch-sherpa-onnx
+#
+# After fetching, build with BRIDGE_KOKORO enabled (project.yml already sets it once
+# the frameworks are present) — see docs/iOS-Device.md / docs/model-manager.md.
+set -euo pipefail
+
+VERSION="${SHERPA_VERSION:-v1.13.2}"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+VENDOR="$ROOT/ui/ios/Vendor"
+ASSET="sherpa-onnx-${VERSION}-ios.tar.bz2"
+URL="https://github.com/k2-fsa/sherpa-onnx/releases/download/${VERSION}/${ASSET}"
+
+mkdir -p "$VENDOR"
+if [ -d "$VENDOR/sherpa-onnx.xcframework" ] && [ -d "$VENDOR/onnxruntime.xcframework" ]; then
+  echo "✓ already present in $VENDOR (delete to re-fetch)"; exit 0
+fi
+
+TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+echo "▸ downloading $ASSET (~78 MB)"
+curl -fL --progress-bar "$URL" -o "$TMP/$ASSET"
+echo "▸ extracting"
+tar -xjf "$TMP/$ASSET" -C "$TMP"
+
+# The tarball nests the two xcframeworks (build-ios/, ios-onnxruntime/). Pull both out.
+for fw in sherpa-onnx onnxruntime; do
+  SRC="$(find "$TMP" -type d -name "${fw}.xcframework" -print -quit)"
+  [ -n "$SRC" ] || { echo "✗ ${fw}.xcframework not found in archive" >&2; exit 1; }
+  rm -rf "$VENDOR/${fw}.xcframework"
+  cp -R "$SRC" "$VENDOR/${fw}.xcframework"
+  echo "  ✓ $VENDOR/${fw}.xcframework"
+done
+
+echo "✓ sherpa-onnx ${VERSION} vendored. Run: cd ui/ios && xcodegen generate"

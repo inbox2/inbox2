@@ -1,0 +1,24 @@
+# Cloudflare Pages response headers (developers.cloudflare.com/pages/configuration/headers).
+#
+# Only the Disk exact-view engine page is cross-origin isolated: LibreOffice
+# WASM needs threads (SharedArrayBuffer), and browsers only allow them in an
+# isolated top-level document. Disk itself and the mail client are not
+# isolated (sign-in popups need their opener). Disk talks to this page through
+# the Disk service worker; see src/lib/disk/engine/client.js. Pages serves
+# disk-engine.html at /disk-engine too, so both paths are listed.
+# The Vite dev server sends the same headers (vite.config.js).
+
+/disk-engine.html
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+
+/disk-engine
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+
+# Public link viewer (build guide 6.9): no third-party script and no referrer.
+# A sealed link's key sits in the URL fragment; this keeps other code off the page.
+# 'wasm-unsafe-eval': libsodium and the preview engines are WebAssembly.
+/share/*
+  Content-Security-Policy: script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'
+  Referrer-Policy: no-referrer

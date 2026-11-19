@@ -1,0 +1,5 @@
+.wrap {
+  display: inline-flex;
+  flex: none;
+  vertical-align: middle;
+}

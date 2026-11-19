@@ -1,0 +1,286 @@
+{
+ "schema_version": 2,
+ "diagram_type": "workflow",
+ "meta": {
+  "title": "Agentic filters: the local-channel rules funnel",
+  "output": "docs/diagrams/agentic-filter/agentic-filter.html",
+  "quality_profile": "showcase",
+  "legend": {
+   "entries": {
+    "messagebus": {
+     "label": "Mail & queues"
+    },
+    "backend": {
+     "label": "Rules / runner code"
+    },
+    "security": {
+     "label": "Gate or human approval"
+    },
+    "database": {
+     "label": "SQLite"
+    },
+    "external": {
+     "label": "Spawned CLI agent"
+    },
+    "frontend": {
+     "label": "Person"
+    }
+   }
+  }
+ },
+ "lanes": [
+  {
+   "id": "mail",
+   "label": "Mail"
+  },
+  {
+   "id": "rules",
+   "label": "Rules engine (core/src/rules)"
+  },
+  {
+   "id": "runner",
+   "label": "Agent runner (src-tauri/local_agents)"
+  },
+  {
+   "id": "human",
+   "label": "Human"
+  }
+ ],
+ "phases": [
+  {
+   "id": "p_eval",
+   "label": "Inline evaluation on sync",
+   "fromCol": 0,
+   "toCol": 3
+  },
+  {
+   "id": "p_run",
+   "label": "Queued run",
+   "fromCol": 4,
+   "toCol": 5,
+   "variant": "emphasis"
+  }
+ ],
+ "mainPath": [
+  "msg",
+  "tier0",
+  "gate",
+  "dispatch",
+  "queue",
+  "runner"
+ ],
+ "nodes": [
+  {
+   "id": "msg",
+   "lane": "mail",
+   "col": 0,
+   "type": "messagebus",
+   "label": "New message",
+   "sublabel": "local channel, after sync"
+  },
+  {
+   "id": "skip",
+   "lane": "mail",
+   "col": 2,
+   "type": "backend",
+   "label": "No dispatch",
+   "sublabel": "no match, or model missing"
+  },
+  {
+   "id": "builtin",
+   "lane": "mail",
+   "col": 3,
+   "type": "backend",
+   "label": "Built-in action",
+   "sublabel": "archive, tag, move: inline"
+  },
+  {
+   "id": "tier0",
+   "lane": "rules",
+   "col": 1,
+   "type": "backend",
+   "label": "Tier 0: static conditions",
+   "sublabel": "conditions.rs, SQLite fields"
+  },
+  {
+   "id": "gate",
+   "lane": "rules",
+   "col": 2,
+   "type": "security",
+   "label": "Tier 1: on-device gate",
+   "sublabel": "gate.rs, cosine \u2265 threshold",
+   "tag": "fails closed"
+  },
+  {
+   "id": "dispatch",
+   "lane": "rules",
+   "col": 3,
+   "type": "backend",
+   "label": "Action dispatch",
+   "sublabel": "actions.rs"
+  },
+  {
+   "id": "queue",
+   "lane": "runner",
+   "col": 4,
+   "type": "database",
+   "label": "agent_runs",
+   "sublabel": "status = pending",
+   "tag": "Tier 2: run_agent"
+  },
+  {
+   "id": "runner",
+   "lane": "runner",
+   "col": 5,
+   "yOffset": -50,
+   "type": "backend",
+   "label": "AgentRunner",
+   "sublabel": "5 s poll; scratch dir + harness"
+  },
+  {
+   "id": "agent",
+   "lane": "runner",
+   "col": 5,
+   "yOffset": 50,
+   "type": "external",
+   "label": "CLI agent",
+   "sublabel": "claude-code, codex, opencode, gemini"
+  },
+  {
+   "id": "approval",
+   "lane": "human",
+   "col": 4,
+   "type": "security",
+   "label": "agent_approvals",
+   "sublabel": "approval_first: first firing",
+   "tag": "human resolves"
+  }
+ ],
+ "edges": [
+  {
+   "id": "e1",
+   "from": "msg",
+   "to": "tier0",
+   "label": "every inbound",
+   "variant": "emphasis",
+   "toSide": "left"
+  },
+  {
+   "id": "e2",
+   "from": "tier0",
+   "to": "skip",
+   "label": "no match",
+   "role": "error",
+   "fromSide": "top",
+   "toSide": "left"
+  },
+  {
+   "id": "e3",
+   "from": "tier0",
+   "to": "gate",
+   "label": "match",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e4",
+   "from": "gate",
+   "to": "skip",
+   "label": "below threshold / not loaded",
+   "variant": "security",
+   "role": "error"
+  },
+  {
+   "id": "e5",
+   "from": "gate",
+   "to": "dispatch",
+   "label": "confirmed",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e6",
+   "from": "dispatch",
+   "to": "builtin",
+   "label": "perform_action",
+   "role": "branch"
+  },
+  {
+   "id": "e7",
+   "from": "dispatch",
+   "to": "queue",
+   "label": "run_agent \u2192 INSERT",
+   "variant": "emphasis",
+   "fromSide": "right",
+   "toSide": "left"
+  },
+  {
+   "id": "e8",
+   "from": "queue",
+   "to": "approval",
+   "label": "approval_first, first run",
+   "variant": "security",
+   "role": "branch"
+  },
+  {
+   "id": "e9",
+   "from": "approval",
+   "to": "runner",
+   "label": "approved",
+   "variant": "security",
+   "role": "return"
+  },
+  {
+   "id": "e10",
+   "from": "queue",
+   "to": "runner",
+   "label": "allowlist / full_auto: claim",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e11",
+   "from": "runner",
+   "to": "agent",
+   "label": "spawn, cwd = scratch dir"
+  },
+  {
+   "id": "e12",
+   "from": "agent",
+   "to": "runner",
+   "label": "result.json (stdout ignored)",
+   "variant": "dashed",
+   "role": "return"
+  }
+ ],
+ "cards": [
+  {
+   "dot": "cyan",
+   "title": "The funnel",
+   "items": [
+    "Tier 0: deterministic predicates over SQLite fields (from, to, subject, has_attachment)",
+    "Tier 1: embeds message + rule phrase with the on-device MiniLM model; passes on cosine \u2265 threshold",
+    "Gate fails closed: no model loaded \u2192 no dispatch",
+    "Agents never run inline; run_agent inserts a pending agent_runs row"
+   ]
+  },
+  {
+   "dot": "amber",
+   "title": "AgentRunner",
+   "items": [
+    "Polls every 5 s; also built by engine_daemon",
+    "Scratch dir <app_data>/agent_runs/<run_key>/: email.eml, body.txt, context.json, task.md, attachments/",
+    "Agent cwd is the scratch dir, never the user's files",
+    "Success = exit 0 and result.json with status ok; stdout only for audit + cost",
+    "Timeout, retries, failed runs listed with retry"
+   ]
+  },
+  {
+   "dot": "rose",
+   "title": "Permission posture per rule",
+   "items": [
+    "allowlist: restricted tools (Claude dontAsk + allowedTools, Codex workspace-write); OpenCode unsupported",
+    "approval_first: full access, first firing waits in agent_approvals",
+    "full_auto: full access, fires immediately; max injection exposure",
+    "Email content is untrusted data; the harness preamble says so"
+   ]
+  }
+ ]
+}

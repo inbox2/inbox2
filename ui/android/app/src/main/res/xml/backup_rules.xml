@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and below (auto-backup). Exclude the encrypted secret store and any
+     legacy plaintext-secret prefs, plus the entire `inbox2/` engine data dir (the local
+     mail DB + the Rust core's encrypted channel-credential store + tokens), so mail and
+     credentials stay on-device and never leave in a cloud/adb backup. -->
+<full-backup-content>
+    <exclude domain="file" path="inbox2/" />
+    <exclude domain="sharedpref" path="inbox2_secure.xml" />
+    <exclude domain="sharedpref" path="inbox2_cloud.xml" />
+    <exclude domain="sharedpref" path="inbox2_voice.xml" />
+    <exclude domain="sharedpref" path="inbox2_privacy.xml" />
+</full-backup-content>

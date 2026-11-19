@@ -1,0 +1,143 @@
+/* The component renders directly inside the page's "Local agents" settings panel
+   (which provides the card chrome), so it carries no surface of its own. */
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2h);
+}
+
+.intro {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-2xs);
+  color: var(--text-secondary);
+}
+
+.refresh {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: var(--space-0h);
+  display: inline-flex;
+}
+
+.refresh:hover {
+  color: var(--text-primary);
+}
+
+.note {
+  font-size: var(--text-2xs);
+  color: var(--text-secondary);
+  margin: var(--space-1h) 0 var(--space-2h);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1h);
+  margin-top: var(--space-3);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-2h);
+  border-radius: var(--radius-7);
+  background: var(--surface-sunken);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0h);
+}
+
+.name {
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+}
+
+.version {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.installLink {
+  font-size: var(--text-3xs);
+  color: var(--accent-primary);
+  text-decoration: none;
+}
+
+.installLink:hover {
+  text-decoration: underline;
+}
+
+/* Failed runs */
+.failures {
+  margin-top: var(--space-3h);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.failHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--run-danger);
+  margin-bottom: var(--space-2);
+}
+
+.failRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1h) 0;
+}
+
+.failInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.failAgent {
+  font-size: var(--text-2xs);
+  color: var(--text-primary);
+}
+
+.failErr {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.failTime {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.failRetry {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-6);
+  padding: var(--space-1) var(--space-2h);
+  font-size: var(--text-3xs);
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.failRetry:hover {
+  color: var(--text-primary);
+}

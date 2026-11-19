@@ -1,0 +1,109 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--body);
+  color: var(--text);
+  background: var(--paper);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  font-variation-settings: "wdth" 118;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0;
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+p {
+  margin: 0;
+}
+
+.wrap {
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.kicker {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--offset);
+}
+
+.kicker--accent {
+  color: var(--accent);
+}
+
+.lede {
+  font-size: 18px;
+  color: #454545;
+  max-width: 46ch;
+}
+
+/* The ErrorBoundary's bare page — no section wrapper to inherit padding from. */
+.errorPage {
+  padding: 120px var(--gutter);
+}
+
+.on-dark {
+  color: #fff;
+}
+
+.on-dark h1,
+.on-dark h2,
+.on-dark h3 {
+  color: #fff;
+}
+
+.on-dark .lede {
+  color: var(--mute-inv);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scroll reveals: `useReveal()` (lib/reveal.js) marks an off-screen element
+   `out` after hydration and lifts it as it scrolls in. Visible by default, so
+   nothing here can hide imagery when JS doesn't run. */
+.reveal,
+.reveal--left,
+.reveal--right {
+  transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.reveal.out { opacity: 0; transform: translateY(32px); }
+.reveal--left.out { opacity: 0; transform: translateX(-56px); }
+.reveal--right.out { opacity: 0; transform: translateX(56px); }

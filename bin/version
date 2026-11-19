@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# The one version number every desktop build shares.
+#
+#   bin/version          0.1.1543
+#   bin/version --long   0.1.1543+eea0897
+#
+# MAJOR.MINOR is whatever ui/desktop/src-tauri/tauri.conf.json says; PATCH is
+# the commit count on HEAD. Every push to main therefore ships a strictly larger
+# SemVer without anyone bumping anything, which is what the desktop updater
+# compares. The short sha rides along as build metadata so a version can be
+# traced to its commit; SemVer ignores it for ordering.
+#
+# ponytail: no release.mjs, no tags, no changelog. A real version bump (0.2) is
+# a one-line edit to tauri.conf.json.
+set -euo pipefail
+ROOT="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+base=$(sed -n 's/^ *"version": *"\([0-9]*\.[0-9]*\)\..*/\1/p' "$ROOT/ui/desktop/src-tauri/tauri.conf.json" | head -1)
+# PATCH_BASE: the private history (2,284 commits, last release 0.1.2283) was
+# squashed into one root commit when the repo went public (2026-11-20). On that
+# history the count restarts at 1, so 2300 is added; without it every installed
+# copy would see 0.1.1 as a downgrade and never update again. The old history's
+# root is a different commit, so it keeps its plain count. CI checks out with
+# fetch-depth 0, so the count is complete.
+PUBLIC_ROOT_SUBJECT="inbox2: public repository"
+PATCH_BASE=0
+[ "$(git -C "$ROOT" log --max-parents=0 --format=%s HEAD | tail -1)" = "$PUBLIC_ROOT_SUBJECT" ] && PATCH_BASE=2300
+v="$base.$((PATCH_BASE + $(git -C "$ROOT" rev-list --count HEAD)))"
+[ "${1:-}" = "--long" ] && v="$v+$(git -C "$ROOT" rev-parse --short HEAD)"
+echo "$v"

@@ -1,0 +1,7 @@
+/* An <svg> is a shrinkable flex item by default, so in a cramped flex row (a
+   toolbar in a narrow pane, a list row with a long subject) glyphs collapse to
+   zero width while text holds its min-content — the icons silently vanish.
+   Every glyph in the app renders through <Icon>, so pin it once here. */
+.icon {
+  flex-shrink: 0;
+}

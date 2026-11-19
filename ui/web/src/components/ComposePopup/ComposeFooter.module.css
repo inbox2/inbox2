@@ -1,0 +1,41 @@
+/* ═══════════════════════════════════════════════════════ */
+/* ComposeFooter — Send, attach, draft status              */
+/* ═══════════════════════════════════════════════════════ */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--overlay-6);
+  background: var(--surface-float-footer);
+  flex-shrink: 0;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-3xs);
+  color: var(--text-muted);
+}
+
+.sendError {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-3xs);
+  color: var(--accent-danger);
+}

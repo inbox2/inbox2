@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+# Archive, sign, and export the iOS app for App Store / TestFlight, then
+# (optionally) upload it to App Store Connect.
+#
+#   bin/ios-release                    # archive + export a signed .ipa
+#   bin/ios-release --upload           # …then upload to App Store Connect (TestFlight)
+#   bin/ios-release --xcframework      # rebuild InboxCore.xcframework first (after core changes)
+#
+# Signing: automatic, team KF53B4S5HD, using the "Apple Distribution" cert in the
+# keychain. -allowProvisioningUpdates lets Xcode create the App Store provisioning
+# profiles for the app + ShareExtension on demand. The export config lives in
+# ui/ios/ExportOptions.plist.
+#
+# Signing and upload both authenticate with the App Store Connect API key, the same
+# one bin/release-desktop uses (no Apple ID, and Xcode needn't be signed in):
+#   ASC_KEY_ID, ASC_ISSUER_ID  (defaults below)
+# The .p8 is read from ~/.appstoreconnect/private_keys/AuthKey_<ASC_KEY_ID>.p8
+#
+# Build numbers are unique per upload without a bump: ExportOptions sets
+# manageAppVersionAndBuildNumber, which needs the app record for com.inbox2.ios to
+# exist in App Store Connect. See docs/iOS-TestFlight.md.
+set -euo pipefail
+
+SCHEME=Inbox2
+CONFIG=Release
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+IOS_DIR="$ROOT/ui/ios"
+BUILD_DIR="$IOS_DIR/build/release"
+ARCHIVE="$BUILD_DIR/Inbox2.xcarchive"
+EXPORT_DIR="$BUILD_DIR/export"
+
+ASC_KEY_ID="${ASC_KEY_ID:-H9PLG58DB9}"
+ASC_ISSUER_ID="${ASC_ISSUER_ID:-d5f5385b-5e34-4d70-925d-0debd3a3e090}"
+
+DO_UPLOAD=0
+DO_XCFRAMEWORK=0
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --upload)      DO_UPLOAD=1 ;;
+    --xcframework) DO_XCFRAMEWORK=1 ;;
+    -h|--help)     sed -n '2,21p' "$0"; exit 0 ;;
+    *) echo "unknown arg: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+P8="$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+[ -f "$P8" ] || { echo "✗ API key not found at $P8" >&2; exit 1; }
+ASC_AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$P8"
+  -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+
+# ── Regenerate the (gitignored) Xcode project from project.yml ───────────────
+if command -v xcodegen >/dev/null 2>&1; then
+  echo "▸ xcodegen generate"
+  (cd "$IOS_DIR" && xcodegen generate >/dev/null)
+fi
+
+# ── Optionally rebuild the Rust core xcframework ─────────────────────────────
+if [ "$DO_XCFRAMEWORK" = 1 ]; then
+  echo "▸ rebuilding InboxCore.xcframework"
+  "$ROOT/ui/desktop/core/build-ios-xcframework.sh"
+  GEN="$ROOT/ui/desktop/target/uniffi-swift/inbox2_core.swift"
+  DST="$IOS_DIR/Sources/Generated/inbox2_core.swift"
+  [ -f "$GEN" ] && cp "$GEN" "$DST" && echo "▸ synced UniFFI binding → Sources/Generated"
+fi
+
+# ── Archive ──────────────────────────────────────────────────────────────────
+echo "▸ archiving ($CONFIG) for generic iOS device"
+rm -rf "$ARCHIVE"
+xcodebuild -project "$IOS_DIR/Inbox2.xcodeproj" -scheme "$SCHEME" \
+  -configuration "$CONFIG" -destination 'generic/platform=iOS' \
+  -archivePath "$ARCHIVE" "${ASC_AUTH[@]}" \
+  archive
+[ -d "$ARCHIVE" ] || { echo "✗ archive failed (no $ARCHIVE)" >&2; exit 1; }
+
+# MediaPipe's prebuilt frameworks ship incomplete Info.plists (one is an xcframework
+# plist), which App Store validation rejects. Export re-signs them, so patching the
+# archive is safe.
+APP_DIR="$ARCHIVE/Products/Applications/Inbox2.app"
+MIN_OS=$(plutil -extract MinimumOSVersion raw "$APP_DIR/Info.plist")
+for FW in "$APP_DIR"/Frameworks/*.framework; do
+  PLIST="$FW/Info.plist"
+  fill() { /usr/libexec/PlistBuddy -c "Print :$1" "$PLIST" >/dev/null 2>&1 || plutil -replace "$1" -string "$2" "$PLIST"; }
+  fill MinimumOSVersion "$MIN_OS"
+  fill CFBundleVersion 1
+  fill CFBundleShortVersionString 1.0
+  fill CFBundleInfoDictionaryVersion 6.0
+  fill CFBundleName "$(basename "$FW" .framework)"
+  plutil -replace CFBundlePackageType -string FMWK "$PLIST"
+  plutil -replace CFBundleSupportedPlatforms -json '["iPhoneOS"]' "$PLIST"
+  plutil -remove AvailableLibraries "$PLIST" 2>/dev/null || true
+  plutil -remove XCFrameworkFormatVersion "$PLIST" 2>/dev/null || true
+done
+
+# ── Export the signed .ipa ───────────────────────────────────────────────────
+echo "▸ exporting signed .ipa"
+rm -rf "$EXPORT_DIR"
+xcodebuild -exportArchive -archivePath "$ARCHIVE" \
+  -exportOptionsPlist "$IOS_DIR/ExportOptions.plist" \
+  -exportPath "$EXPORT_DIR" "${ASC_AUTH[@]}"
+IPA=$(ls "$EXPORT_DIR"/*.ipa 2>/dev/null | head -1)
+[ -n "$IPA" ] || { echo "✗ export produced no .ipa" >&2; exit 1; }
+echo "✓ exported: $IPA"
+
+# ── Optionally upload to App Store Connect (TestFlight) ──────────────────────
+if [ "$DO_UPLOAD" = 1 ]; then
+  echo "▸ validating, then uploading to App Store Connect (key $ASC_KEY_ID)"
+  xcrun altool --validate-app -f "$IPA" --type ios \
+    --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+  xcrun altool --upload-app -f "$IPA" --type ios \
+    --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+  echo "✓ uploaded — it'll appear in TestFlight after App Store Connect finishes processing."
+fi
+
+echo "✓ done"

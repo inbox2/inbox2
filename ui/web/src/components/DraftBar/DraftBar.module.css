@@ -1,0 +1,129 @@
+/* ═══════════════════════════════════════════════════════ */
+/* DraftBar — Vista-era taskbar for minimized drafts       */
+/* Fixed bottom, acrylic glass, pill buttons               */
+/* ═══════════════════════════════════════════════════════ */
+
+.bar {
+  position: fixed;
+  /* Sits on top of the Touch Strip's footprint, not over it. */
+  bottom: var(--touch-strip-offset, 0px);
+  left: 0;
+  right: 0;
+  height: var(--draftbar-height);
+  z-index: var(--z-bar);
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  padding: 0 var(--space-3);
+
+  /* Vista Aero glass bar */
+  background: var(--surface-bar);
+  border-top: 1px solid var(--overlay-8);
+  box-shadow:
+    0 -1px 4px color-mix(in srgb, var(--ink) 8%, transparent),
+    inset 0 1px 0 var(--overlay-4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* macOS + Windows desktop: the native window material (macOS vibrancy / Windows
+   Acrylic) provides the glass. A CSS backdrop-filter anywhere in the main window
+   forces a compositing layer that occludes that material for the whole window
+   (flattening the app chrome's translucency), so defer to the native material. */
+:global([data-os="macos"]) .bar,
+:global([data-os="windows"]) .bar {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Top edge highlight — the Aero glass line */
+.bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--space-8);
+  right: var(--space-8);
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--overlay-8),
+    var(--overlay-4),
+    transparent
+  );
+}
+
+/* Draft pill — taskbar button */
+.pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-2);
+  max-width: 200px;
+  height: 30px;
+
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-ui);
+  color: var(--text-secondary);
+
+  background: var(--surface-float-highlight);
+  border: 1px solid var(--overlay-10);
+  border-radius: var(--radius-sm);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--ink) 10%, transparent),
+    inset 0 1px 0 var(--overlay-5);
+
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.pill:hover {
+  background: var(--overlay-12);
+  color: var(--text-primary);
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--ink) 12%, transparent),
+    inset 0 1px 0 var(--overlay-8);
+}
+
+.pill:active {
+  background: rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--ink) 10%, transparent);
+  transform: translateY(0.5px);
+}
+
+.pill:focus-visible {
+  outline: none;
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--ink) 10%, transparent),
+    var(--glow-focus);
+}
+
+.pillLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.pillClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: var(--radius-xs);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  margin-left: var(--space-1);
+  transition: all var(--duration-fast);
+}
+
+.pillClose:hover {
+  background: color-mix(in srgb, var(--accent-danger) 30%, transparent);
+  color: var(--accent-danger);
+}

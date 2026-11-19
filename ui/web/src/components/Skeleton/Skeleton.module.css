@@ -1,0 +1,78 @@
+/* Skeletons in the management skin. Widths vary with :nth-child so no inline styles are needed. */
+.skeleton {
+  --sk-fill: rgba(24, 34, 66, 0.07);
+  --sk-shine: rgba(255, 255, 255, 0.55);
+}
+
+.bar,
+.icon {
+  display: block;
+  border-radius: var(--radius-full);
+  background: var(--sk-fill) linear-gradient(90deg, transparent 0%, var(--sk-shine) 50%, transparent 100%) no-repeat;
+  background-size: 40% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+.bar { height: 9px; }
+
+@keyframes shimmer {
+  from { background-position: -40% 0; }
+  to { background-position: 140% 0; }
+}
+
+/* ── row: icon + name, modified, by, access, size (the folder list columns) ── */
+.row .item {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 110px 90px 90px 64px;
+  align-items: center;
+  gap: var(--space-4h);
+  height: 50px;
+  padding: 0 var(--space-4h);
+  border-bottom: 1px solid var(--m-line-soft);
+}
+.row .icon { width: 26px; height: 32px; border-radius: var(--radius-4); }
+.row .name { width: 55%; }
+.row .item:nth-child(4n + 2) .name { width: 38%; }
+.row .item:nth-child(4n + 3) .name { width: 70%; }
+.row .item:nth-child(4n + 4) .name { width: 46%; }
+.row .bar:not(.name) { width: 70%; }
+.row .size { justify-self: end; width: 80%; }
+
+/* ── tile: the grid view and the share tiles on D:\ ── */
+.tile {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: var(--space-3h);
+}
+.tile .item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2h);
+  min-height: 150px;
+  padding: var(--space-4h) var(--space-4) var(--space-3h);
+  border: 1.5px solid var(--m-line);
+  border-radius: var(--m-r-xl);
+  background: var(--m-surface);
+}
+.tile .icon { width: 56px; height: 49px; border-radius: var(--radius-8); margin-bottom: 4px; }
+.tile .name { width: 75%; height: 12px; }
+.tile .item:nth-child(3n + 2) .name { width: 55%; }
+.tile .item:nth-child(3n + 3) .name { width: 85%; }
+.tile .small { width: 35%; }
+
+/* ── text: paragraph lines ── */
+.text .item { padding: var(--space-1h) 0; }
+.text .item:nth-child(4n + 1) .bar { width: 100%; }
+.text .item:nth-child(4n + 2) .bar { width: 94%; }
+.text .item:nth-child(4n + 3) .bar { width: 88%; }
+.text .item:nth-child(4n + 4) .bar { width: 60%; }
+
+@media (max-width: 760px) {
+  /* The list hides modified, by and access on phones (mockup). */
+  .row .item { grid-template-columns: 26px minmax(0, 1fr) 64px; gap: var(--space-3); padding: 0 var(--space-3); }
+  .row .item > :nth-child(n + 3):nth-child(-n + 5) { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar,
+  .icon { animation: none; background-image: none; }
+}

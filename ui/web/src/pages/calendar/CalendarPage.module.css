@@ -1,0 +1,688 @@
+/* ═══════════════════════════════════════════════════════ */
+/* Calendar — Live Operational Timeline                    */
+/* Temporal, rhythmic, alive — not a grid, a timeline      */
+/* ═══════════════════════════════════════════════════════ */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+/* Desktop (macOS/Windows) — match the canonical layout.module.css .app: make the
+ * window transparent so the native vibrancy shows behind the chrome. Without this
+ * the calendar's opaque --bg-base sits behind the translucent chrome and the chrome
+ * reads washed-out light instead of the dark vibrancy every other page gets. The
+ * content stays opaque via .body below, so only the chrome strip gets the material. */
+:global([data-os="macos"]) .app,
+:global([data-os="windows"]) .app {
+  background: transparent;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+.resizeHandle {
+  width: 3px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background var(--duration-fast);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 5;
+}
+
+.resizeHandle:hover,
+.resizeHandle:active {
+  background: var(--overlay-8);
+}
+
+.calendarMain {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  /* Subtle ambient gradient — time flows downward */
+  background:
+    linear-gradient(180deg,
+      var(--overlay-2) 0%,
+      transparent 15%,
+      transparent 85%,
+      var(--overlay-2) 100%
+    );
+}
+
+/* Timezone chip parked over FullCalendar's top-left axis corner.
+   position vars set by the measuring effect in CalendarPage.jsx. */
+.tzAnchor {
+  position: absolute;
+  top: var(--tz-top, 0);
+  left: var(--tz-left, 0);
+  width: var(--tz-width, 0);
+  height: var(--tz-height, 0);
+  z-index: 10;
+  display: flex;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* FullCalendar — Deep atmospheric overrides               */
+/* ═══════════════════════════════════════════════════════ */
+
+.calendarMain :global(.fc) {
+  /* Dramatically reduce grid visibility — time flows, not boxes */
+  --fc-border-color: var(--overlay-3);
+  --fc-button-bg-color: var(--btn-bg);
+  --fc-button-border-color: var(--overlay-8);
+  --fc-button-text-color: var(--text-secondary);
+  --fc-button-hover-bg-color: var(--btn-bg-hover);
+  --fc-button-hover-border-color: var(--overlay-12);
+  --fc-button-active-bg-color: var(--overlay-12);
+  --fc-button-active-border-color: var(--overlay-15);
+  --fc-button-active-text-color: var(--text-primary);
+  --fc-neutral-bg-color: transparent;
+  --fc-page-bg-color: transparent;
+  --fc-event-border-color: transparent;
+  --fc-list-event-hover-bg-color: var(--overlay-6);
+  /* Today gets warm ambient glow — not just a tinted box */
+  --fc-today-bg-color: color-mix(in srgb, var(--accent-warning) 3%, transparent);
+  /* Now indicator — bold, alive, pulsing */
+  --fc-now-indicator-color: color-mix(in srgb, var(--accent-warning) 90%, transparent);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  height: 100%;
+}
+
+/* ── Toolbar — temporal context, not generic nav ──────── */
+
+.calendarMain :global(.fc .fc-toolbar) {
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--overlay-4);
+}
+
+.calendarMain :global(.fc .fc-toolbar-title) {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant: small-caps;
+}
+
+.calendarMain :global(.fc .fc-button) {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-ui);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  border: var(--btn-border);
+  box-shadow: var(--btn-shadow);
+  transition: all var(--duration-fast);
+}
+
+.calendarMain :global(.fc .fc-button:focus) {
+  box-shadow: var(--glow-focus);
+  outline: none;
+}
+
+.calendarMain :global(.fc .fc-button-active) {
+  color: var(--text-primary);
+  font-weight: var(--weight-semibold);
+  box-shadow:
+    var(--btn-shadow),
+    var(--btn-highlight),
+    var(--acrylic-highlight);
+}
+
+/* "Today" button — warm accent identity */
+.calendarMain :global(.fc .fc-today-button) {
+  color: var(--accent-warm-bright);
+  font-weight: var(--weight-semibold);
+}
+
+.calendarMain :global(.fc .fc-today-button:not(:disabled):hover) {
+  color: white;
+  background: var(--accent-warm);
+  border-color: var(--accent-warm);
+}
+
+/* ── Column headers — day identity ──────────────────── */
+
+.calendarMain :global(.fc .fc-col-header-cell) {
+  font-weight: var(--weight-medium);
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: var(--space-2) 0;
+  border-color: var(--overlay-3);
+}
+
+/* Today column header — electric blue */
+.calendarMain :global(.fc .fc-col-header-cell.fc-day-today) {
+  color: var(--accent-warning);
+  font-weight: var(--weight-bold);
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--accent-warning) 8%, transparent) 0%,
+      color-mix(in srgb, var(--accent-warning) 2%, transparent) 100%
+    );
+}
+
+.calendarMain :global(.fc .fc-col-header-cell a) {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.calendarMain :global(.fc .fc-col-header-cell a:hover) {
+  color: var(--text-primary);
+}
+
+.calendarMain :global(.fc .fc-col-header-cell.fc-day-today a) {
+  color: var(--accent-warning);
+}
+
+/* ── Scrollgrid — nearly invisible structure ──────── */
+
+.calendarMain :global(.fc .fc-scrollgrid) {
+  border: none;
+}
+
+.calendarMain :global(.fc .fc-scrollgrid td),
+.calendarMain :global(.fc .fc-scrollgrid th) {
+  border-color: var(--overlay-3);
+}
+
+/* ── Time grid — human rhythm ──────────────────────── */
+
+/* Base slot — barely there */
+.calendarMain :global(.fc .fc-timegrid-slot) {
+  border-color: var(--overlay-2);
+  height: 3em;
+}
+
+/* Hour boundaries — slightly stronger than half-hours */
+.calendarMain :global(.fc .fc-timegrid-slot-lane.fc-timegrid-slot-minor) {
+  border-top-style: dotted;
+  border-color: var(--overlay-2);
+}
+
+/* Time labels — hierarchy between hours */
+.calendarMain :global(.fc .fc-timegrid-slot-label) {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  vertical-align: top;
+  padding-top: var(--space-0h);
+  padding-right: var(--space-2);
+}
+
+/* Major hours (9, 12, 1, 5) get emphasis */
+.calendarMain :global(.fc .fc-timegrid-slot-label-frame) {
+  text-align: right;
+}
+
+/* ── Today column — warm ambient glow ─────────────── */
+
+.calendarMain :global(.fc .fc-day-today) {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--accent-warning) 4%, transparent) 0%,
+      color-mix(in srgb, var(--accent-warning) 2%, transparent) 30%,
+      color-mix(in srgb, var(--accent-warning) 1%, transparent) 70%,
+      color-mix(in srgb, var(--accent-warning) 3%, transparent) 100%
+    );
+}
+
+/* Today in month view — warm badge */
+.calendarMain :global(.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number) {
+  color: white;
+  background: var(--accent-warm);
+  border-radius: var(--radius-full);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xs);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-warning) 25%, transparent);
+}
+
+.calendarMain :global(.fc .fc-daygrid-day-number) {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  padding: var(--space-1);
+}
+
+/* ── NOW indicator — the heartbeat ────────────────── */
+
+.calendarMain :global(.fc .fc-timegrid-now-indicator-line) {
+  border-color: color-mix(in srgb, var(--accent-warning) 80%, transparent);
+  border-width: 2px;
+  /* Warm glow on both sides */
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--accent-warning) 30%, transparent),
+    0 0 20px color-mix(in srgb, var(--accent-warning) 10%, transparent);
+  z-index: 5;
+}
+
+/* Now indicator dot — pulsing beacon */
+.calendarMain :global(.fc .fc-timegrid-now-indicator-arrow) {
+  border-color: color-mix(in srgb, var(--accent-warning) 90%, transparent);
+  border-width: 6px;
+  margin-top: -6px;
+  animation: nowPulse 3s ease-in-out infinite;
+}
+
+@keyframes nowPulse {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent-warning) 40%, transparent)); }
+  50% { opacity: 0.7; filter: drop-shadow(0 0 12px color-mix(in srgb, var(--accent-warning) 60%, transparent)); }
+}
+
+/* ── Business hours rhythm ────────────────────────── */
+/* Before 9am — pre-work, dimmer */
+/* 9am–12pm — morning intensity */
+/* 12pm–1pm — lunch break marker */
+/* 1pm–5pm — afternoon zone */
+/* After 5pm — winding down */
+
+.calendarMain :global(.fc .fc-timegrid-col) {
+  /* Soft vertical gradient: pre-work → work → post-work */
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--scrim) 6%, transparent) 0%,      /* 6am — dim, pre-work */
+      color-mix(in srgb, var(--scrim) 2%, transparent) 12.5%,   /* ~8am — warming up */
+      transparent 18.75%,            /* 9am — business hours start */
+      transparent 37.5%,             /* 12pm */
+      var(--overlay-2) 40.6%,       /* 12:30 — lunch subtle */
+      transparent 43.75%,            /* 1pm — back to work */
+      transparent 68.75%,            /* 5pm — business hours end */
+      color-mix(in srgb, var(--scrim) 3%, transparent) 81.25%,  /* 7pm — winding down */
+      color-mix(in srgb, var(--scrim) 6%, transparent) 100%     /* 10pm — evening dim */
+    );
+}
+
+/* ── Events — filled background, white text ──────────── */
+
+.calendarMain :global(.fc .fc-event) {
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  transition:
+    transform var(--duration-fast),
+    box-shadow var(--duration-fast);
+}
+
+.calendarMain :global(.fc .fc-event:hover) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--ink) 20%, transparent);
+  z-index: 10;
+}
+
+.calendarMain :global(.fc .fc-timegrid-event) {
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-1h);
+  min-height: 22px;
+  overflow: hidden;
+}
+
+.calendarMain :global(.fc .fc-timegrid-event .fc-event-time) {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-semibold);
+}
+
+.calendarMain :global(.fc .fc-timegrid-event .fc-event-title) {
+  font-weight: var(--weight-bold);
+  line-height: 1.3;
+}
+
+/* Day grid events — compact */
+.calendarMain :global(.fc .fc-daygrid-event) {
+  padding: var(--space-px) var(--space-1h);
+  margin-bottom: var(--space-px);
+}
+
+/* The calendar's color rides on the text (set in eventDidMount), so the dot in
+ * front of every month-view event is redundant noise. */
+.calendarMain :global(.fc .fc-daygrid-event-dot) {
+  display: none;
+}
+
+
+/* ── List view — agenda rhythm ────────────────────── */
+
+.calendarMain :global(.fc .fc-list) {
+  border: none;
+}
+
+.calendarMain :global(.fc .fc-list-event) {
+  cursor: pointer;
+}
+
+.calendarMain :global(.fc .fc-list-event:hover td) {
+  background: var(--overlay-4);
+}
+
+.calendarMain :global(.fc .fc-list-day-cushion) {
+  background:
+    linear-gradient(90deg,
+      var(--overlay-6) 0%,
+      var(--overlay-2) 40%,
+      transparent 80%
+    );
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+  text-shadow: var(--chrome-text-shadow);
+}
+
+/* ── Selection highlight — warm intent ────────────── */
+
+.calendarMain :global(.fc .fc-highlight) {
+  background: color-mix(in srgb, var(--accent-warning) 8%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--accent-warning) 30%, transparent);
+}
+
+/* ── Empty state ambient text ─────────────────────── */
+/* When no events, the grid shouldn't feel abandoned */
+
+.calendarMain :global(.fc .fc-timegrid-body)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Subtle vignette — draws eye to center of day */
+  background:
+    radial-gradient(ellipse at 50% 35%,
+      transparent 0%,
+      transparent 60%,
+      color-mix(in srgb, var(--scrim) 4%, transparent) 100%
+    );
+}
+
+/* ── Past days in month view — dimmer ─────────────── */
+/* Must stay scoped to .fc-daygrid-day: bare .fc-day-past also matches the
+ * timegrid columns, and opacity < 1 there makes the column a stacking context.
+ * That traps .fc-timegrid-col-events (z-index 3) inside a z-index:auto column,
+ * so the whole events layer paints under .fc-timegrid-slots (z-index 1) and the
+ * slot <td> swallows every click — events unclickable, date-select fires
+ * instead and creates a new event on top of the one you clicked. */
+.calendarMain :global(.fc .fc-daygrid-day.fc-day-past) {
+  opacity: 0.7;
+}
+
+.calendarMain :global(.fc .fc-daygrid-day.fc-day-past:hover) {
+  opacity: 0.85;
+}
+
+/* ── Weekend columns — slightly quieter ───────────── */
+.calendarMain :global(.fc .fc-day-sat),
+.calendarMain :global(.fc .fc-day-sun) {
+  background: color-mix(in srgb, var(--scrim) 2%, transparent);
+}
+
+/* ── Non-business hours — dimmed zone ─────────────── */
+.calendarMain :global(.fc .fc-non-business) {
+  background: color-mix(in srgb, var(--scrim) 4%, transparent);
+}
+
+:global([data-theme="light"]) .calendarMain :global(.fc .fc-non-business) {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* Light theme — adapted warmth                            */
+/* ═══════════════════════════════════════════════════════ */
+
+:global([data-theme="light"]) .calendarMain :global(.fc .fc-timegrid-col) {
+  background:
+    linear-gradient(180deg,
+      rgba(0, 0, 0, 0.03) 0%,
+      rgba(0, 0, 0, 0.01) 12.5%,
+      transparent 18.75%,
+      transparent 37.5%,
+      rgba(0, 0, 0, 0.015) 40.6%,
+      transparent 43.75%,
+      transparent 68.75%,
+      rgba(0, 0, 0, 0.015) 81.25%,
+      rgba(0, 0, 0, 0.03) 100%
+    );
+}
+
+:global([data-theme="light"]) .calendarMain :global(.fc .fc-timegrid-now-indicator-line) {
+  border-color: color-mix(in srgb, var(--accent-primary) 70%, transparent);
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--accent-primary) 20%, transparent),
+    0 0 16px color-mix(in srgb, var(--accent-primary) 8%, transparent);
+}
+
+:global([data-theme="light"]) .calendarMain :global(.fc .fc-day-today) {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--accent-primary) 4%, transparent) 0%,
+      color-mix(in srgb, var(--accent-primary) 2%, transparent) 50%,
+      color-mix(in srgb, var(--accent-primary) 3%, transparent) 100%
+    );
+}
+
+
+/* Real meeting-provider logo parked in the event block's top-right corner
+   (injected in eventDidMount). Non-interactive — the block's own click handles
+   opening the event. Drop shadow lifts it off pastel/coloured fills. */
+.eventBrand {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  display: inline-flex;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+/* Reserve the top-right corner so the badge never lands on the time/title. */
+.branded :global(.fc-event-main) {
+  padding-right: 22px;
+}
+
+/* ── Blocked time (docs/Calendar.md) ── */
+
+/* Hatched, muted, deliberately event-unlike: not bookable, not an event. */
+.blockedEvent {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--overlay-6) 0 7px,
+    var(--overlay-12, var(--overlay-8)) 7px 14px
+  ) !important;
+  border: 1px dashed var(--border-strong, var(--border-subtle)) !important;
+  color: var(--text-secondary) !important;
+  opacity: 0.9;
+}
+
+.blockedEvent :global(.fc-event-title),
+.blockedEvent :global(.fc-event-time) {
+  color: var(--text-secondary);
+}
+
+/* Drag-selection choice: Block time vs New event. */
+.selectChoiceBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-scrim);
+}
+
+.selectChoice {
+  position: fixed;
+  top: var(--choice-y);
+  left: var(--choice-x);
+  z-index: var(--z-drawer);
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: var(--space-1);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  /* Opaque: the translucent raised surface let the event underneath read through. */
+  background: var(--surface-float);
+  box-shadow: var(--shadow-lg, 0 14px 30px -8px rgb(0 0 0 / 0.6));
+}
+
+.selectChoiceItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2h, var(--space-2h));
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.selectChoiceIcon {
+  flex-shrink: 0;
+  margin-top: var(--space-0h);
+  color: var(--text-secondary);
+}
+
+.selectChoiceItem:hover .selectChoiceIcon {
+  color: var(--text-primary);
+}
+
+.selectChoiceText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0h);
+}
+
+.selectChoiceItem:hover,
+.selectChoiceItem:focus-visible {
+  background: var(--overlay-8);
+}
+
+.selectChoiceHint {
+  color: var(--text-muted, var(--text-secondary));
+  font-size: var(--text-xs);
+}
+
+/* ── Zones (docs/Calendar.md "Zones") ─────────────────── */
+/* Background bands behind the events: striped so they read as "soft" next to
+   the solid, bookable meetings on top. --zone is a tokens.css --zone-* var set
+   per band (eventDidMount), so each theme gets its own shade. */
+.calendarMain :global(.fc) .zoneEvent {
+  opacity: 1;
+  margin: 1px var(--space-0h);
+  border-radius: var(--radius-md);
+  background:
+    repeating-linear-gradient(135deg,
+      color-mix(in srgb, var(--zone) 16%, transparent) 0 6px,
+      color-mix(in srgb, var(--zone) 7%, transparent) 6px 12px);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--zone) 42%, transparent);
+}
+
+.calendarMain :global(.fc) .zoneActive {
+  background:
+    repeating-linear-gradient(135deg,
+      color-mix(in srgb, var(--zone) 24%, transparent) 0 6px,
+      color-mix(in srgb, var(--zone) 11%, transparent) 6px 12px);
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--zone) 80%, transparent),
+    0 0 16px color-mix(in srgb, var(--zone) 22%, transparent);
+}
+
+.zoneLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  max-width: 100%;
+  margin: var(--space-1) var(--space-1h);
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+
+.zoneLabel:focus-visible {
+  outline: none;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--glow-focus);
+}
+
+.zoneCategory {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--zone) 70%, var(--text-primary));
+}
+
+.zoneDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--zone);
+}
+
+.zoneLeft {
+  margin-left: var(--space-1);
+  padding: 0 var(--space-1h);
+  border-radius: var(--radius-full);
+  background: var(--zone);
+  color: var(--bg-base);
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.zoneName {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+/* ── Weekend view: next week's Mon–Fri, set apart from this weekend ── */
+
+.calendarMain .nextWeek {
+  background: color-mix(in srgb, var(--accent-info) 4%, transparent);
+}
+
+/* The seam between this weekend and next week. */
+.calendarMain .nextWeek:global(.fc-day-mon) {
+  border-left: 2px solid color-mix(in srgb, var(--accent-info) 35%, transparent);
+}
+
+/* ── Weekend headers — a quieter, warmer band than the work days ── */
+
+.calendarMain :global(.fc .fc-col-header-cell.fc-day-sat:not(.fc-day-today)),
+.calendarMain :global(.fc .fc-col-header-cell.fc-day-sun:not(.fc-day-today)) {
+  color: var(--accent-warm);
+  font-style: italic;
+  background: color-mix(in srgb, var(--accent-warm) 7%, transparent);
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--accent-warm) 45%, transparent);
+}
+
+/* Today on a weekend keeps today's colour, plus the weekend underline. */
+.calendarMain :global(.fc .fc-col-header-cell.fc-day-sat.fc-day-today),
+.calendarMain :global(.fc .fc-col-header-cell.fc-day-sun.fc-day-today) {
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--accent-warm) 45%, transparent);
+}

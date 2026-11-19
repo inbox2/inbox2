@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# Build the iOS app and put an install page for it on this Mac's Tailscale name,
+# so an iPad (or iPhone) on the tailnet installs it from Safari, from anywhere.
+# No TestFlight review, no cable. Modelled on gliph's mobile/tools/publish-ipad.sh.
+#
+#   bin/ios-publish-ipad                 # Debug build → prints https://<mac>.ts.net:8445/
+#   bin/ios-publish-ipad --xcframework   # rebuild InboxCore.xcframework first (after core changes)
+#
+# A development build: the device must be registered on team KF53B4S5HD before
+# the build, or iOS refuses the install (Xcode registers a device the first time
+# it is paired). The working tree is built, not a commit. Keep Tailscale on, on
+# the device, until the install finishes. An upgrade install keeps the app's data.
+# Always Debug: the build is development-signed, so its APNs tokens are
+# sandbox ones, and only a DEBUG build registers them as sandbox (PushRegistrar).
+# Ports: 8443 Sidra, 8444 gliph, 8445 inbox2.
+set -euo pipefail
+
+ROOT="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+IOS_DIR="$ROOT/ui/ios"
+TS=/Applications/Tailscale.app/Contents/MacOS/Tailscale
+LOCAL_PORT=18773
+HTTPS_PORT=8445
+CONFIG=Debug
+DERIVED="$IOS_DIR/build/ota"
+SITE="${TMPDIR:-/tmp}/inbox2-ota-site"
+ICON="$IOS_DIR/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png"
+
+for arg in "$@"; do
+  case "$arg" in
+    --xcframework)
+      "$ROOT/ui/desktop/core/build-ios-xcframework.sh"
+      GEN="$ROOT/ui/desktop/target/uniffi-swift/inbox2_core.swift"
+      [ -f "$GEN" ] && cp "$GEN" "$IOS_DIR/Sources/Generated/inbox2_core.swift" ;;
+    *) echo "unknown flag: $arg" >&2; exit 2 ;;
+  esac
+done
+
+# The build number is the publish time, so every publish is a newer build to iOS.
+BUILD=$(date +%s)
+(cd "$IOS_DIR" && xcodegen generate --quiet) # the .xcodeproj is generated + gitignored
+echo "▸ building ($CONFIG, build $BUILD)"
+LOG=$(mktemp)
+if ! xcodebuild -project "$IOS_DIR/Inbox2.xcodeproj" -scheme Inbox2 \
+  -configuration "$CONFIG" -destination 'generic/platform=iOS' \
+  -derivedDataPath "$DERIVED" -allowProvisioningUpdates \
+  CURRENT_PROJECT_VERSION="$BUILD" build > "$LOG" 2>&1; then
+  grep -E " error:" "$LOG" >&2 || tail -20 "$LOG" >&2
+  echo "✗ build failed (full log: $LOG)" >&2
+  exit 1
+fi
+
+APP="$DERIVED/Build/Products/$CONFIG-iphoneos/Inbox2.app"
+HOST=$("$TS" status --json | python3 -c "import json,sys; print(json.load(sys.stdin)['Self']['DNSName'].rstrip('.'))")
+BASE="https://$HOST:$HTTPS_PORT"
+BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
+VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP/Info.plist")
+BUILD=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$APP/Info.plist")
+COMMIT=$(git -C "$ROOT" rev-parse --short HEAD)$(git -C "$ROOT" diff --quiet HEAD -- ui/ios || echo "+dirty")
+# Which devices the profile lets install it: the iPad has to be in this list.
+DEVICES=$(security cms -D -i "$APP/embedded.mobileprovision" | plutil -extract ProvisionedDevices json -o - - 2>/dev/null || true)
+
+rm -rf "$SITE" && mkdir -p "$SITE/Payload"
+cp -cR "$APP" "$SITE/Payload/"
+(cd "$SITE" && zip -qry -1 Inbox2.ipa Payload && rm -rf Payload)
+sips -z 180 180 "$ICON" --out "$SITE/icon.png" >/dev/null
+cp "$ICON" "$SITE/icon-1024.png"
+
+cat > "$SITE/manifest.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict><key>items</key><array><dict>
+<key>assets</key><array><dict><key>kind</key><string>software-package</string><key>url</key><string>$BASE/Inbox2.ipa?$BUILD</string></dict><dict><key>kind</key><string>display-image</string><key>url</key><string>$BASE/icon.png</string></dict><dict><key>kind</key><string>full-size-image</string><key>url</key><string>$BASE/icon-1024.png</string></dict></array>
+<key>metadata</key><dict><key>bundle-identifier</key><string>$BUNDLE_ID</string><key>bundle-version</key><string>$BUILD</string><key>kind</key><string>software</string><key>title</key><string>inbox2</string></dict>
+</dict></array></dict></plist>
+PLIST
+
+SIZE=$(du -m "$SITE/Inbox2.ipa" | cut -f1)
+cat > "$SITE/index.html" <<HTML
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=theme-color content="#111111"><meta name=format-detection content="telephone=no"><title>Install inbox2</title><link rel=apple-touch-icon href=icon.png>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;text-align:center;background:#111111;color:#fafaf7;font:15px/1.5 -apple-system,system-ui,sans-serif}main{background:#1c1c1c;border:1px solid #333;border-radius:18px;padding:32px 40px;margin:16px}img{border-radius:22px;display:block;margin:0 auto 12px}h1{font-size:28px;margin:0 0 6px}.mono{font:13px ui-monospace,Menlo,monospace;color:#c8c8c2;margin:0 0 20px}a.install{display:inline-block;background:#ffd600;color:#111111;padding:10px 28px;border-radius:10px;font-weight:700;text-decoration:none}a.install:active{transform:scale(.97)}p.note{color:#c8c8c2;font-size:13px;margin:16px 0 0}</style>
+<main><img src="icon.png" width=96 height=96 alt=""><h1>inbox2</h1><p class=mono>$VERSION ($BUILD) · $COMMIT · $SIZE MB</p>
+<a class=install href="itms-services://?action=download-manifest&amp;url=$BASE/manifest.plist">Install</a>
+<p class=note>Keep Tailscale on until the install finishes.</p></main>
+HTML
+
+# The old server holds the deleted directory open, so it has to go.
+pkill -f "inbox2-ota-server $LOCAL_PORT" 2>/dev/null || true
+for _ in $(seq 40); do lsof -ti "tcp:$LOCAL_PORT" -sTCP:LISTEN >/dev/null || break; sleep 0.25; done
+# Apple wants the manifest served as text/xml for a wireless install.
+nohup python3 -c '
+import functools, http.server as h, sys
+H = h.SimpleHTTPRequestHandler
+H.extensions_map.update({".plist": "text/xml", ".ipa": "application/octet-stream"})
+h.ThreadingHTTPServer(("127.0.0.1", int(sys.argv[2])), functools.partial(H, directory=sys.argv[3])).serve_forever()
+' inbox2-ota-server "$LOCAL_PORT" "$SITE" >"$SITE.log" 2>&1 </dev/null &
+SERVER=$!
+disown "$SERVER"
+for _ in $(seq 20); do
+  curl -fs "http://127.0.0.1:$LOCAL_PORT/manifest.plist" | grep -q "$BUILD" && break
+  sleep 0.25
+done
+curl -fs "http://127.0.0.1:$LOCAL_PORT/manifest.plist" | grep -q "$BUILD" \
+  || { echo "the server on 127.0.0.1:$LOCAL_PORT is not serving this build (log: $SITE.log)" >&2; exit 1; }
+kill -0 "$SERVER" 2>/dev/null && [ "$(lsof -ti "tcp:$LOCAL_PORT" -sTCP:LISTEN)" = "$SERVER" ] \
+  || { echo "the new server did not take 127.0.0.1:$LOCAL_PORT (log: $SITE.log)" >&2; exit 1; }
+curl -fsI "http://127.0.0.1:$LOCAL_PORT/manifest.plist" | grep -qi "^content-type: text/xml" \
+  || { echo "manifest.plist is not served as text/xml (log: $SITE.log)" >&2; exit 1; }
+"$TS" serve --bg --https="$HTTPS_PORT" "http://127.0.0.1:$LOCAL_PORT" >/dev/null
+echo "devices in the profile: ${DEVICES:-none (not a development profile?)}"
+echo "$BASE/"

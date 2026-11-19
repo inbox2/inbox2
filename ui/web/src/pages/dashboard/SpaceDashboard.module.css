@@ -1,0 +1,239 @@
+/* Clash Display + General Sans + Terminal Grotesque load globally via
+ * styles/management.css; the wordmark face is the --font-grotesque token. */
+/* ═══ SPACES COMMAND CENTER — bento, /admin/raw language ═══ */
+
+.page {
+  /* Alias the management bento palette (management.css) instead of re-hardcoding
+   * it, so a palette change there flows here too. Radii are intentionally tighter
+   * than the canonical --m-r-* scale, so kept as local overrides. */
+  --bg: var(--m-bg);
+  --char: var(--m-char);
+  --char2: var(--m-char2);
+  --yellow: var(--m-yellow);
+  /* This page never sits inside `.management`, so --m-violet is unset here and
+   * the bento violet fallback is what actually renders (consumers: the paywall
+   * bullet icons, the create-tab underline, input focus). */
+  --violet: var(--m-violet, var(--accent-bento-violet));
+  --pink: var(--m-pink);
+  --r-xl: 26px;
+  --r-lg: 18px;
+  --r-md: 14px;
+  --display: 'Clash Display', var(--font-ui);
+  --text: 'General Sans', var(--font-ui);
+  /* Shared glassmorphic panel treatment (translucent charcoal frosting the
+   * app background behind it). */
+  --glass-panel: rgba(26, 26, 31, 0.38);
+  --glass-blur: blur(39px) saturate(1.3);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 40px rgba(0, 0, 0, 0.3);
+
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+  padding: var(--space-4);
+  position: relative;
+  background: var(--bg-workspace);
+  color: #fff;
+  font-family: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Light mode — Spaces uses an animated water backdrop (subtle wave motion)
+ * instead of the app-wide dot grid (which stays the default everywhere else in
+ * light mode). The still photo on .page is the loading / reduced-motion
+ * fallback that shows through when the video is hidden. */
+:global([data-theme='light']) .page {
+  background-image: url('/bg-spaces-light.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.bgVideo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+/* Soft scrim over the backdrop so the glass panels keep their contrast. */
+.bgScrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(18, 20, 28, 0.18) 0%, rgba(18, 20, 28, 0.28) 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bgVideo { display: none; }
+}
+
+/* The stat tiles + add button use `--bg-base` (a light fill in light mode) with
+ * white glyphs, so the icons disappear against the photo-backed glass. Over the
+ * dark glass panel, a dark translucent tile keeps the white icons legible. */
+:global([data-theme='light']) .mIcon,
+:global([data-theme='light']) .addBtn { background: rgba(0, 0, 0, 0.24); border-color: rgba(255, 255, 255, 0.16); }
+:global([data-theme='light']) .mLabel,
+:global([data-theme='light']) .teamLabel { color: rgba(255, 255, 255, 0.72); }
+.shell { position: relative; z-index: 1; flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; gap: var(--space-3h); }
+
+/* ── Brand (now inline in the people row, left of the avatars) ── */
+.logo { max-height: 44px; width: auto; display: block; margin-right: var(--space-3h); flex-shrink: 0; }
+/* Name fallback when the org has no uploaded company logo (mirrors /admin). */
+.orgName { margin-right: var(--space-3h); flex-shrink: 0; font-family: var(--font-grotesque); font-weight: 400; font-size: var(--text-4xl); line-height: 1; letter-spacing: 0; color: #fff; white-space: nowrap; }
+
+/* ── Bottom row: people bar (50%) + white stat cards (50%) ── */
+.bottomRow { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3h); align-items: stretch; }
+
+.teamCard { min-height: 92px; background: var(--glass-panel); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: var(--r-xl); padding: 0 var(--space-5h); display: flex; align-items: center; justify-content: space-between; color: #fff; }
+.teamLeft { display: flex; align-items: center; gap: var(--space-4); }
+.teamMeta { display: flex; align-items: baseline; gap: var(--space-2); }
+.teamNum { font-family: var(--display); font-weight: 600; font-size: var(--text-4xl); line-height: 1; }
+.teamLabel { font-size: var(--text-3xs); text-transform: uppercase; letter-spacing: 0.09em; color: rgba(255, 255, 255, 0.5); }
+.addBtn { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-full); background: var(--bg-base); color: #fff; cursor: pointer; transition: transform 0.12s ease, background 0.12s ease; }
+.addBtn:hover { background: #16171d; transform: translateY(-1px) scale(1.04); }
+.addBtn:active { transform: scale(0.96); }
+
+.statCards { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2h); padding: var(--space-2h) var(--space-4h); background: var(--glass-panel); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: var(--r-xl); }
+.mStat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3h) var(--space-4);
+  height: 100%;
+  min-height: 72px;
+  border-radius: var(--r-lg);
+  /* No inner card — the tiles sit directly on the outer glass panel. */
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.mIcon { width: 42px; height: 42px; border-radius: var(--radius-xl); display: grid; place-items: center; flex-shrink: 0; background: var(--bg-base); border: 1px solid rgba(255, 255, 255, 0.1); }
+.mText { display: flex; flex-direction: column; gap: var(--space-0h); min-width: 0; }
+.mVal { font-family: var(--display); font-weight: 600; font-size: 24px; line-height: 1; color: #fff; }
+.mLabel { font-size: var(--text-3xs); text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.5); }
+.accV .mIcon, .accP .mIcon, .accG .mIcon { color: #fff; }
+
+/* ── Board: treemap (fills available height) ── */
+.board { flex: 1; min-height: 0; }
+
+.panelHead { display: flex; align-items: baseline; justify-content: space-between; }
+.panelTitle { margin: 0; font-family: var(--display); font-weight: 600; font-size: var(--text-lg); }
+
+/* Make the metric toggle readable on the glass panel (the default ghost pills
+ * use --text-muted, which washes out over the warm wallpaper). */
+.metricToggle { background: rgba(0, 0, 0, 0.25); }
+.metricToggle button { color: rgba(255, 255, 255, 0.6); }
+.metricToggle button:hover { color: rgba(255, 255, 255, 0.85); }
+.metricToggle button[aria-checked='true'] { color: #fff; background: rgba(255, 255, 255, 0.16); }
+
+.treemapPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--space-4h);
+  border-radius: var(--r-xl);
+  background:
+    radial-gradient(80% 60% at 85% 0%, rgba(123, 108, 246, 0.2) 0%, transparent 60%),
+    var(--glass-panel);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  color: #fff;
+}
+.treemapWrap { flex: 1; min-height: 0; position: relative; }
+/* Locked preview: the mock treemap rendered behind the paywall card —
+ * blurred, dimmed and non-interactive so it reads as a teaser, not live data. */
+.lockedPreview {
+  position: absolute;
+  inset: 0;
+  filter: blur(3px) saturate(0.9);
+  opacity: 0.6;
+  pointer-events: none;
+  user-select: none;
+  transform: scale(0.985);
+}
+/* Pro badge in the panel head when AI triage is gated. */
+.lockBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1h);
+  padding: var(--space-1) var(--space-2h);
+  border-radius: var(--radius-full);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+/* Desktop local-channel overlay marker: the board counts include threads the
+ * on-device classifier routed from the viewer's own connected accounts. */
+.localHint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1h);
+  margin-left: auto;
+  margin-right: var(--space-3);
+  font-size: var(--text-2xs);
+  color: rgba(255, 255, 255, 0.5);
+}
+/* Loading / empty placeholder shown in place of the treemap (no mock flash). */
+.boardHint { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 0 var(--space-6); font-size: var(--text-xs); color: rgba(255, 255, 255, 0.45); }
+
+/* ── Avatar stack ── */
+.stack { display: flex; align-items: center; }
+.stackItem { margin-left: -8px; border: 2px solid #fff; border-radius: 50%; line-height: 0; }
+.stackItem:first-child { margin-left: 0; }
+.stackMore { margin-left: var(--space-2); font-size: var(--text-2xs); font-weight: 600; opacity: 0.8; }
+
+/* ── Create modal (charcoal) ── */
+/* The Modal portals to <body>, outside .page, so the aliased --char2 never
+   resolved here and the panel rendered transparent. Modal.panel's own
+   --surface-float is the right raised surface; only shape + type are ours. */
+.modal { width: 430px; max-width: 92vw; padding: 0; border-radius: 22px; color: #fff; font-family: var(--text); }
+.createTabs { display: flex; gap: var(--space-1); padding: var(--space-4) var(--space-4h) 0; }
+.createTab { display: inline-flex; align-items: center; gap: var(--space-1h); padding: var(--space-2h) 13px; font-size: var(--text-xs); font-weight: 500; color: rgba(255, 255, 255, 0.6); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; }
+.createTabOn { color: #fff; border-bottom-color: var(--violet); }
+.createBody { display: flex; flex-direction: column; gap: var(--space-3h); padding: var(--space-4h); border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.chipPick { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.spaceChip { font: inherit; display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-2) 13px; font-size: var(--text-2xs); border-radius: var(--radius-full); border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.78); cursor: pointer; transition: all 0.12s ease; }
+.spaceChip:hover { border-color: color-mix(in srgb, var(--c-a) 60%, transparent); color: #fff; }
+.spaceChipOn { border-color: var(--c-a); background: color-mix(in srgb, var(--c-a) 18%, transparent); color: #fff; }
+.spaceChip:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+.spaceChipDot { width: 8px; height: 8px; border-radius: var(--radius-full); background: linear-gradient(140deg, var(--c-a), var(--c-b)); }
+.createHint { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; font-size: var(--text-2xs); color: rgba(255, 255, 255, 0.55); line-height: 1.4; }
+.createHint svg { color: var(--yellow); flex-shrink: 0; margin-top: var(--space-px); }
+.createActions { display: flex; justify-content: flex-end; gap: var(--space-2h); padding: var(--space-3h) var(--space-4h); border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.createCancel, .createCancel:hover, .createCancel:active { background: rgba(255, 255, 255, 0.08); border: none; border-radius: var(--radius-full); padding: var(--space-3) var(--space-4h); font-weight: 600; font-size: var(--text-sm); cursor: pointer; color: #fff; box-shadow: none; transform: none; }
+.createPrimary, .createPrimary:hover, .createPrimary:active { background: var(--yellow); border: none; border-radius: var(--radius-full); padding: var(--space-3) var(--space-5); font-weight: 600; font-size: var(--text-sm); cursor: pointer; color: var(--char); box-shadow: none; transform: none; }
+
+/* ── Responsive ── */
+@media (max-width: 1080px) {
+  .bottomRow { grid-template-columns: 1fr; }
+}
+
+/* ═══ GROOVEBOX — solid island panels over the grid, no frosted glass ═══ */
+:global([data-theme-variant="groovebox"]) .page {
+  --glass-panel: var(--gb-island);
+  --glass-blur: none;
+  --glass-border: transparent;
+  --glass-shadow: inset 0 0 0 1px rgba(243, 240, 234, 0.05), 0 14px 32px rgba(0, 0, 0, 0.45);
+  --r-xl: 22px;
+}
+:global([data-theme-variant="groovebox"]) .treemapPanel { background: var(--glass-panel); }
+:global([data-theme-variant="groovebox"]) .mIcon,
+:global([data-theme-variant="groovebox"]) .addBtn {
+  background: linear-gradient(180deg, #34343a 0%, #26262b 100%);
+  border: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 2px 0 #08080a;
+}
+:global([data-theme-variant="groovebox"]) .accV .mIcon { color: var(--accent-purple); }
+:global([data-theme-variant="groovebox"]) .accP .mIcon { color: #f0a3bd; }
+:global([data-theme-variant="groovebox"]) .accG .mIcon { color: #5fd68a; }
+:global([data-theme-variant="groovebox"]) .mVal { color: #f3f0ea; }
+

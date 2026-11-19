@@ -1,0 +1,263 @@
+{
+  "format": "disk sealed v1 (disk-build.md 6)",
+  "vectors": [
+    {
+      "name": "AD",
+      "inputs": {
+        "label": "disk/example/v1",
+        "fields": [
+          {
+            "id": "dnd_filenode000000000000B"
+          },
+          {
+            "int": 7
+          },
+          {
+            "flag": 1
+          },
+          {
+            "bytes": "a1b2"
+          }
+        ]
+      },
+      "expected": {
+        "ad": "6469736b2f6578616d706c652f7631000019646e645f66696c656e6f646530303030303030303030303042000800000000000000070001010002a1b2"
+      }
+    },
+    {
+      "name": "KDF",
+      "inputs": {
+        "key": "1111111111111111111111111111111111111111111111111111111111111111",
+        "label": "disk/meta/v1"
+      },
+      "expected": {
+        "out": "565c946e4e80acbe68b3b48dcae0ed0a86c5b5dab0a91bc7bc8e61f7222a25da"
+      }
+    },
+    {
+      "name": "scope keys",
+      "inputs": {
+        "Ks": "1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "expected": {
+        "E": "f71c6168c2a81451b475a21e9a967a29bdfa46440dde8fb3e0cae5e4d1920e99",
+        "M": "565c946e4e80acbe68b3b48dcae0ed0a86c5b5dab0a91bc7bc8e61f7222a25da",
+        "W": "abf14987ba22fc90deeb7243a84cfde759c74719e08e15148ea6a4ae37439148",
+        "P": "c480b7c8c1c67d356e9c79a43f7171b97b8a8d3dfa41863fda23ff7b3c9c91cb"
+      }
+    },
+    {
+      "name": "version keys",
+      "inputs": {
+        "Kv": "3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "expected": {
+        "C": "e28cbc4cee4aaacc866f9444032e66724c2b6c5c8cac04a3ba1197fd9a36be6c",
+        "F": "c594deb397987202e11f66d5ae8c66005164818a61dfcbcdd7d28736fe974697",
+        "T": "8c62ead7961765a56ddb410f8c8e6dc68b8419b7d3dd77da498730d70d4bd50f",
+        "R": "de5234dec0c6f02ef322c149900ad022c94e361587f04093fb8d45026bea14ed"
+      }
+    },
+    {
+      "name": "ENV",
+      "inputs": {
+        "key": "1111111111111111111111111111111111111111111111111111111111111111",
+        "ad": "6469736b2f6578616d706c652f7631000019646e645f66696c656e6f646530303030303030303030303042",
+        "plaintext": "68656c6c6f",
+        "nonce": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0"
+      },
+      "expected": {
+        "env": "01a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a03d5d44acd27adb6f46c082175154c6e47f3e82b4cb"
+      }
+    },
+    {
+      "name": "key grant (open)",
+      "inputs": {
+        "identitySeed": "4444444444444444444444444444444444444444444444444444444444444444",
+        "publicKey": "7ce31baa9a04b5cfb83ab7ccdd7b669b911a082d29883d6aad3256294a0a5e0c",
+        "sealed": "89fb9728718e1a51702a00ea42ec5321efa124a39aa8e03f93861f633e5c587884d32b7ddfa6fc9a2ad51c5e9f4932b7a4a7d4e1baea0470cd1bc90aec093f06c7b5449d7876966acfca5a254359ea9d"
+      },
+      "expected": {
+        "Ks": "1111111111111111111111111111111111111111111111111111111111111111"
+      }
+    },
+    {
+      "name": "epoch chain",
+      "inputs": {
+        "scope": "dnd_scoperoot00000000000A",
+        "epoch": 2,
+        "Ks": "2222222222222222222222222222222222222222222222222222222222222222",
+        "previous": "1111111111111111111111111111111111111111111111111111111111111111",
+        "nonce": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+      },
+      "expected": {
+        "previous_key_wrapped": "01a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a19bb773c7a553c853e367d4137bc64c5af92e0c2b8f813b68258f77f9e9327aeae1943ad286767078fb7d05277b65ea0d"
+      }
+    },
+    {
+      "name": "metadata",
+      "inputs": {
+        "Ks": "1111111111111111111111111111111111111111111111111111111111111111",
+        "node": "dnd_filenode000000000000B",
+        "meta": {
+          "name": "Q4 plan é.pdf",
+          "mime": "application/pdf"
+        },
+        "nonce": "a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2"
+      },
+      "expected": {
+        "json": "{\"mime\":\"application/pdf\",\"name\":\"Q4 plan é.pdf\"}",
+        "metadata_ciphertext": "01a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2dc861587ae86a51d96ff6f7f3cf8f642c05e8398e924b044c7f6190792869b717d5c42abfb9978f0322905193764d20ab7f8ccfabbbefd29eae9d719a21849dcda65"
+      }
+    },
+    {
+      "name": "version key wrap",
+      "inputs": {
+        "Ks": "1111111111111111111111111111111111111111111111111111111111111111",
+        "node": "dnd_filenode000000000000B",
+        "version": "dvr_version0000000000000D",
+        "Kv": "3333333333333333333333333333333333333333333333333333333333333333",
+        "nonce": "a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3"
+      },
+      "expected": {
+        "wrapped_key": "01a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a34acd28faceea005120ef81a53b7c162a82c8ad6960d920716ef8b4dcd323fbc2ab71dbe2bb8ce3933784d142f68f4848"
+      }
+    },
+    {
+      "name": "content chunks",
+      "inputs": {
+        "Kv": "3333333333333333333333333333333333333333333333333333333333333333",
+        "prefix": "55555555555555555555555555555555",
+        "chunk_bytes": 16,
+        "plaintext": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2021222324252627"
+      },
+      "expected": {
+        "chunks": [
+          "f393c86ab2b25f5f7566c07fc78e302f86a5b3a046c867c8c0d4c3bc7f3f742d",
+          "9597ccfefdaf63244fb4415fdeb4186d02af97d100886e8c1708c55eb4448707",
+          "3927eb700b2556ea0d14b183c6db52447feb1561a71ae6cc"
+        ],
+        "object": "f393c86ab2b25f5f7566c07fc78e302f86a5b3a046c867c8c0d4c3bc7f3f742d9597ccfefdaf63244fb4415fdeb4186d02af97d100886e8c1708c55eb44487073927eb700b2556ea0d14b183c6db52447feb1561a71ae6cc"
+      }
+    },
+    {
+      "name": "empty file",
+      "inputs": {
+        "Kv": "3333333333333333333333333333333333333333333333333333333333333333",
+        "prefix": "55555555555555555555555555555555",
+        "chunk_bytes": 16
+      },
+      "expected": {
+        "object": "9d61d6394cd5af3d4029cf74a3dbce6b"
+      }
+    },
+    {
+      "name": "manifest",
+      "inputs": {
+        "Kv": "3333333333333333333333333333333333333333333333333333333333333333",
+        "node": "dnd_filenode000000000000B",
+        "version": "dvr_version0000000000000D",
+        "nonce": "a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4",
+        "object": "f393c86ab2b25f5f7566c07fc78e302f86a5b3a046c867c8c0d4c3bc7f3f742d9597ccfefdaf63244fb4415fdeb4186d02af97d100886e8c1708c55eb44487073927eb700b2556ea0d14b183c6db52447feb1561a71ae6cc"
+      },
+      "expected": {
+        "json": "{\"chunk_bytes\":16,\"chunks\":3,\"node\":\"dnd_filenode000000000000B\",\"prefix\":\"VVVVVVVVVVVVVVVVVVVVVQ==\",\"size\":40,\"tags\":\"hOg7qSXEIi/QcsOY64E5R++3wAc0esKpVUyLHYXocMI=\",\"v\":1,\"version\":\"dvr_version0000000000000D\"}",
+        "manifest_ciphertext": "01a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4d4f7409c7ee5a057ce8ae5a43931cf76d82e3f6bd7921b432d6074245251e589ba2c11ad855e0f930c8ed0a9d4560de760fba5a740449649c54d1000320cff2684351f72a29afc8dbe6200d2ed54046e422a01f6c5a4f3fc0e1068f06c40437f81f1e6603c5d910f9f7e5ee5e7048d9fa5df8f09174b67a895e23f1767b9351b20072d4f7a1b7bdf123830e6e2457bd2f8d0d4aff8967043b4c8fe8816ceed0f9771ffbc2a629c1b97a94d203bd546dd984248ec8e79cf78d44c013d4452ea218218e8a48d583806bf9a7dd316008e5581907442328eb2d4ef97a619cbc082f4"
+      }
+    },
+    {
+      "name": "thumbnail object",
+      "inputs": {
+        "Kv": "3333333333333333333333333333333333333333333333333333333333333333",
+        "prefix": "66666666666666666666666666666666",
+        "plaintext": "6e6f74207265616c6c79206120706e67"
+      },
+      "expected": {
+        "object": "01666666666666666666666666666666660000000000000010001000009490ef0ae6968fac2f003f7282c845c207c5bbc3d0b4b906e657612a1cd68e85"
+      }
+    },
+    {
+      "name": "link without password",
+      "inputs": {
+        "secret": "7777777777777777777777777777777777777777777777777777777777777777",
+        "secret_b64url": "d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3c",
+        "salt": "88888888888888888888888888888888",
+        "password": null,
+        "link": "dln_link0000000000000000F",
+        "version": "dvr_version0000000000000D",
+        "Kv": "3333333333333333333333333333333333333333333333333333333333333333",
+        "name": "Q4 plan é.pdf",
+        "mime": "application/pdf",
+        "nonce": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5"
+      },
+      "expected": {
+        "pw_key": "0000000000000000000000000000000000000000000000000000000000000000",
+        "wrap_key": "087817b00ac9b9cb835fe088c7debf4a09e09413f66d11875df1942442aac4ce",
+        "verifier": null,
+        "wrapped_payload": "01a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a53943bc4e14b0629fe23f4863c68be4629ff89f713a63983cfc688127783a221fedc59cc1d9ea39e68c04b2aed481d2a9344666000a35b9b1fd08e49a3701ed7aba517881ba160c1e73f0168d3e78d93ec740edff9225277f4ad2448502cfc1e1771c9934911658abf6b9f531f7e2c071152bf5acf5"
+      }
+    },
+    {
+      "name": "link with password",
+      "inputs": {
+        "secret": "7777777777777777777777777777777777777777777777777777777777777777",
+        "secret_b64url": "d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3c",
+        "salt": "88888888888888888888888888888888",
+        "password": "correct horse battery staple",
+        "link": "dln_link0000000000000000F",
+        "version": "dvr_version0000000000000D",
+        "Kv": "3333333333333333333333333333333333333333333333333333333333333333",
+        "name": "Q4 plan é.pdf",
+        "mime": "application/pdf",
+        "nonce": "a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6"
+      },
+      "expected": {
+        "pw_key": "ba2131c463c9b90787e59520999f0df4c5ce2e1bdf49c6c98f4cacfe34cd6d66",
+        "wrap_key": "fa3b39c76e1d832dafa6f0035f9b8b2d9578d11dc630dcf530e7e4c94642175c",
+        "verifier": "3d9035d2b3087b66ecfd2b3e6ec3ac2ea892b306ba355fc62fc0f06047ac05da",
+        "wrapped_payload": "01a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6da8253581a9f3844c4e82ba8e26e623039826864fafbc56450b5ab51e310e15a9211b537b20b2843e8547085d7cc241ce46923444b14bf8f6c1ec48161948255226b15af1132bbada09f1577e13b5f5428b00540fd5fbcdf2330943ac2440694e922276ea77895ea198e12e2bee1e57666f595591e"
+      }
+    },
+    {
+      "name": "page snapshot",
+      "inputs": {
+        "Ks": "2222222222222222222222222222222222222222222222222222222222222222",
+        "node": "dnd_filenode000000000000B",
+        "epoch": 2,
+        "seq": 7,
+        "state": "0101a1b2c3d4",
+        "nonce": "a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7"
+      },
+      "expected": {
+        "sealed_snapshot": "01a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7d9fba3dd679b54af772c9de768ddc26c630dc52461d4"
+      }
+    },
+    {
+      "name": "page update",
+      "inputs": {
+        "Ks": "2222222222222222222222222222222222222222222222222222222222222222",
+        "node": "dnd_filenode000000000000B",
+        "epoch": 2,
+        "seq": 8,
+        "update": "a1b2c3d4",
+        "nonce": "a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8"
+      },
+      "expected": {
+        "sealed_update": "01a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a805ffb76d7f99fecd114c394af3a5ea849c500be0"
+      }
+    },
+    {
+      "name": "page awareness",
+      "inputs": {
+        "Ks": "2222222222222222222222222222222222222222222222222222222222222222",
+        "node": "dnd_filenode000000000000B",
+        "epoch": 2,
+        "update": "c3d4",
+        "nonce": "a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9"
+      },
+      "expected": {
+        "sealed_awareness": "01a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a945745c2ac7108d49eb494b097b1e5bd57277"
+      }
+    }
+  ]
+}

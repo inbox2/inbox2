@@ -1,0 +1,20 @@
+.bellLeft {
+  transform-origin: 3.5px 4.5px;
+}
+
+.bellRight {
+  transform-origin: 20.5px 4.5px;
+}
+
+.flameGroup {
+  transform-origin: 50% 100%;
+  transform-box: fill-box;
+}
+
+.userAvatar {
+  transform-origin: 50% 50%;
+}
+
+.plusSign {
+  transform-origin: 19px 19px;
+}

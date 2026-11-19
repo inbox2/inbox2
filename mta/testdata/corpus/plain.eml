@@ -1,0 +1,13 @@
+From: Alice Sender <alice@example.com>
+To: support@acme.com
+Subject: Plain text test message
+Message-ID: <plain-001@example.com>
+Date: Sat, 24 May 2026 10:00:00 +0000
+Content-Type: text/plain; charset="UTF-8"
+
+Hello,
+
+This is a plain text test message for the MX receiver.
+
+Best regards,
+Alice

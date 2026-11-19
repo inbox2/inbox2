@@ -1,0 +1,28 @@
+/* Consent screen for a registered application's brokered OAuth flow. Light
+ * "management" surface — it is shown to people who have never seen inbox2. */
+
+.page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--space-6) var(--space-4); background: var(--m-bg); }
+
+.card { width: 100%; max-width: 460px; padding: var(--space-7) var(--space-6) var(--space-4); border-radius: var(--m-r-lg); background: var(--m-surface); border: 1px solid rgba(24, 34, 66, 0.1); box-shadow: 0 18px 48px rgba(24, 34, 66, 0.12); text-align: center; }
+
+.state { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-6) 0; color: var(--m-ink-soft); }
+.stateTitle { margin: 0; font-size: var(--text-base); font-weight: 600; color: var(--m-ink); }
+.stateSub { margin: 0; font-size: var(--text-sm); }
+
+/* App icon → provider, the "you are about to leave for X" pairing. */
+.marks { display: flex; align-items: center; justify-content: center; gap: var(--space-3); margin-bottom: var(--space-5); }
+.appIcon { width: 56px; height: 56px; border-radius: var(--m-r-md); object-fit: cover; border: 1px solid rgba(24, 34, 66, 0.12); }
+.marksLink { color: var(--m-ink-soft); }
+.providerIcon { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: var(--m-r-md); border: 1px solid rgba(24, 34, 66, 0.12); background: rgba(24, 34, 66, 0.03); color: var(--m-ink); }
+.providerLogo { width: 28px; height: 28px; object-fit: contain; }
+
+.title { margin: 0 0 var(--space-2); font-size: var(--text-lg); font-weight: 650; line-height: 1.35; color: var(--m-ink); }
+.sub { margin: 0 0 var(--space-5); font-size: var(--text-sm); line-height: 1.6; color: var(--m-ink-soft); }
+
+.actions { display: flex; flex-direction: column; gap: var(--space-2); }
+.actions > * { width: 100%; justify-content: center; }
+
+.note { margin: var(--space-4) 0 0; font-size: var(--text-xs); line-height: 1.5; color: var(--m-ink-soft); }
+
+.poweredBy { display: flex; align-items: center; justify-content: center; gap: var(--space-1h); margin-top: var(--space-5); padding-top: var(--space-3h); border-top: 1px solid rgba(24, 34, 66, 0.08); font-size: var(--text-xs); color: var(--m-ink-soft); }
+.brandMark { width: 16px; height: 16px; border-radius: var(--radius-4); }

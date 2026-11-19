@@ -1,0 +1,22 @@
+.mark {
+  display: block;
+  flex-shrink: 0;
+}
+
+.lockup {
+  font-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--display);
+  font-variation-settings: "wdth" 118;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #fff;
+  text-decoration: none;
+}
+
+/* The footer's larger lockup. After .lockup — same specificity, so order wins. */
+.big {
+  font-size: 26px;
+}

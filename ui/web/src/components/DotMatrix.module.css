@@ -1,0 +1,35 @@
+/* Absolute fill backdrop — applied to every rendered variant so call sites
+   don't each repeat the same positioning class. */
+.fill {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bgImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Faint ambient backdrop — the percolating dot-grid loop sits at ~0.2 so it
+   reads as texture behind the UI rather than competing with it. */
+.dim {
+  opacity: 0.2;
+}
+
+/* The two crossfading copies of the dot-grid clip. Each copy's opacity is
+   driven per-frame via the `--o` custom property (see PixelGridLoop). They
+   stack inside the dimmed wrapper, so their summed opacity is then scaled by
+   the wrapper's 0.2. */
+.loopVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: var(--o, 1);
+}

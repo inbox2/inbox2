@@ -1,0 +1,132 @@
+# Image findings with no fixed Debian package, accepted 2026-11-07 (security
+# triage). Each is a library deploy/pushleft/Dockerfile cannot drop, with why
+# the CVE is out of reach. Untrusted files reach native code only through
+# Disk::Thumbnailer (vips with VIPS_BLOCK_UNTRUSTED, pdftoppm, and ffmpeg held to
+# its demuxer and decoder lists), pdftotext (AttachmentTextExtractor) and rspamd.
+# Never list a CVE that has a fix: rebuild instead (APT_UPGRADE_AT).
+
+# OpenEXR, cfitsio, matio, ImageMagick: hard dependencies of Debian's
+# libvips42t64, reached only through vips's openexrload, fitsload, matload and
+# magickload, all untrusted loaders the thumbnailer blocks.
+CVE-2025-12495
+CVE-2025-12839
+CVE-2025-12840
+CVE-2025-64181
+CVE-2026-27622
+CVE-2026-34379
+CVE-2026-34543
+CVE-2026-34544
+CVE-2026-34545
+CVE-2026-34588
+CVE-2026-40244
+CVE-2026-40250
+CVE-2026-41142
+CVE-2026-42216
+CVE-2026-42217
+CVE-2026-59184
+CVE-2026-59186
+CVE-2026-59187
+CVE-2026-59189
+CVE-2026-59981
+CVE-2026-59982
+CVE-2026-115504
+CVE-2025-2338
+CVE-2026-119123
+
+# FFmpeg: NVDEC needs an NVIDIA GPU (none); the VobSub demuxer and the RASC
+# decoder are off the thumbnailer's -format_whitelist and -codec_whitelist; the
+# S/PDIF muxer is never used (output is one PNG frame).
+CVE-2026-64832
+CVE-2026-64830
+CVE-2026-58049
+CVE-2026-64833
+
+# libxml2 use-after-free: Nokogiri ships its own libxml2; the system one is
+# reached by untrusted input only through librsvg and ImageMagick (blocked vips
+# loaders) and FFmpeg's DASH demuxer (not on the format list).
+CVE-2026-6653
+
+# libtiff: process_command_opts is in the tiff command-line tools, not the
+# library; the SamplesPerPixel DoS ends in the thumbnailer's killed-after-60s
+# child process.
+CVE-2026-52490
+CVE-2026-36849
+
+# libXi (libsdl2, pulled by ffmpeg's libavdevice) talks to an X server: none.
+CVE-2026-109089
+CVE-2026-109090
+# libsndfile ima_reader (libpulse, pulled by libavdevice): no sound I/O here.
+CVE-2026-37555
+# cJSON (librist, pulled by libavformat): the RIST protocol is never opened.
+CVE-2026-29036
+CVE-2026-16554
+# GnuPG tpm2daemon (pulled by poppler's gpgme): never started, no TPM.
+CVE-2026-24882
+# curl SFTP/SCP host check: nothing here fetches sftp:// or scp:// URLs.
+CVE-2026-12064
+# expat (fontconfig, vips, mesa): reads the image's own config files; vips's
+# XML is only in .v files, whose loader is blocked.
+CVE-2026-115506
+CVE-2026-113351
+CVE-2026-118370
+CVE-2026-117610
+# SQLite FTS5 and session changesets: rspamd's sqlite files are its own; no
+# FTS5 index or changeset from outside is read.
+CVE-2026-119374
+CVE-2026-119379
+CVE-2026-119373
+# Local-only: systemd-homed (not running in a container), libacl symlink
+# traversal (no setuid ACL tools), ncurses (no terminal input from users).
+CVE-2026-16742
+CVE-2026-54369
+CVE-2025-69720
+
+# Found by a newer Trivy DB on the 2026-11-07 rebuild, not yet in Pushleft's scan.
+# FFmpeg: RTP/ASF, CAF, WTV, DASH and MPEG-PS are off -format_whitelist, RIST
+# is never opened, ADX/AAX, PGS, CFHD, Dirac and PNG decoders are off
+# -codec_whitelist, hqdn3d is a filter we never run, HEVC muxing never happens.
+CVE-2026-64834
+CVE-2026-64835
+CVE-2026-66036
+CVE-2026-66039
+CVE-2026-66040
+CVE-2026-66041
+CVE-2026-70628
+CVE-2026-70632
+CVE-2026-75141
+CVE-2026-75142
+CVE-2026-75143
+CVE-2026-75144
+CVE-2026-75146
+# OpenEXR exrmultiview: a command-line tool, not shipped; openexrload is blocked.
+CVE-2026-68515
+# libxml2: as CVE-2026-6653 above; the Python-bindings one has no Python here.
+CVE-2026-74860
+CVE-2026-86138
+CVE-2026-86139
+CVE-2026-86140
+CVE-2026-86142
+CVE-2026-86143
+CVE-2026-86144
+# cJSON JSON Patch/MergePatch: as above, only librist links it.
+CVE-2026-67215
+CVE-2026-67216
+CVE-2026-87933
+# zlib gz_vacate is the gzFile write path; Ruby's GzipWriter and the Go
+# binaries do not use it. CVE-2026-76844 is a webpack advisory misattributed to zlib1g.
+CVE-2026-85091
+CVE-2026-76844
+# util-linux mount and nsenter: uid 1000 with no mount or namespace rights.
+CVE-2026-76642
+CVE-2026-78408
+CVE-2026-78409
+CVE-2026-78410
+# libX11 and libXrender: only a malicious X server reaches them, and there is none.
+CVE-2026-88806
+CVE-2026-88807
+# Redis cluster bus: the rspamd role's redis is standalone on 127.0.0.1 (.pl.yaml).
+CVE-2026-92925
+# Perl Archive::Tar: nothing here unpacks tar files with Perl.
+CVE-2026-9538
+# libcurl connection reuse: curl fetches the rspamd key at build only; the app never runs it.
+CVE-2026-8458

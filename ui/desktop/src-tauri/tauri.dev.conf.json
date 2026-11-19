@@ -1,0 +1,24 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Inbox2 Dev",
+  "identifier": "com.inbox2.desktop.dev",
+  "build": {
+    "beforeBuildCommand": "cd ../web && VITE_API_ORIGIN=http://localhost:4000 VITE_ACCOUNT_URL=http://localhost:4173 yarn build"
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["inbox2-dev"]
+      }
+    }
+  },
+  "bundle": {
+    "icon": [
+      "icons-dev/32x32.png",
+      "icons-dev/128x128.png",
+      "icons-dev/128x128@2x.png",
+      "icons-dev/icon.icns",
+      "icons-dev/icon.ico"
+    ]
+  }
+}

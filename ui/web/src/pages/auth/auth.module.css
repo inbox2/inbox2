@@ -1,0 +1,138 @@
+.authPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-base);
+  padding: var(--space-4);
+  position: relative;
+  overflow: hidden;
+}
+
+.dragRegion {
+  display: none;
+}
+
+/* Windows/Linux: the strip also holds the window controls at its right end
+   (Chrome/WindowControls renders nothing on macOS). */
+:global([data-tauri]) .dragRegion {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  padding-right: var(--space-2);
+  -webkit-app-region: drag;
+  z-index: var(--z-sidebar);
+}
+
+.authCard {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  /* Glassmorphic: a thin translucent tint heavily frosted so the pixel-grid behind
+     shows through, with a bright top edge for the lifted-glass look. */
+  background: rgba(22, 24, 32, 0.42);
+  backdrop-filter: blur(30px) saturate(1.6);
+  -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  border: 1px solid var(--overlay-12);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 var(--overlay-15),
+    inset 0 0 0 1px var(--overlay-4);
+}
+
+.authLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.authLogo img {
+  width: 32px;
+  height: 32px;
+}
+
+.authLogo span {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+}
+
+.authTitle {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-tertiary);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-5);
+}
+
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Muted status line under the title (SSO callback, invite auto-accept). */
+.authSubtitle {
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.fieldGroup label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.fieldGroup input {
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-family: var(--font-ui);
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.fieldGroup input:focus {
+  border-color: var(--border-focus);
+}
+
+.submitButton {
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  margin-top: var(--space-2);
+}
+
+.authError {
+  padding: var(--space-2) var(--space-3);
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-border);
+  border-radius: var(--radius-md);
+  color: var(--status-danger-fg);
+  font-size: var(--text-xs);
+}

@@ -1,0 +1,55 @@
+<%#
+  Sent to the visitor when the invitee declines their meeting request. Includes
+  the optional reason. Locals: request (MeetingRequest), invitee_name (String),
+  when_lines (Array<String>).
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>About your meeting request</title>
+</head>
+<body style="margin:0;padding:0;background:#f2ede2;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2ede2;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:560px;max-width:100%;background:#fcfaf4;border:1px solid rgba(24,34,66,0.13);border-radius:14px;">
+          <tr>
+            <td style="padding:24px 28px;border-bottom:1px solid rgba(24,34,66,0.09);">
+              <span style="font:700 20px/1 Georgia,'Iowan Old Style',serif;color:#182242;">inbox2</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 28px 8px;">
+              <div style="font:700 24px/1.25 Georgia,serif;color:#182242;"><%= invitee_name %> can't make this time.</div>
+              <div style="font:400 15px/1.6 Arial,sans-serif;color:#5b6178;padding-top:14px;">
+                Your request for
+                <% when_lines.each do |line| %>
+                  <div style="font:500 14px/1.7 ui-monospace,monospace;color:#182242;"><%= line %></div>
+                <% end %>
+                was declined.
+              </div>
+              <% if request.decline_reason.present? %>
+                <div style="margin-top:14px;padding:12px 16px;background:#f4efe4;border-left:3px solid rgba(24,34,66,0.2);border-radius:0 10px 10px 0;font:italic 400 14px/1.6 Georgia,serif;color:#5b6178;">
+                  &ldquo;<%= request.decline_reason %>&rdquo;
+                </div>
+              <% end %>
+              <div style="font:400 14px/1.6 Arial,sans-serif;color:#5b6178;padding-top:16px;">
+                You're welcome to pick a different time on the same scheduling page.
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 28px 32px;">
+              <div style="font:400 12px/1.6 Arial,sans-serif;color:#8d92a5;">
+                Sent by inbox2 on behalf of <%= invitee_name %>.
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

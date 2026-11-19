@@ -1,0 +1,14 @@
+/* Social channels render over a frosted-glass surface. The shared detail header
+   is transparent (it sits on the opaque email workspace), so on social — where
+   the body is a glass panel over the transparent desktop window — the header
+   needs its own matching glass scrim or the desktop bleeds through it. */
+/* Doubled class raises specificity above the shared `.detailHeader { background:
+   transparent }` so the glass scrim actually wins and the dark overlay reaches
+   the very top of the pane (no wallpaper bleed in the header). */
+.socialChrome.socialChrome {
+  background: color-mix(in srgb, var(--bg-base) 86%, transparent);
+  backdrop-filter: var(--acrylic-blur);
+  -webkit-backdrop-filter: var(--acrylic-blur);
+  /* Seamless with the glass body below — drop the shared hairline divider. */
+  border-bottom: none;
+}

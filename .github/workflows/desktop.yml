@@ -1,0 +1,192 @@
+name: Desktop release
+
+# Every push to main builds the desktop app for macOS, Windows and Linux, signs
+# it for the updater and publishes it where https://api.inbox2.com/downloads/desktop
+# serves it — which is where every installed copy's Update tag looks
+# (docs/Desktop-Release.md). bin/release-desktop does the same from a Mac and
+# stays as the fallback.
+#
+#   version → bin/version (MAJOR.MINOR from tauri.conf.json, PATCH from the
+#             commit count + PATCH_BASE), shared by every job
+#   macos   → aarch64 .app/.dmg, Developer ID signed + notarized
+#   windows → x86_64 NSIS installer (no Authenticode: SmartScreen warns once)
+#   linux   → x86_64 .deb, signed for the updater after the build
+#   publish → latest.json + every artifact into the Pushleft downloads bucket;
+#             latest.json goes up last, so a client polling mid-upload keeps
+#             the previous release; the newest three releases are kept
+#
+# Secrets:
+#   TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD — updater key
+#     (losing it strands every installed copy; the original lives off-repo)
+#   APPLE_CERTIFICATE (base64 .p12 with the Developer ID Application identity),
+#   APPLE_CERTIFICATE_PASSWORD
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (base64) — App Store Connect API key,
+#     used by notarization
+#   PUSHLEFT_TOKEN — uploads into the bucket with `pl storage`
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-release
+  cancel-in-progress: false
+
+env:
+  API_ORIGIN: https://api.inbox2.com
+  BUCKET: pl-205eb939-desktop-downloads-34b0b1f9
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      v: ${{ steps.v.outputs.v }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: v
+        run: echo "v=$(bin/version)" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: version
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { os: macos-15,      name: macos,   bundles: "app,dmg" }
+          - { os: windows-2022,  name: windows, bundles: "nsis" }
+          - { os: ubuntu-22.04,  name: linux,   bundles: "deb" }   # glibc 2.35 floor
+    runs-on: ${{ matrix.os }}
+    env:
+      V: ${{ needs.version.outputs.v }}
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Linux system dependencies
+        if: matrix.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev \
+            libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ui/desktop
+          key: desktop-${{ matrix.name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install JS dependencies + build the web client
+        shell: bash
+        run: |
+          corepack enable
+          yarn --cwd ui/web install --frozen-lockfile --ignore-scripts --non-interactive
+          yarn --cwd ui/desktop install --frozen-lockfile --non-interactive
+          (cd ui/web && VITE_API_ORIGIN="$API_ORIGIN" yarn build)
+
+      - name: Apple signing + notarization key
+        if: matrix.name == 'macos'
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/asc"
+          echo "$ASC_KEY_P8" | base64 --decode > "$RUNNER_TEMP/asc/AuthKey_$ASC_KEY_ID.p8"
+          echo "APPLE_API_KEY_PATH=$RUNNER_TEMP/asc/AuthKey_$ASC_KEY_ID.p8" >> "$GITHUB_ENV"
+
+      - name: tauri build
+        shell: bash
+        working-directory: ui/desktop
+        env:
+          # macOS only (the other platforms ignore APPLE_*): tauri imports the
+          # certificate into a temporary keychain itself.
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: "Developer ID Application: Waseem Sadiq (KF53B4S5HD)"
+          APPLE_API_KEY: ${{ secrets.ASC_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          # Linux: the .deb is signed for the updater below, not by tauri.
+          extra='{"version":"'"$V"'"}'
+          [ "${{ matrix.name }}" = linux ] && extra='{"version":"'"$V"'","bundle":{"createUpdaterArtifacts":false}}'
+          node_modules/.bin/tauri build -c src-tauri/tauri.release.conf.json --config "$extra" --bundles ${{ matrix.bundles }}
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          T=ui/desktop/target/release/bundle
+          mkdir -p out
+          case "${{ matrix.name }}" in
+            macos)   cp "$T"/macos/*.app.tar.gz "$T"/macos/*.app.tar.gz.sig "$T"/dmg/*.dmg out/ ;;
+            windows) cp "$T"/nsis/*-setup.exe "$T"/nsis/*-setup.exe.sig out/ ;;
+            linux)
+              cp "$T"/deb/*.deb out/
+              for f in out/*.deb; do (cd ui/desktop && node_modules/.bin/tauri signer sign "../../$f" >/dev/null); done ;;
+          esac
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.name }}
+          path: out/*
+          if-no-files-found: error
+
+  publish:
+    needs: [version, build]
+    runs-on: ubuntu-24.04
+    env:
+      V: ${{ needs.version.outputs.v }}
+      PL_VERSION: 0.1.0-a6ff5f3
+      PL_SHA256: 62aba640cdee25bd2129098758166123ea3db037f94088b8ee605a7e3ba39d7d
+      PUSHLEFT_TOKEN: ${{ secrets.PUSHLEFT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          pattern: desktop-*
+          merge-multiple: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: latest.json
+        run: |
+          node ui/desktop/scripts/gen-manifest.mjs --artifacts out --out out --version "$V" \
+            --base-url "$API_ORIGIN/downloads/desktop/$V" --mac-arch aarch64
+          cat out/latest.json
+      - name: Install pl
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/pl" "https://releases.pushleft.dev/cli/$PL_VERSION/pl-linux-amd64"
+          echo "$PL_SHA256  $RUNNER_TEMP/pl" | sha256sum -c -
+          sudo install -m 0755 "$RUNNER_TEMP/pl" /usr/local/bin/pl
+      - name: Upload (latest.json last)
+        run: |
+          for f in out/*; do
+            [ "$(basename "$f")" = latest.json ] && continue
+            pl storage cp "$f" "$BUCKET:$V/" --production
+          done
+          pl storage cp out/latest.json "$BUCKET:$V/latest.json" --content-type application/json --production
+      - name: Keep the newest three releases
+        run: |
+          pl storage ls "$BUCKET" --production | awk '$1 == "-" {sub("/$", "", $2); print $2}' \
+            | sort -t. -k1,1n -k2,2n -k3,3n \
+            | awk -v k=3 '{a[NR]=$0} END {for (i = 1; i <= NR - k; i++) print a[i]}' \
+            | while read -r old; do pl storage rm -r "$BUCKET:$old/" --production; done
+      - name: Check the served manifest
+        run: |
+          for i in $(seq 1 12); do
+            got=$(curl -fsS "$API_ORIGIN/downloads/desktop/latest.json" | node -pe 'JSON.parse(require("fs").readFileSync(0)).version')
+            [ "$got" = "$V" ] && { echo "serving $got"; exit 0; }
+            sleep 10
+          done
+          echo "::warning::the server still serves $got, not $V (it caches the bucket listing for a minute)"

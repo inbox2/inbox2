@@ -1,0 +1,140 @@
+/* Local WhatsApp chat: the Meta social detail header (layout .detailHeader +
+   ConversationDetail .socialChrome) over the shared ChatThread. */
+.pane {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.sub {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+}
+
+.latest {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-0h) var(--space-2);
+  border: 1px solid var(--overlay-4);
+  border-radius: var(--radius-full);
+  background: var(--overlay-3);
+  color: var(--text-secondary);
+  font-size: var(--text-2xs);
+  cursor: pointer;
+}
+
+.latest:hover {
+  color: var(--text-primary);
+}
+
+.latest:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.error {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+/* ── Column variant (the WhatsApp tab): a lane header naming the chat ── */
+/* Also the drag handle: hold, then drag to reorder the columns. */
+.columnHeader {
+  cursor: grab;
+  gap: var(--space-2);
+}
+
+/* Focusable as the drag handle (keyboard: Space lifts, ←/→ move, Space drops). */
+.columnHeader:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+
+.columnName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--overlay-4);
+  color: var(--text-primary);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}
+
+.inlineError {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1h) var(--space-3);
+  font-size: var(--text-2xs);
+  color: var(--status-caution-text);
+  background: var(--overlay-3);
+  position: relative;
+  z-index: 2;
+}
+
+/* The WhatsApp button while the chat has unread messages: green, like WhatsApp's unread badge. */
+.unreadPill {
+  border-color: color-mix(in srgb, var(--status-success-text) 55%, transparent);
+  background: color-mix(in srgb, var(--status-success-text) 22%, transparent);
+  color: var(--text-primary);
+}
+
+.unreadCheck {
+  color: var(--status-success-text);
+}
+
+.unreadPill:hover {
+  background: color-mix(in srgb, var(--status-success-text) 32%, transparent);
+}

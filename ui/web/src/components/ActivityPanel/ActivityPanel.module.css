@@ -1,0 +1,111 @@
+/* Floating background-work panel — bottom-right, above the page, under toasts. */
+.panel {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: var(--z-float);
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--panel-groove), var(--acrylic-highlight), var(--shadow-md, 0 8px 24px rgb(0 0 0 / 35%));
+  font-size: var(--text-sm);
+}
+
+.collapsed {
+  width: auto;
+  padding: var(--space-2) var(--space-3);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary);
+}
+
+/* The title area toggles; the icon buttons on the right stay their own hit
+   targets (settings + hide), so the panel needs no extra footer row. */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.iconBtn {
+  display: flex;
+  flex-shrink: 0;
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.iconBtn:hover { background: var(--overlay-2); color: var(--text-primary); }
+
+.icon { color: var(--text-secondary); flex-shrink: 0; }
+.warn { color: var(--status-warn-text); }
+.spinning { animation: spin 1.6s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .spinning { animation: none; }
+}
+
+.title { font-weight: var(--weight-semibold); }
+.pct { color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+
+.bar {
+  height: 6px;
+  background: var(--overlay-4);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  width: var(--progress, 0%);
+  background: linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-warm-bright) 100%);
+  border-radius: var(--radius-full);
+  transition: width var(--duration-normal, 220ms) var(--ease-out, ease);
+}
+
+.fillBlocked { background: var(--status-warn-text); }
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.detail { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.date { flex-shrink: 0; }
+
+
+.error {
+  margin-top: var(--space-1);
+  color: var(--status-warn-text);
+  font-size: var(--text-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

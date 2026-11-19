@@ -1,0 +1,39 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-button-size, 28px);
+  height: var(--icon-button-size, 28px);
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--overlay-4);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast),
+    color var(--duration-fast),
+    border-color var(--duration-fast);
+}
+
+.button:hover {
+  background: var(--overlay-8);
+  color: var(--text-primary);
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: var(--glow-focus);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Danger — reddens on hover (Delete affordances). */
+.danger:hover {
+  color: var(--accent-danger);
+  border-color: var(--accent-danger);
+}

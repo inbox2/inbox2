@@ -1,0 +1,57 @@
+.card {
+  background: var(--accent-amber-dim);
+  border: 1px solid rgba(200, 176, 128, 0.1);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--space-3);
+  right: var(--space-3);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200, 176, 128, 0.15), transparent);
+}
+
+.label {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  color: var(--accent-warning);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin-bottom: var(--space-2);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.author {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--text-sender);
+}
+
+.time {
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.body {
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  line-height: var(--leading-normal);
+}
+
+.body p { margin-bottom: var(--space-3); }
+.body p:last-child { margin-bottom: 0; }

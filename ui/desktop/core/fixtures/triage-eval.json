@@ -1,0 +1,165 @@
+{
+  "_comment": "Starter triage eval fixtures. Run with: cargo run --bin triage-eval -- fixtures/triage-eval.json [--key sk-… | --endpoint http://127.0.0.1:8080]. Cases without strong deterministic signals exercise the model lane; grow this file with real-world misclassifications (check conversations.triage_source/triage_signals for what fired).",
+  "cases": [
+    {
+      "name": "dutch-invoice",
+      "subject": "Uw rekening van Maxim Dental B.V.",
+      "expected": "payment_due",
+      "messages": [
+        {
+          "from": "Infomedics <noreply@infomedics.nl>",
+          "body": "Namens Maxim Dental sturen we u deze rekening. U heeft 30 dagen om te betalen. Bedrag: € 32,42. Betalingskenmerk: 52295211771071."
+        }
+      ]
+    },
+    {
+      "name": "esp-newsletter",
+      "subject": "Integrate Actors into your workflows",
+      "expected": "fyi",
+      "messages": [
+        {
+          "from": "Product News <news@saas.example>",
+          "message_id": "<abc@mail.mcdlv.net>",
+          "body": "Time to incorporate Actors into your workflow! Get started today.",
+          "html": "<p>Get started today!</p><a href=\"x\">Unsubscribe</a>"
+        }
+      ]
+    },
+    {
+      "name": "password-reset",
+      "subject": "Reset your password",
+      "expected": "action_required",
+      "messages": [
+        {
+          "from": "accounts@service.example",
+          "body": "We received a request to reset your password. Click the link below to choose a new one. If this wasn't you, ignore this email."
+        }
+      ]
+    },
+    {
+      "name": "esignature-request",
+      "subject": "Please sign: Consulting agreement",
+      "expected": "action_required",
+      "messages": [
+        {
+          "from": "DocuSign <dse@docusign.net>",
+          "body": "Signature requested: Alex sent you a document. Please sign the document at your earliest convenience."
+        }
+      ]
+    },
+    {
+      "name": "calendar-invite",
+      "subject": "Invitation: Q3 planning @ Tue 15:00",
+      "expected": "scheduling",
+      "messages": [
+        {
+          "from": "Google Calendar <calendar-notification@google.com>",
+          "body": "Sam has invited you to the following event. Q3 planning. When: Tuesday 15:00. Join Zoom meeting: https://zoom.us/j/123"
+        }
+      ]
+    },
+    {
+      "name": "rsvp-accepted-subject",
+      "subject": "Accepted: Q3 planning",
+      "expected": "scheduling",
+      "messages": [
+        {
+          "from": "Sam <sam@partner.example>",
+          "body": "Yes, I'll be there."
+        }
+      ]
+    },
+    {
+      "name": "personal-question",
+      "subject": "Re: lunch?",
+      "expected": "needs_answer",
+      "messages": [
+        {
+          "from": "Sam <sam@partner.example>",
+          "body": "Are you free for lunch tomorrow? There's a new place around the corner I'd like to try. Let me know!"
+        }
+      ]
+    },
+    {
+      "name": "dutch-personal-question",
+      "subject": "Documenten voor de overdracht",
+      "expected": "needs_answer",
+      "messages": [
+        {
+          "from": "Anouk <anouk@notariskantoor.example>",
+          "body": "Beste, voor de overdracht hebben wij nog een kopie van uw legitimatiebewijs nodig. Kunt u die deze week aanleveren? Alvast bedankt."
+        }
+      ]
+    },
+    {
+      "name": "owner-replied-waiting",
+      "subject": "Re: contract draft",
+      "expected": "waiting_reply",
+      "messages": [
+        {
+          "from": "Alex <alex@client.example>",
+          "body": "Could you send over the revised contract when it's ready?"
+        },
+        {
+          "sent_by_owner": true,
+          "body": "Just sent the revised draft over — let me know if clause 4 works for you."
+        }
+      ]
+    },
+    {
+      "name": "approval-request",
+      "subject": "Expense report for the conference",
+      "expected": "needs_approval",
+      "messages": [
+        {
+          "from": "Robin <robin@ourteam.example>",
+          "body": "Hi, could you approve my expense report for the Berlin conference? It's waiting in the portal — €640 total, flights and two hotel nights."
+        }
+      ]
+    },
+    {
+      "name": "answer-expected-from-other",
+      "subject": "API quota for the pilot",
+      "expected": "needs_answer_other",
+      "messages": [
+        {
+          "from": "Priya <priya@customer.example>",
+          "body": "Thanks for the intro call! Could someone from your platform team confirm what API quota the pilot tier includes? Jordan (cc'd) probably knows the details."
+        }
+      ]
+    },
+    {
+      "name": "resolved-thanks",
+      "subject": "Re: Q3 sync",
+      "expected": "resolved",
+      "messages": [
+        {
+          "from": "Sam <sam@partner.example>",
+          "body": "Works for me, see you then. Thanks for sorting this out!"
+        }
+      ]
+    },
+    {
+      "name": "shipping-confirmation",
+      "subject": "Your order has shipped",
+      "expected": "receipt",
+      "messages": [
+        {
+          "from": "orders@shop.example",
+          "body": "Good news — your order #84512 has shipped and will arrive Thursday. Track your package with the link below."
+        }
+      ]
+    },
+    {
+      "name": "feature-announcement-no-footer",
+      "subject": "Introducing dark mode",
+      "expected": "fyi",
+      "messages": [
+        {
+          "from": "The Acme Team <team@acme.example>",
+          "body": "We just launched dark mode! Head to settings to try it out. We think you're going to love it — upgrade to Pro for scheduled themes."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+/* SegmentedControl — recessed track with ghost pills; active pill lifts. */
+
+.group {
+  display: flex;
+  gap: var(--space-0h);
+  background: var(--overlay-2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-0h);
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: none;
+  border-radius: var(--radius-xs);
+  color: var(--text-muted);
+  font-size: var(--text-3xs);
+  font-family: var(--font-ui);
+  font-weight: var(--weight-medium);
+  padding: var(--space-0h) var(--space-2);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.pill:hover {
+  color: var(--text-secondary);
+}
+
+.pill:focus-visible {
+  outline: none;
+  box-shadow: var(--glow-focus);
+}
+
+.pillActive {
+  background: var(--overlay-6);
+  color: var(--text-primary);
+}
+
+/* Per-option accent — only tints the active pill, mirroring the former
+   `data-level`-keyed colors. `--seg-accent` is set on the element via ref. */
+.pillActive.pillAccented {
+  color: var(--seg-accent);
+}
+
+.count {
+  font-size: var(--text-3xs);
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}

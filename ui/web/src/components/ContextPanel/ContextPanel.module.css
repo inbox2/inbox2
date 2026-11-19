@@ -1,0 +1,214 @@
+/* ═══════════════════════════════════════════════════════ */
+/* ContextPanel — Operational intelligence sidebar         */
+/* Dynamic, dense, useful, case-management depth           */
+/* ═══════════════════════════════════════════════════════ */
+
+.group {
+  border-bottom: 1px solid var(--overlay-4);
+  position: relative;
+}
+
+.group:last-child {
+  border-bottom: none;
+}
+
+/* Light mode: replace hard border with soft tonal separator */
+:global([data-theme="light"]) .group {
+  border-bottom: none;
+}
+
+:global([data-theme="light"]) .group + .group::before {
+  content: '';
+  display: block;
+  height: 1px;
+  margin: 0 var(--space-3);
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.06) 30%,
+    rgba(0, 0, 0, 0.06) 70%,
+    transparent 100%
+  );
+}
+
+.header {
+  width: 100%;
+  font-family: inherit;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: left;
+  padding: var(--space-1h) var(--space-3);
+  background: transparent;
+  border: none;
+  border-bottom: none;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+
+.header:hover {
+  color: var(--text-secondary);
+}
+
+.header:hover .headerIcon,
+.header:hover .headerChevron {
+  opacity: 0.7;
+}
+
+.headerChevron {
+  margin-left: auto;
+  opacity: 0.35;
+  transition: transform 160ms ease, opacity 120ms ease;
+}
+
+.headerChevronOpen {
+  transform: rotate(90deg);
+}
+
+.headerIcon {
+  opacity: 0.4;
+}
+
+:global([data-theme="light"]) .headerIcon {
+  opacity: 0.35;
+}
+
+
+.headerBadge {
+  font-size: var(--text-5xs);
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 var(--space-1);
+  background: var(--overlay-3);
+  border-radius: var(--radius-xs);
+  line-height: 1.6;
+}
+
+:global([data-theme="light"]) .headerBadge {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.body {
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-px);
+  margin-bottom: var(--space-1h);
+}
+
+/* Trailing margin would stack on the body's own padding and make each section's
+   bottom gap depend on what its last child is. */
+.field:last-child,
+.row:last-child {
+  margin-bottom: 0;
+}
+
+/* The one field-label style for the whole inspector — AIInsightsPanel composes
+   it so SENTIMENT/INTENT match PERSON/DOMAIN/LABEL/TO/FROM/RULES. */
+.label {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.value {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: var(--weight-medium);
+}
+
+.valueMono {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1h);
+}
+
+.row .field {
+  margin-bottom: 0;
+}
+
+.collaborator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--overlay-2);
+}
+
+:global([data-theme="light"]) .collaborator {
+  padding: var(--space-1h) 0;
+  border-bottom: none;
+}
+
+:global([data-theme="light"]) .collaborator + .collaborator {
+  border-top: 1px solid rgba(0, 0, 0, 0.025);
+}
+
+.collaborator:last-child {
+  border-bottom: none;
+}
+
+.collaboratorName {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: var(--weight-medium);
+  flex: 1;
+}
+
+.collaboratorDetail {
+  font-size: var(--text-3xs);
+  color: var(--text-muted);
+  padding: var(--space-px) var(--space-1);
+  background: var(--overlay-3);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--overlay-3);
+}
+
+:global([data-theme="light"]) .collaboratorDetail {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.025);
+}
+
+.viewingBadge {
+  font-size: var(--text-3xs);
+  color: var(--accent-success);
+  display: flex;
+  align-items: center;
+  gap: var(--space-0h);
+  font-weight: var(--weight-medium);
+}
+
+.viewingDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-success);
+  box-shadow: 0 0 4px rgba(122, 170, 140, 0.4);
+  animation: presencePulse 2.5s ease-in-out infinite;
+}
+
+@keyframes presencePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 4px rgba(122, 170, 140, 0.4); }
+  50% { opacity: 0.6; box-shadow: 0 0 6px rgba(122, 170, 140, 0.6); }
+}

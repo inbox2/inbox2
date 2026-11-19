@@ -1,0 +1,175 @@
+/* Disk shell (mockup: .shell, aside, .nav, .quota). */
+.shell { display: flex; min-height: 100dvh; font-family: var(--m-text); }
+
+.side {
+  width: 248px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0h);
+  padding: 22px var(--space-3h);
+  overflow-y: auto;
+}
+
+.brand { display: flex; align-items: baseline; gap: var(--space-2); padding: 0 var(--space-2h) 20px; }
+.brandWord { font: 620 24px var(--m-display); color: var(--m-char); }
+.brandKicker { font: 600 12px var(--m-text); letter-spacing: 0.09em; text-transform: uppercase; color: var(--m-accent-ink); }
+
+.group { padding: var(--space-3) var(--space-3h) 4px; font-size: var(--text-4xs); font-weight: 600; color: var(--m-ink-faint); }
+
+.navItem {
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2h);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 550;
+  color: var(--m-ink-soft);
+  text-decoration: none;
+}
+.navItem:hover { background: var(--m-wash-deep); color: var(--m-ink); text-decoration: none; }
+.navItem:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 1px; }
+.navItem.on { background: var(--m-char); color: #f5f2e9; font-weight: 600; }
+.sub { padding-left: 26px; font-size: var(--text-2xs); }
+.drv { margin-left: auto; font: 600 12px var(--m-mono); opacity: 0.7; }
+
+/* The bottom group (exact view, sealing, mail, space) sits at the foot of the sidebar. */
+.quota { position: relative; display: flex; align-items: center; gap: var(--space-2); margin: var(--space-1h) 0 4px; font: 11px var(--m-mono); color: var(--m-ink-faint); --meter-color: var(--m-ink-faint); }
+.usage { margin: var(--space-2h) var(--space-3h) 0; padding-top: var(--space-1h); border-top: 1px solid var(--m-line-soft); }
+.quota > div:not(.quotaTip) { flex: 1; margin-top: 0; }
+.quota:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 3px; border-radius: 2px; }
+.quotaLetter { flex-shrink: 0; }
+.quotaTip {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 2;
+  padding: var(--space-2h) var(--space-3);
+  background: var(--m-char2);
+  border: 1px solid var(--m-line);
+  border-radius: var(--m-r-sm);
+  box-shadow: 0 8px 24px rgba(24, 34, 66, 0.14);
+  font: 11px var(--m-mono);
+  color: var(--m-ink-soft);
+}
+.quota:hover .quotaTip, .quota:focus-visible .quotaTip { display: block; }
+.quotaTip b { display: block; color: var(--m-ink); font-weight: 600; }
+.quotaHint { display: block; margin-top: var(--space-0h); font-family: var(--m-text); }
+/* Stacked: the sidebar is too narrow (and scrolls, so clips) for a donut beside its legend. */
+.quotaBreak { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+.quotaTip dl { align-self: stretch; display: grid; grid-template-columns: 1fr auto; gap: var(--space-0h) var(--space-3); margin: 0; }
+.quotaTip dt { display: flex; align-items: center; gap: var(--space-1h); }
+.donut { width: 64px; height: 64px; flex-shrink: 0; }
+.donut circle { stroke: var(--slice); }
+.swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; background: var(--slice); }
+/* Categorical slots in a fixed order (validated: no adjacent pair below the CVD/normal-vision floors). */
+.k_documents { --slice: #2a78d6; }
+.k_images { --slice: #eb6834; }
+.k_video { --slice: #1baf7a; }
+.k_audio { --slice: #e87ba4; }
+.k_sealed { --slice: #4a3aa7; }
+.k_other { --slice: #eda100; }
+.k_versions { --slice: #008300; }
+.k_trash { --slice: #e34948; }
+.quotaTip dd { margin: 0; text-align: right; }
+
+/* Exact-view engine download, bottom right, gone once ready. */
+.engineChip {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: var(--z-float);
+  width: 200px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--m-char2);
+  border: 1px solid var(--m-line);
+  border-radius: var(--m-r-sm);
+  box-shadow: 0 8px 24px rgba(24, 34, 66, 0.14);
+  font: 11px var(--m-text);
+  color: var(--m-ink-soft);
+}
+.engineChip > div { margin-top: var(--space-1h); }
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 26px 34px 60px; }
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 440px;
+  margin: 80px auto;
+  text-align: center;
+  color: var(--m-ink-soft);
+}
+.stateTitle { margin: 0; font: 580 26px var(--m-display); color: var(--m-ink); }
+
+.mobileBar { display: none; }
+.scrim { display: none; }
+
+@media (max-width: 760px) {
+  .shell { flex-direction: column; }
+  .mobileBar {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    padding: var(--space-2) var(--space-4);
+    background: var(--m-bg);
+    border-bottom: 1px solid var(--m-line);
+  }
+  .mobileBar .brandWord { font-size: 20px; }
+  .menuBtn {
+    display: grid;
+    place-items: center;
+    align-self: center;
+    width: 40px;
+    height: 40px;
+    margin-left: -8px;
+    border: 0;
+    border-radius: var(--m-r-md);
+    background: none;
+    color: var(--m-ink);
+    cursor: pointer;
+  }
+  .side {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: var(--z-drawer);
+    width: min(280px, 84vw);
+    background: var(--m-bg);
+    box-shadow: 0 0 40px var(--m-shadow-soft);
+    transform: translateX(-105%);
+    visibility: hidden;
+    transition: transform 0.2s ease, visibility 0.2s;
+  }
+  .sideOpen { transform: none; visibility: visible; }
+  .scrim { display: block; position: fixed; inset: 0; z-index: var(--z-scrim); background: var(--m-scrim); }
+  .main { padding: var(--space-4) var(--space-4) 50px; }
+}
+
+@media (max-width: 760px) and (prefers-reduced-motion: reduce) {
+  .side { transition: none; }
+}
+.banner { margin: 0 0 var(--space-3h); padding: var(--space-2h) var(--space-3h); border-radius: var(--m-r-md); background: color-mix(in srgb, var(--m-amber) 18%, #fff); font-size: var(--text-2xs); color: var(--m-ink); }
+.banner a { color: var(--m-accent-ink); font-weight: 600; }
+.bannerFull { background: color-mix(in srgb, var(--m-pink) 12%, #fff); }
+.lock { margin-left: auto; padding: 0 5px; border: 1px solid currentColor; border-radius: var(--radius-full); font-size: 10px; color: var(--m-ink-soft); }
+
+/* The app switcher (avatar), top right above every page. */
+.topBar { display: flex; justify-content: flex-end; margin: -12px 0 var(--space-2); }

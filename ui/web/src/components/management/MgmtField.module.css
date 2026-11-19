@@ -1,0 +1,29 @@
+.field { display: flex; flex-direction: column; gap: var(--space-1h); }
+
+.label {
+  font-family: var(--m-sans);
+  font-size: var(--text-3xs);
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  color: var(--m-ink-soft);
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-3h);
+  font-family: var(--m-text);
+  font-size: var(--text-sm);
+  color: var(--m-ink);
+  background: var(--m-surface-2);
+  border: 1px solid var(--m-line-soft);
+  border-radius: var(--m-r-md);
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.input::placeholder { color: var(--m-ink-faint); }
+.input:focus {
+  border-color: var(--m-accent-bright);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--m-accent) 35%, transparent);
+}
+
+.hint { font-size: var(--text-2xs); color: var(--m-ink-faint); }

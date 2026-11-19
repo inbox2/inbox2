@@ -1,0 +1,150 @@
+.section {
+  background: var(--ink2);
+  padding: 120px 0;
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+  padding-bottom: 56px;
+}
+
+.h2 {
+  font-size: var(--h2);
+  line-height: 0.96;
+  max-width: 14ch;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 72px;
+}
+
+.row {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 56px;
+  align-items: center;
+}
+
+/* Alternate: mock left / text right, then swapped — the wide column swaps
+   with it, so every mock is the same size. */
+.row:nth-child(even) {
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+}
+
+.row:nth-child(even) .desktop {
+  order: 2;
+}
+
+/* A slice of a Mac desktop: wallpaper, the menu bar, and the card top-right
+   under it, where macOS puts notifications. */
+.desktop {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+  background:
+    radial-gradient(ellipse 70% 80% at 15% 90%, rgba(255, 140, 60, 0.9), transparent 60%),
+    radial-gradient(ellipse 60% 70% at 85% 20%, rgba(134, 145, 255, 0.95), transparent 60%),
+    radial-gradient(ellipse 50% 60% at 60% 70%, rgba(255, 90, 200, 0.7), transparent 60%),
+    linear-gradient(160deg, #1c1f3a, #3a2a5c 50%, #1a2b4a);
+}
+
+.menubar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 7%;
+  padding: 0 14px;
+  background: rgba(20, 20, 30, 0.45);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  font-size: clamp(9px, 0.95vw, 13px);
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+}
+
+.menubar svg {
+  width: 1.15em;
+  height: 1.15em;
+  fill: currentColor;
+}
+
+.menubar b {
+  font-weight: 700;
+}
+
+.menubar em {
+  font-style: normal;
+  margin-left: auto;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.card {
+  position: absolute;
+  top: 11%;
+  right: 3%;
+  width: 62%;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* The toast arrives the way macOS delivers one: in from the right edge, a
+   beat after the desktop itself has settled. */
+.card {
+  transition: opacity 0.7s ease 0.5s, transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.5s;
+}
+
+.desktop:global(.out) .card {
+  opacity: 0;
+  transform: translateX(110%);
+}
+
+/* Cut the shot's dark bezel: 42/1428 of the width all round, a touch less
+   along the bottom where the card's accent bar sits. Percent margins resolve
+   against the width on every side, which is exactly what a square bezel wants. */
+.card img {
+  display: block;
+  width: calc(100% + 2 * 2.94%);
+  max-width: none;
+  margin: -2.94% -2.94% -1.9%;
+}
+
+.row figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row strong {
+  font-size: 24px;
+  font-family: var(--display);
+  font-variation-settings: "wdth" 118;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.row span {
+  font-size: 17px;
+  color: var(--mute-inv);
+  max-width: 34ch;
+}
+
+@media (max-width: 900px) {
+  .section { padding: 64px 0; }
+  .rows { gap: 48px; }
+  .row { grid-template-columns: 1fr; gap: 20px; }
+  .row:nth-child(even) .desktop { order: 0; }
+  .menubar { font-size: clamp(9px, 1.8vw, 13px); }
+  .card { width: 78%; }
+}

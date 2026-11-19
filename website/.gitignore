@@ -1,0 +1,9 @@
+node_modules/
+build/
+.react-router/
+.wrangler/
+.dev.vars
+*.local
+.DS_Store
+assets-src/
+__pycache__/

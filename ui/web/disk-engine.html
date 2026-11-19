@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Inbox2 Disk: exact view</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  </head>
+  <body>
+    <!-- The Disk exact-view engine (spec F5b). Cross-origin isolated by its
+         response headers (public/_headers, vite.config.js), so LibreOffice WASM
+         can run its threads. Opened by Disk in a small window; see
+         src/lib/disk/engine/client.js. -->
+    <main id="engine"></main>
+    <script type="module" src="/src/diskEngine/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,98 @@
+[
+ {
+  "t": 0.22,
+  "text": "All your addresses in one inbox",
+  "zoom": null
+ },
+ {
+  "t": 4.06,
+  "text": "Grid view ranks the day by urgency",
+  "zoom": null
+ },
+ {
+  "t": 13.83,
+  "text": "Open a thread",
+  "zoom": [
+   1.35,
+   0.72,
+   0.5
+  ]
+ },
+ {
+  "t": 18.8,
+  "text": "Filter to what nobody has read yet",
+  "zoom": [
+   1.5,
+   0.3,
+   0.52
+  ]
+ },
+ {
+  "t": 23.42,
+  "text": "Every channel is just another tab",
+  "zoom": [
+   1.7,
+   0.36,
+   0.05
+  ]
+ },
+ {
+  "t": 27.27,
+  "text": "Gmail",
+  "zoom": null
+ },
+ {
+  "t": 30.36,
+  "text": "Outlook",
+  "zoom": null
+ },
+ {
+  "t": 33.38,
+  "text": "WhatsApp",
+  "zoom": null
+ },
+ {
+  "t": 36.56,
+  "text": "Instagram",
+  "zoom": null
+ },
+ {
+  "t": 47.05,
+  "text": "Search covers every account at once",
+  "zoom": null
+ },
+ {
+  "t": 51.79,
+  "text": "Results from every account in one list",
+  "zoom": null
+ },
+ {
+  "t": 65.9,
+  "text": "Reply from the address the mail came to",
+  "zoom": [
+   1.25,
+   0.5,
+   0.45
+  ]
+ },
+ {
+  "t": 84.58,
+  "text": "Sent",
+  "zoom": null
+ },
+ {
+  "t": 90.88,
+  "text": "Spaces keep a project's mail together",
+  "zoom": null
+ },
+ {
+  "t": 99.35,
+  "text": "The calendar is in the same window",
+  "zoom": null
+ },
+ {
+  "t": 106.0,
+  "text": "All of it in one app",
+  "zoom": null
+ }
+]

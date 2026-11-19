@@ -1,0 +1,56 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "2d19adb3f281592c003b479ee4c1fa2fd3109d6b0cd87bea1b9c661ea3a84f07",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/services/disk/access.rb",
+      "line": 65,
+      "code": "Disk::Node.where(\"disk_nodes.id IN (#{Disk::Node.subtree_ids_sql(Disk::Grant.where(:membership_id => membership.disk_ids).select(:node_id))})\")",
+      "location": {
+        "type": "method",
+        "class": "Disk::Access",
+        "method": "self.scope_for"
+      },
+      "confidence": "High",
+      "note": "The interpolated SQL is Disk::Node.subtree_ids_sql, a recursive CTE built from a relation's to_sql or a sanitize_sql bind; no request value reaches it as text."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "6baed11724a1985ac95fcbe27e3c58c74eb1492efc3bb0b6ae55c86a50e40840",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/services/disk/access.rb",
+      "line": 137,
+      "code": "Disk::Node.where(:sealed => false).where(\"disk_nodes.id IN (#{Disk::Node.subtree_ids_sql(agent_grants(membership).map do\n g.node_id\n end)})\")",
+      "location": {
+        "type": "method",
+        "class": "Disk::Access",
+        "method": "self.agent_scope"
+      },
+      "confidence": "Medium",
+      "note": "The interpolated SQL is Disk::Node.subtree_ids_sql, a recursive CTE built from a relation's to_sql or a sanitize_sql bind; no request value reaches it as text."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "c4938e8f68bb08b8a2f7e4b98075633e4b5cddfba617f079b65f19adc4211cbe",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/disk/node.rb",
+      "line": 203,
+      "code": "where(\"disk_nodes.id IN (#{subtree_ids_sql(ids, **opts)})\")",
+      "location": {
+        "type": "method",
+        "class": "Disk::Node",
+        "method": "Disk::Node.subtree"
+      },
+      "confidence": "Medium",
+      "note": "The interpolated SQL is Disk::Node.subtree_ids_sql, a recursive CTE built from a relation's to_sql or a sanitize_sql bind; no request value reaches it as text."
+    }
+  ],
+  "brakeman_version": "8.1.0"
+}

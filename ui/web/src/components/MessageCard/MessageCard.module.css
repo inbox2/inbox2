@@ -1,0 +1,280 @@
+/* ═══════════════════════════════════════════════════════ */
+/* MessageCard — Thread message with timeline continuity   */
+/* Case-management depth, conversation flow                */
+/* ═══════════════════════════════════════════════════════ */
+
+.card {
+  background: var(--bg-raised);
+  border: 1px solid var(--overlay-4);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4) var(--space-3);
+  margin-bottom: var(--space-3);
+  box-shadow:
+    var(--shadow-sm),
+    var(--acrylic-highlight);
+  position: relative;
+  z-index: 1;
+  transition:
+    box-shadow var(--duration-normal) var(--ease-out),
+    border-color var(--duration-normal);
+}
+
+/* Light mode: warm paper sheet, lifted off the cool workspace with a soft
+   hairline border + faint shadow (reading area reads intentional, not a bare rect) */
+:global([data-theme="light"]) .card {
+  background: #ffffff;
+  border-color: var(--border-default);
+  box-shadow:
+    0 1px 2px rgba(20, 24, 40, 0.03),
+    0 8px 24px rgba(20, 24, 40, 0.04);
+}
+
+.card:hover {
+  border-color: var(--overlay-6);
+  box-shadow:
+    var(--shadow-md),
+    var(--acrylic-highlight),
+    var(--shadow-glow-warm);
+}
+
+/* Top highlight edge — diffuse light catch */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--space-5);
+  right: var(--space-5);
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--overlay-6),
+    var(--overlay-3),
+    transparent
+  );
+  border-radius: 1px;
+}
+
+:global([data-theme="light"]) .card::before {
+  background: linear-gradient(90deg,
+    transparent,
+    color-mix(in srgb, var(--bevel) 70%, transparent),
+    color-mix(in srgb, var(--bevel) 40%, transparent),
+    transparent
+  );
+}
+
+/* Timeline connector dot — disabled */
+
+/* Collapsed — compact header-only card. Sits a touch darker/recessed so the
+   open message reads as the active state. */
+.collapsed {
+  padding: var(--space-2) var(--space-4);
+}
+
+:global([data-theme="light"]) .collapsed {
+  background: linear-gradient(180deg, #f8f8fa 0%, #f2f2f4 100%);
+  border-color: var(--border-default);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    inset 0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.collapsed .header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  cursor: pointer;
+}
+
+.collapsed .email {
+  display: none;
+}
+
+/* Keyboard focus — BMW electric blue border */
+.focused {
+  border-color: var(--border-focus);
+  box-shadow:
+    0 0 0 1px var(--border-focus),
+    0 0 8px color-mix(in srgb, var(--accent-warning) 15%, transparent);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--overlay-3);
+  cursor: pointer;
+}
+
+.header:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+:global([data-theme="light"]) .header {
+  border-bottom-color: rgba(0, 0, 0, 0.03);
+}
+
+.snippet {
+  flex: 1;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.sender {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  line-height: var(--leading-tight);
+}
+
+/* Unread — bold sender like ConversationItem unread state */
+.unread .sender {
+  font-weight: var(--weight-bold);
+  color: var(--text-sender);
+}
+
+.email {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  margin-left: auto;
+}
+
+/* Conversation triage classification chip (async worker output), shown left of
+   the time on the newest message. Tone maps to severity. */
+.triageBadge {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-medium);
+  padding: var(--space-px) var(--space-1h);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Provider-synced draft (e.g. an Outlook autosaved reply). Filled pill so an
+   unsent draft can't be mistaken for a delivered message in the thread. */
+.draftBadge {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: var(--space-px) var(--space-1h);
+  border-radius: var(--radius-full);
+  color: var(--accent-gold);
+  background: color-mix(in srgb, var(--accent-gold) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-gold) 45%, transparent);
+  white-space: nowrap;
+}
+
+.triage_urgent {
+  color: var(--accent-danger);
+  border-color: color-mix(in srgb, var(--accent-danger) 45%, transparent);
+}
+
+.triage_pending {
+  color: var(--accent-gold);
+  border-color: color-mix(in srgb, var(--accent-gold) 45%, transparent);
+}
+
+.triage_open {
+  color: var(--accent-success);
+  border-color: color-mix(in srgb, var(--accent-success) 45%, transparent);
+}
+
+/* A custom (org/user-defined) label: neutral, tinted by its palette color when
+   it has one (--label-color set from JS). */
+.triage_custom {
+  background: var(--overlay-2);
+}
+
+.triage_custom[data-colored] {
+  color: var(--label-color);
+  border-color: color-mix(in srgb, var(--label-color) 45%, transparent);
+}
+
+.time {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  padding: 0 var(--space-1h);
+  background: var(--overlay-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--overlay-6);
+}
+
+:global([data-theme="light"]) .time {
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.025);
+  border-color: var(--overlay-3);
+}
+
+.body {
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  /* Same white "page" as EmailFrame's iframe, so plain-text and HTML mail read
+     alike in one thread (colour literals mirror buildSrcDoc's BASE_CSS). */
+  background: #ffffff;
+  color: #1a1a1a;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.body p { margin-bottom: var(--space-3); }
+.body p:last-child { margin-bottom: 0; }
+.body strong { font-weight: var(--weight-semibold); color: #1a1a1a; }
+.body ul, .body ol { padding-left: var(--space-5); margin-bottom: var(--space-3); }
+.body li { margin-bottom: var(--space-1); }
+.body a { color: #1a73e8; }
+/* QuotedText's signature/quote toggles + signature use dark-theme overlay tokens
+   that vanish on white — restyle them like the iframe's <details> summary. */
+.body button { background: #f1f3f4; border-color: #e0e0e0; color: #5f6368; }
+.body button:hover { background: #e8eaed; border-color: #d0d0d0; color: #3c4043; }
+.body [class*="signatureBlock"] { color: #5f6368; }
+
+@keyframes attachSlide {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
+/* Groovebox: triage labels are solid pastel chips with dark type, like the
+   theme's keycap tags — not outlined pills. */
+:global([data-theme-variant="groovebox"]) .triageBadge {
+  --chip: #b4b0b8;
+  background: var(--chip);
+  color: #141416;
+  border: 0;
+  border-radius: var(--radius-6);
+  font-weight: var(--weight-bold);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+  text-shadow: none;
+}
+:global([data-theme-variant="groovebox"]) .triage_urgent { --chip: var(--accent-danger); }
+:global([data-theme-variant="groovebox"]) .triage_pending { --chip: var(--accent-gold); }
+:global([data-theme-variant="groovebox"]) .triage_open { --chip: var(--accent-success); }
+:global([data-theme-variant="groovebox"]) .triage_custom { --chip: var(--accent-purple); }
+:global([data-theme-variant="groovebox"]) .triage_custom[data-colored] { --chip: var(--label-color); }
+
+
+/* Save to Disk progress line under the attachments. */
+.diskNote { margin: 4px var(--space-4); font-size: var(--text-2xs); color: var(--color-text-secondary); }

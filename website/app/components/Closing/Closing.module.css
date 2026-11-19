@@ -1,0 +1,119 @@
+.closing {
+  background: var(--ink);
+  padding: 150px 0 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.glowA,
+.glowB {
+  position: absolute;
+  pointer-events: none;
+  filter: blur(60px);
+}
+
+.glowA {
+  left: 50%;
+  top: 50%;
+  width: 1000px;
+  height: 600px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, var(--glow-a), transparent 62%);
+}
+
+.glowB {
+  left: -10%;
+  top: -10%;
+  width: 500px;
+  height: 400px;
+  background: radial-gradient(ellipse at center, var(--glow-b), transparent 65%);
+}
+
+.rain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.leaf {
+  position: absolute;
+  top: -240px;
+  filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.5));
+  animation: fall 28s ease-in-out infinite;
+}
+
+@keyframes fall {
+  0% { transform: translate(0, 0) rotate(-14deg); opacity: 0; }
+  5% { opacity: 1; }
+  14% { transform: translate(-90px, 14vh) rotate(12deg); }
+  22% { transform: translate(-60px, 18vh) rotate(22deg); }
+  36% { transform: translate(90px, 36vh) rotate(-16deg); }
+  44% { transform: translate(120px, 40vh) rotate(-24deg); }
+  58% { transform: translate(-70px, 60vh) rotate(14deg); }
+  66% { transform: translate(-100px, 64vh) rotate(20deg); }
+  80% { transform: translate(60px, 84vh) rotate(-12deg); }
+  92% { opacity: 1; }
+  100% { transform: translate(20px, 108vh) rotate(-2deg); opacity: 0; }
+}
+
+.inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  text-align: center;
+}
+
+.h2 {
+  font-size: clamp(48px, 6.6vw, 96px);
+  line-height: 0.92;
+  max-width: 12ch;
+  letter-spacing: -0.045em;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.p {
+  font-size: 20px;
+  max-width: 40ch;
+  color: var(--mute-inv);
+}
+
+.ctas {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.pool {
+  width: min(760px, 100%);
+  display: block;
+  margin-top: 20px;
+  margin-bottom: -40px;
+}
+
+@media (max-width: 900px) {
+  .closing {
+    padding-top: 72px;
+  }
+  .h2 {
+    font-size: 50px;
+  }
+  .p {
+    font-size: 16px;
+  }
+  .ctas {
+    flex-direction: column;
+    width: 100%;
+  }
+  .ctas > * {
+    width: 100%;
+  }
+  .leaf {
+    width: 90px !important;
+  }
+}

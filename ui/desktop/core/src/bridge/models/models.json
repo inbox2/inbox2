@@ -1,0 +1,130 @@
+{
+  "_comment": "Three-lane model manifest for the Bridge. One entry per (capability x lane), except where the same lane ships different artifacts per platform (NLU free: the same Qwen2.5-1.5B-Instruct checkpoint as a LiteRT .task on mobile and a GGUF for the desktop llama-server sidecar) — resolution is platform-aware via Manifest::entry_for. The NLU free lane additionally carries an alternate VARIANT per platform (Gemma 3 1B — ~2x smaller and faster, English-only, gated repo on mobile): entry order is the default order (Qwen first), Manifest::entries_for lists every variant, and the free lane counts as installed when ANY variant is installed. The host picks which variant to run. native/openai lanes carry no files. The `free` lanes point at real distributed assets; sha256 is left empty (download logs a warning + skips verification) — pin to a verified hash before relying on integrity.",
+  "version": 2,
+  "models": [
+    {
+      "id": "apple-avspeech",
+      "capability": "tts",
+      "lane": "native",
+      "engine": "native",
+      "license": "system",
+      "platforms": ["ios", "macos"],
+      "langs": ["*"]
+    },
+    {
+      "id": "kokoro-multi-lang-v1",
+      "capability": "tts",
+      "lane": "free",
+      "engine": "sherpa-onnx",
+      "files": [
+        { "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2", "sha256": "", "bytes": 342000000, "archive": "tar.bz2" }
+      ],
+      "total_bytes": 342000000,
+      "license": "Apache-2.0",
+      "platforms": ["ios", "android", "macos", "windows", "linux"],
+      "langs": ["en", "fr", "it", "ja", "zh"],
+      "voices": ["af_heart", "af_bella", "am_adam", "am_michael", "bf_emma", "bm_george"]
+    },
+    {
+      "id": "openai-tts-1",
+      "capability": "tts",
+      "lane": "openai",
+      "engine": "openai",
+      "license": "proprietary",
+      "platforms": ["ios", "android", "macos", "windows", "linux"],
+      "langs": ["*"],
+      "voices": ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
+    },
+
+    {
+      "id": "apple-speech",
+      "capability": "stt",
+      "lane": "native",
+      "engine": "native",
+      "license": "system",
+      "platforms": ["ios", "macos"],
+      "langs": ["*"]
+    },
+    {
+      "id": "openai-gpt-4o-transcribe",
+      "capability": "stt",
+      "lane": "openai",
+      "engine": "openai",
+      "license": "proprietary",
+      "platforms": ["ios", "android", "macos", "windows", "linux"],
+      "langs": ["*"]
+    },
+
+    {
+      "id": "apple-foundation-models",
+      "capability": "nlu",
+      "lane": "native",
+      "engine": "native",
+      "license": "system",
+      "platforms": ["ios", "macos"],
+      "availability_reqs": { "min_ios": 26, "requires_apple_intelligence": true },
+      "langs": ["*"]
+    },
+    {
+      "id": "qwen2.5-1.5b-instruct-q8",
+      "capability": "nlu",
+      "lane": "free",
+      "engine": "litert",
+      "files": [
+        { "url": "https://huggingface.co/litert-community/Qwen2.5-1.5B-Instruct/resolve/main/Qwen2.5-1.5B-Instruct_multi-prefill-seq_q8_ekv4096.task", "sha256": "", "bytes": 1598556720 }
+      ],
+      "total_bytes": 1598556720,
+      "license": "Apache-2.0",
+      "platforms": ["ios", "android"],
+      "langs": ["*"]
+    },
+    {
+      "id": "qwen2.5-1.5b-instruct-gguf",
+      "capability": "nlu",
+      "lane": "free",
+      "engine": "llama-cpp",
+      "files": [
+        { "url": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf", "sha256": "", "bytes": 1117320736 }
+      ],
+      "total_bytes": 1117320736,
+      "license": "Apache-2.0",
+      "platforms": ["macos", "windows", "linux"],
+      "langs": ["*"]
+    },
+    {
+      "id": "gemma3-1b-it-int4",
+      "capability": "nlu",
+      "lane": "free",
+      "engine": "litert",
+      "files": [
+        { "url": "https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/Gemma3-1B-IT_multi-prefill-seq_q4_block32_ekv4096.task", "sha256": "", "bytes": 722016246 }
+      ],
+      "total_bytes": 722016246,
+      "license": "Gemma",
+      "platforms": ["ios", "android"],
+      "langs": ["en"]
+    },
+    {
+      "id": "gemma3-1b-it-gguf",
+      "capability": "nlu",
+      "lane": "free",
+      "engine": "llama-cpp",
+      "files": [
+        { "url": "https://huggingface.co/ggml-org/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf", "sha256": "", "bytes": 806058240 }
+      ],
+      "total_bytes": 806058240,
+      "license": "Gemma",
+      "platforms": ["macos", "windows", "linux"],
+      "langs": ["en"]
+    },
+    {
+      "id": "openai-gpt-4o-mini",
+      "capability": "nlu",
+      "lane": "openai",
+      "engine": "openai",
+      "license": "proprietary",
+      "platforms": ["ios", "android", "macos", "windows", "linux"],
+      "langs": ["*"]
+    }
+  ]
+}

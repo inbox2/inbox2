@@ -1,0 +1,139 @@
+/* ═══════════════════════════════════════════════════════ */
+/* NotificationPage — Tauri external notification window     */
+/* Light frosted-glass card stack (macOS visual language).   */
+/* Palette is fixed light glass regardless of app theme.     */
+/* ═══════════════════════════════════════════════════════ */
+
+.root {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  /* Padding must equal WINDOW_PAD in NotificationPage.jsx so the auto-resize
+     leaves room for the card shadows + top/bottom margin instead of clipping. */
+  padding: var(--space-4);
+  font-family: var(--font-ui);
+}
+
+/* Cards fill the window width (minus root padding) rather than a fixed pixel
+   width — so they can never overflow and clip on the left if the OS window ends
+   up a different width than expected. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2h);
+  width: 100%;
+}
+
+/* The card is components/NotificationCard. Here it is also a draggable
+   surface — never let a drag turn into a text selection, and keep the gesture
+   vertical-scroll friendly. */
+.swipe {
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: pan-y;
+}
+
+/* Opening any card flings the whole stack off to the right at once. The slide
+   distance (120%) clears the card regardless of width; FLING_MS in the page
+   must match this transition duration so the cards are gone before the clear. */
+.flung {
+  transform: translateX(120%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 180ms var(--ease-in, ease-in), opacity 180ms linear;
+}
+
+/* ── Clickable text region — the entire header + subject + detail block is one
+      big "open message" target. Hover tints the whole region (macOS-style)
+      rather than underlining a single line. ── */
+
+.clickable {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: background var(--duration-micro) linear;
+}
+
+.clickable:hover {
+  background: color-mix(in srgb, var(--glass-ink) 3.5%, transparent);
+}
+
+.clickable:focus-visible {
+  outline: 2px solid var(--rail-base, var(--accent-warning));
+  outline-offset: -2px;
+}
+
+/* ── Header — the channel glyph is the page's own; the row is shared. ── */
+
+.channelIcon {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-xs, var(--radius-4));
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* The generic IMAP glyph ships white for the app's dark surfaces; invert it to
+   dark so it reads on the light frosted-glass card. */
+.channelIconDark {
+  filter: invert(1);
+}
+
+/* Non-merged content only: a shorter detail well than the popup's stack list. */
+.detailShort { max-height: 70px; }
+
+/* Collapsed: the OTP row folds away with the shared detail block. */
+:global([data-collapsed]) .otpRow { display: none; }
+
+/* Not an open target — the row's gaps/padding must not inherit the card's
+   open cursor (its buttons set their own pointer cursor). */
+.actionsRow { cursor: default; }
+
+/* ── Sign-in code / link — the site's icon, then the code or where it goes. ── */
+
+.otpRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2h);
+  padding: 0 13px var(--space-2h);
+  min-width: 0;
+}
+
+.otpCode {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--glass-text);
+}
+
+.otpHost {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  min-width: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--glass-text-2);
+  white-space: nowrap;
+}
+
+/* The link itself: code font on a faint chip, cut with an ellipsis when wide. */
+.otpUrl {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  font-weight: 500;
+  color: var(--glass-text);
+  background: color-mix(in srgb, var(--glass-text) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--glass-text) 12%, transparent);
+}

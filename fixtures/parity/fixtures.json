@@ -1,0 +1,1469 @@
+{
+  "_README": "Cross-language parity fixtures. Driven by BOTH api/spec/services/cross_language_parity_spec.rb (Ruby) and ui/desktop/core/src/parity_tests.rs (Rust). 'agreed' cases must produce the SAME output on both engines. 'divergences' cases capture behaviour that still DIFFERS, each with a per-engine expected value ('ruby'/'rust'). See fixtures/parity/README.md for the drift report and what has been reconciled.",
+  "snippet": {
+    "_fn": "SnippetBuilder.build(body_plain, body_html)  <->  threading::build_snippet(body_plain, body_html)",
+    "agreed": [
+      {
+        "name": "ordinary text, whitespace collapsed",
+        "body_plain": "hi   there\nfriend",
+        "body_html": null,
+        "expected": "hi there friend"
+      },
+      {
+        "name": "nil/empty both -> empty",
+        "body_plain": null,
+        "body_html": null,
+        "expected": ""
+      },
+      {
+        "name": "HTML source in text/plain without a leading doctype -> stripped",
+        "body_plain": "<div class=\"card\">\n  <h2>Cold-call pain</h2>\n  <textarea>Buyer ko call karna band karo.</textarea>\n  <button>Create draft ad</button>\n</div>",
+        "body_html": null,
+        "expected": "Cold-call pain Buyer ko call karna band karo. Create draft ad"
+      },
+      {
+        "name": "strips selector lists and nested @media bodies",
+        "body_plain": "Hi! .btn, a:hover { color: red } @media all { td { margin: 0 } } Sale on now",
+        "body_html": null,
+        "expected": "Hi! Sale on now"
+      },
+      {
+        "name": "strips leaked CSS rule and invisible preheader padding",
+        "body_plain": "Vestiaire Collective    * { font-family: Arial,\nsans-serif !important; }   Maybe it’s time͏‌ ͏‌ ͏‌",
+        "body_html": null,
+        "expected": "Vestiaire Collective Maybe it’s time"
+      },
+      {
+        "name": "keeps prose braces that are not declaration-shaped",
+        "body_plain": "use {braces} wisely",
+        "body_html": null,
+        "expected": "use {braces} wisely"
+      },
+      {
+        "name": "decodes HTML entities in the plain part",
+        "body_plain": "Meta &amp; you &#8211; you&#39;ve got 3&nbsp;updates&hellip;",
+        "body_html": null,
+        "expected": "Meta & you – you've got 3 updates…"
+      },
+      {
+        "name": "falls back to HTML-only mail, stripped and decoded",
+        "body_plain": null,
+        "body_html": "<p>Meta &amp; you &#8211; you&#39;ve got 3&nbsp;new updates&hellip;</p>",
+        "expected": "Meta & you – you've got 3 new updates…"
+      },
+      {
+        "name": "prefers the HTML part when both present (Gmail-style)",
+        "body_plain": "plain loses",
+        "body_html": "<p>html wins</p>",
+        "expected": "html wins"
+      },
+      {
+        "name": "image-only HTML falls back to the plain part",
+        "body_plain": "plain fallback",
+        "body_html": "<img src=\"x\">",
+        "expected": "plain fallback"
+      },
+      {
+        "name": "blank plain falls back to HTML",
+        "body_plain": "   ",
+        "body_html": "<p>fallback</p>",
+        "expected": "fallback"
+      },
+      {
+        "name": "decodes hex numeric entity",
+        "body_plain": "it&#x2019;s here",
+        "body_html": null,
+        "expected": "it’s here"
+      },
+      {
+        "name": "decodes invisible-format entities then strips them",
+        "body_plain": "pad&#8203;ded&zwnj; text",
+        "body_html": null,
+        "expected": "padded text"
+      },
+      {
+        "name": "single-pass decode, never emits markup",
+        "body_plain": "&amp;lt;b&amp;gt;",
+        "body_html": null,
+        "expected": "&lt;b&gt;"
+      },
+      {
+        "name": "escaped angle brackets stay escaped",
+        "body_plain": "&lt;img onerror=x&gt; &#60;b&#62;",
+        "body_html": null,
+        "expected": "&lt;img onerror=x&gt; &#60;b&#62;"
+      },
+      {
+        "name": "unknown entities and bare ampersands pass through",
+        "body_plain": "AT&T; R&D and Q&A",
+        "body_html": null,
+        "expected": "AT&T; R&D and Q&A"
+      },
+      {
+        "name": "strips a wrapped tracking URL with its wrapper",
+        "body_plain": "Nu live in de nieuwste 96 Hero image ( https://clicks.treatwell.com/f/a/6tE-ICN4hzqPMl7BfMqPEg~~/AAAHahA~/NFtcpMkHm7uRbZd ) Boek nu",
+        "body_html": null,
+        "expected": "Nu live in de nieuwste 96 Hero image Boek nu"
+      },
+      {
+        "name": "strips a bare URL mid-sentence",
+        "body_plain": "Reset your password at https://example.com/reset?t=abc now",
+        "body_html": null,
+        "expected": "Reset your password at now"
+      },
+      {
+        "name": "RECONCILED (Rust): over-length is hard-cut to 200, no ellipsis",
+        "body_plain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "body_html": null,
+        "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "name": "RECONCILED (Rust): HTML source in the text/plain part is stripped",
+        "body_plain": "<!DOCTYPE html><html><body>Hello there</body></html>",
+        "body_html": null,
+        "expected": "Hello there"
+      },
+      {
+        "name": "strips a leaked [cid:] inline-image placeholder",
+        "body_plain": "Kindly approve Mandatory 'Component' Field [cid:logo_ecbea85b-c03e-44b5-a1f2@inbox2]",
+        "body_html": null,
+        "expected": "Kindly approve Mandatory 'Component' Field"
+      },
+      {
+        "name": "strips decorative separator runs, keeps short dashes",
+        "body_plain": "================================\nLearn more\n================================\nHi Waseem -- re-send the *~*~*~ C++ notes",
+        "body_html": null,
+        "expected": "Learn more Hi Waseem -- re-send the C++ notes"
+      },
+      {
+        "name": "entity reference split by the sender's line wrapping",
+        "body_plain": "<div>Be a star and leave a review</div>\n<div>&nbsp;&#8204;&nbsp\n;&#8204;&nbsp;&#820\n4;</div>\n<p>Would you recommend them?</p>",
+        "body_html": null,
+        "expected": "Be a star and leave a review Would you recommend them?"
+      },
+      {
+        "name": "prose straddling a line break is not joined",
+        "body_plain": "R &\nD; and Q&A",
+        "body_html": null,
+        "expected": "R & D; and Q&A"
+      },
+      {
+        "name": "tab references decode to a space",
+        "body_plain": "Telefoon:010-4769447 &#x0009;&#x0009;De heer",
+        "body_html": null,
+        "expected": "Telefoon:010-4769447 De heer"
+      }
+    ],
+    "divergences": [
+      {
+        "name": "lone known tag in prose",
+        "body_plain": "email me at <a> or use <name> placeholder; compare 5 < 10 and 10 > 5",
+        "body_html": null,
+        "ruby": "email me at <a> or use <name> placeholder; compare 5 < 10 and 10 > 5",
+        "rust": "email me at or use <name> placeholder; compare 5 < 10 and 10 > 5",
+        "note": "Rust's strip_known_tags drops a lone known-element tag (the tracking-pixel pass); Ruby has no residual-tag strip, so the tag survives. Unknown '<name>' words and stray '<' stay prose on both."
+      }
+    ]
+  },
+  "subject": {
+    "_fn": "SubjectNormalizer.normalize(input)  <->  threading::normalize_subject(input)",
+    "agreed": [
+      {
+        "name": "Re prefix",
+        "input": "Re: Hello",
+        "expected": "Hello"
+      },
+      {
+        "name": "repeated RE",
+        "input": "RE: RE: Hello",
+        "expected": "Hello"
+      },
+      {
+        "name": "Fwd then Re",
+        "input": "Fwd: Re: Hello",
+        "expected": "Hello"
+      },
+      {
+        "name": "FW",
+        "input": "FW: Hello",
+        "expected": "Hello"
+      },
+      {
+        "name": "no prefix",
+        "input": "Hello",
+        "expected": "Hello"
+      },
+      {
+        "name": "surrounding whitespace",
+        "input": "  Re:  Hello  ",
+        "expected": "Hello"
+      },
+      {
+        "name": "German AW",
+        "input": "AW: Bericht",
+        "expected": "Bericht"
+      },
+      {
+        "name": "Scandinavian SV",
+        "input": "SV: Rapport",
+        "expected": "Rapport"
+      },
+      {
+        "name": "Dutch Antw",
+        "input": "Antw: Vraag",
+        "expected": "Vraag"
+      },
+      {
+        "name": "German fwd WG",
+        "input": "WG: Bericht",
+        "expected": "Bericht"
+      },
+      {
+        "name": "bracketed count",
+        "input": "Re[2]: Hello",
+        "expected": "Hello"
+      },
+      {
+        "name": "list tag",
+        "input": "[team-list] Standup notes",
+        "expected": "Standup notes"
+      },
+      {
+        "name": "mixed fwd/list/re",
+        "input": "Fwd: [list] Re: Topic",
+        "expected": "Topic"
+      },
+      {
+        "name": "internal whitespace collapse",
+        "input": "Re:  spread   out",
+        "expected": "spread out"
+      },
+      {
+        "name": "empty string",
+        "input": "",
+        "expected": ""
+      },
+      {
+        "name": "whitespace only",
+        "input": "   ",
+        "expected": ""
+      },
+      {
+        "name": "bare prefix only",
+        "input": "Re:",
+        "expected": ""
+      },
+      {
+        "name": "CJK with ASCII colon",
+        "input": "回复: 你好",
+        "expected": "你好"
+      },
+      {
+        "name": "RECONCILED (more langs): Turkish YNT",
+        "input": "YNT: konu",
+        "expected": "konu"
+      },
+      {
+        "name": "RECONCILED (more langs): Italian Rif",
+        "input": "Rif: Riunione",
+        "expected": "Riunione"
+      },
+      {
+        "name": "RECONCILED (more langs): Portuguese Res",
+        "input": "Res: Enc: Contrato",
+        "expected": "Contrato"
+      },
+      {
+        "name": "RECONCILED (more langs): French Rép",
+        "input": "Rép: Réunion",
+        "expected": "Réunion"
+      },
+      {
+        "name": "RECONCILED (more langs): Korean reply",
+        "input": "답장: 회의",
+        "expected": "회의"
+      },
+      {
+        "name": "RECONCILED (more langs): Korean forward",
+        "input": "전달: 회의",
+        "expected": "회의"
+      },
+      {
+        "name": "RECONCILED (more langs): Japanese reply",
+        "input": "返信: 会議",
+        "expected": "会議"
+      },
+      {
+        "name": "RECONCILED (more langs): Japanese forward",
+        "input": "転送: 会議",
+        "expected": "会議"
+      },
+      {
+        "name": "RECONCILED (more langs): Hebrew reply",
+        "input": "השב: פגישה",
+        "expected": "פגישה"
+      },
+      {
+        "name": "RECONCILED (more langs): Arabic reply",
+        "input": "رد: اجتماع",
+        "expected": "اجتماع"
+      },
+      {
+        "name": "RECONCILED (more langs): Arabic forward (multi-word)",
+        "input": "إعادة توجيه: اجتماع",
+        "expected": "اجتماع"
+      },
+      {
+        "name": "RECONCILED (more langs): Hindi reply",
+        "input": "उत्तर: बैठक",
+        "expected": "बैठक"
+      },
+      {
+        "name": "RECONCILED (more langs): Greek reply",
+        "input": "ΑΠ: Συνάντηση",
+        "expected": "Συνάντηση"
+      },
+      {
+        "name": "RECONCILED (more langs): Russian forward",
+        "input": "ПЕР: Встреча",
+        "expected": "Встреча"
+      },
+      {
+        "name": "RECONCILED (more langs): Bulgarian reply",
+        "input": "НА: Среща",
+        "expected": "Среща"
+      },
+      {
+        "name": "RECONCILED (more langs): Chinese colon then Re",
+        "input": "回复: Re: 项目更新",
+        "expected": "项目更新"
+      }
+    ],
+    "divergences": [
+      {
+        "name": "space before colon",
+        "input": "RE : spaced colon",
+        "ruby": "RE : spaced colon",
+        "rust": "spaced colon",
+        "note": "Not reconciled (only language coverage was asked for). Rust trims whitespace between prefix and colon; Ruby requires the colon to immediately follow the prefix."
+      },
+      {
+        "name": "CJK with full-width colon",
+        "input": "回复：你好",
+        "ruby": "回复：你好",
+        "rust": "你好",
+        "note": "Not reconciled. Rust accepts the full-width colon U+FF1A after a CJK prefix; Ruby only recognises an ASCII colon."
+      },
+      {
+        "name": "CJK with no colon",
+        "input": "回复 你好",
+        "ruby": "回复 你好",
+        "rust": "你好",
+        "note": "Not reconciled. Rust strips an East-Asian ideographic prefix even with no colon; Ruby requires a colon."
+      },
+      {
+        "name": "parenthesised count",
+        "input": "Re(2): Hello",
+        "ruby": "Re(2): Hello",
+        "rust": "Hello",
+        "note": "Not reconciled. Rust accepts (n) and [n] count markers; Ruby only accepts [n]."
+      },
+      {
+        "name": "over-long list tag (45 chars)",
+        "input": "[xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx] Subject",
+        "ruby": "[xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx] Subject",
+        "rust": "Subject",
+        "note": "Not reconciled. Ruby caps list-tag content at 40 chars; Rust has no length cap."
+      },
+      {
+        "name": "list tag with nothing after it",
+        "input": "[list]",
+        "ruby": "",
+        "rust": "[list]",
+        "note": "Not reconciled. Ruby strips a leading list tag unconditionally (yielding empty); Rust keeps it when no subject text follows."
+      }
+    ]
+  },
+  "conditions": {
+    "_fn": "RuleExecutor#match_rule?(conditions, conv, msg)  <->  rules::conditions::conditions_match(conditions, msg). Both engines accept from/to plus the sender/recipient aliases.",
+    "message": {
+      "from": "Billing <billing@acme.com>",
+      "to": "me@example.com",
+      "subject": "Invoice #42 — June",
+      "body": "Please find the invoice attached.",
+      "has_attachment": true
+    },
+    "agreed": [
+      {
+        "name": "subject contains",
+        "conditions": [
+          {
+            "field": "subject",
+            "op": "contains",
+            "value": "invoice"
+          }
+        ],
+        "expected": true
+      },
+      {
+        "name": "subject equals (case-insensitive)",
+        "conditions": [
+          {
+            "field": "subject",
+            "op": "equals",
+            "value": "invoice #42 — june"
+          }
+        ],
+        "expected": true
+      },
+      {
+        "name": "subject starts_with (case-insensitive)",
+        "conditions": [
+          {
+            "field": "subject",
+            "op": "starts_with",
+            "value": "INVOICE"
+          }
+        ],
+        "expected": true
+      },
+      {
+        "name": "subject ends_with (case-insensitive)",
+        "conditions": [
+          {
+            "field": "subject",
+            "op": "ends_with",
+            "value": "JUNE"
+          }
+        ],
+        "expected": true
+      },
+      {
+        "name": "body contains",
+        "conditions": [
+          {
+            "field": "body",
+            "op": "contains",
+            "value": "attached"
+          }
+        ],
+        "expected": true
+      },
+      {
+        "name": "subject missing term",
+        "conditions": [
+          {
+            "field": "subject",
+            "op": "contains",
+            "value": "receipt"
+          }
+        ],
+        "expected": false
+      },
+      {
+        "name": "AND all hold",
+        "conditions": [
+          {
+            "field": "subject",
+            "op": "contains",
+            "value": "invoice"
+          },
+          {
+            "field": "body",
+            "op": "contains",
+            "value": "attached"
+          }
+        ],
+        "expected": true
+      },
+      {
+        "name": "AND one fails",
+        "conditions": [
+          {
+            "field": "subject",
+            "op": "contains",
+            "value": "invoice"
+          },
+          {
+            "field": "subject",
+            "op": "contains",
+            "value": "receipt"
+          }
+        ],
+        "expected": false
+      },
+      {
+        "name": "unknown operator",
+        "conditions": [
+          {
+            "field": "subject",
+            "op": "regex",
+            "value": "x"
+          }
+        ],
+        "expected": false
+      },
+      {
+        "name": "unknown field",
+        "conditions": [
+          {
+            "field": "nonsense",
+            "op": "contains",
+            "value": "x"
+          }
+        ],
+        "expected": false
+      },
+      {
+        "name": "RECONCILED (Rust): empty conditions never match",
+        "conditions": [],
+        "expected": false
+      },
+      {
+        "name": "field 'from'",
+        "conditions": [
+          {
+            "field": "from",
+            "op": "contains",
+            "value": "billing"
+          }
+        ],
+        "expected": true
+      },
+      {
+        "name": "field 'to'",
+        "conditions": [
+          {
+            "field": "to",
+            "op": "contains",
+            "value": "example"
+          }
+        ],
+        "expected": true
+      },
+      {
+        "name": "old 'sender' name is not a recognized field (no alias)",
+        "conditions": [
+          {
+            "field": "sender",
+            "op": "contains",
+            "value": "billing"
+          }
+        ],
+        "expected": false
+      },
+      {
+        "name": "old 'recipient' name is not a recognized field (no alias)",
+        "conditions": [
+          {
+            "field": "recipient",
+            "op": "contains",
+            "value": "example"
+          }
+        ],
+        "expected": false
+      },
+      {
+        "name": "RECONCILED (Rust): has_attachment is_true",
+        "conditions": [
+          {
+            "field": "has_attachment",
+            "op": "is_true",
+            "value": ""
+          }
+        ],
+        "expected": true
+      },
+      {
+        "name": "RECONCILED (Rust): has_attachment equals false",
+        "conditions": [
+          {
+            "field": "has_attachment",
+            "op": "equals",
+            "value": "false"
+          }
+        ],
+        "expected": false
+      }
+    ],
+    "divergences": []
+  },
+  "jev_triage": {
+    "_fn": "JevTriage.questions(labels:, spaces:, ask_label:) / JevTriage.state(...)  <->  triage::jev_questions(labels, spaces, ask_label) / triage::jev_state(...). Compare as parsed JSON, key order included. Contract: docs/Triage.md",
+    "model": "jev-1.13.0",
+    "builtin_labels": [
+      {
+        "slug": "needs_answer",
+        "name": "Needs answer",
+        "description": "A real person directly asked the owner a question or made a request and is waiting for the owner's personal reply",
+        "not_for": "Bulk, marketing, newsletter or automated mail; questions aimed at someone else"
+      },
+      {
+        "slug": "needs_answer_other",
+        "name": "Reply from someone else",
+        "description": "A reply is expected, but from someone other than the owner, for example the owner is only copied or the question is aimed at a colleague",
+        "not_for": ""
+      },
+      {
+        "slug": "waiting_reply",
+        "name": "Waiting for reply",
+        "description": "The owner sent the last message and is waiting for the other side to respond",
+        "not_for": "A closing thanks that ends the conversation"
+      },
+      {
+        "slug": "needs_approval",
+        "name": "Needs approval",
+        "description": "The owner is asked to approve or authorize someone else's request or work: a pull request, a purchase, time off, an expense, or a document prepared for their sign-off",
+        "not_for": "Bills, invoices or payments the owner has to pay"
+      },
+      {
+        "slug": "scheduling",
+        "name": "Scheduling",
+        "description": "Arranging or changing a meeting or a time, or a reminder or confirmation of an already-booked appointment with a concrete date and time, automated booking mail included",
+        "not_for": "Order, shipping or delivery updates"
+      },
+      {
+        "slug": "action_required",
+        "name": "Action required",
+        "description": "The owner must personally complete a concrete task with a consequence: sign a contract, cancel a subscription, verify an account, upload a requested file or fill in a requested form",
+        "not_for": "Marketing calls to action such as get started, learn more or upgrade; bills, invoices or statements to pay or look over"
+      },
+      {
+        "slug": "fyi",
+        "name": "FYI",
+        "description": "Informational, nothing is needed from the owner: announcements, promotions, product and service updates, threads the owner is only copied on, and anything else that asks nothing",
+        "not_for": "Newsletters and articles worth reading, receipts and order updates, automated system notifications"
+      },
+      {
+        "slug": "resolved",
+        "name": "Resolved",
+        "description": "The matter is concluded and nothing is left to do, such as a closing thanks or a confirmation that it is done",
+        "not_for": ""
+      },
+      {
+        "slug": "payment_due",
+        "name": "To pay",
+        "description": "The owner has to pay something: an invoice, bill, payment reminder, failed direct debit or renewal fee that is not already paid or collected automatically",
+        "not_for": "Receipts and invoices that say they are already paid or will be collected automatically"
+      },
+      {
+        "slug": "to_review",
+        "name": "To review",
+        "description": "Data or a document for the owner to look over, with nothing to answer or do: bank or card statements, reports, dashboards, analytics, shared spreadsheets",
+        "not_for": "Documents the owner must sign or approve"
+      },
+      {
+        "slug": "read_later",
+        "name": "Read later",
+        "description": "Something worth reading but not urgent: newsletters, articles, essays and product launch letters the owner subscribed to",
+        "not_for": "Promotions, sales and discount offers"
+      },
+      {
+        "slug": "receipt",
+        "name": "Receipt",
+        "description": "A record of something already done or paid: a receipt, an invoice marked paid or collected automatically, an order, shipping or delivery confirmation",
+        "not_for": ""
+      },
+      {
+        "slug": "notification",
+        "name": "Notification",
+        "description": "An automated system message: sign-in codes and links, security alerts, password resets, build, deploy, crash and monitoring alerts, app store processing notices",
+        "not_for": "Messages written by a real person"
+      }
+    ],
+    "priority_levels": [
+      "No attention needed: can be ignored, archived, or read whenever",
+      "Low: worth reading eventually, no action or deadline",
+      "Normal: needs a response or action within the next few days",
+      "High: needs a response or action today, or blocks someone's work",
+      "Urgent: needs immediate attention, such as an outage, a security incident, or a deadline within hours"
+    ],
+    "space_holding_pen": "triage",
+    "space_min_probability": 0.5,
+    "state_example": {
+      "owner": "ops@acme.com",
+      "subject": "Quote for 200 units",
+      "messages": [
+        {
+          "direction": "received",
+          "from": "jan@example.nl",
+          "text": "Hi, could you send a quote for 200 units by Friday?"
+        }
+      ],
+      "expected": {
+        "owner": "ops@acme.com",
+        "thread": {
+          "subject": "Quote for 200 units",
+          "messages": [
+            {
+              "direction": "received",
+              "from": "jan@example.nl",
+              "text": "Hi, could you send a quote for 200 units by Friday?"
+            }
+          ],
+          "last_direction": "received"
+        }
+      }
+    },
+    "agreed": [
+      {
+        "name": "built-ins only, no spaces",
+        "labels": "builtin",
+        "spaces": [],
+        "ask_label": true,
+        "expected": {
+          "label": {
+            "type": "choice",
+            "instructions": {
+              "question": "Which label describes what `thread` needs from its owner (`owner`) right now?",
+              "focus": "Judge the newest message in the context of the thread. Bulk, marketing, newsletter and automated mail never needs a personal reply from the owner: label it by what it is, such as a bill to pay, a booked appointment, a statement to review, something to read, a receipt or a system notification."
+            },
+            "criteria": {
+              "needs_answer": {
+                "name": "Needs answer",
+                "what": "A real person directly asked the owner a question or made a request and is waiting for the owner's personal reply",
+                "not_for": "Bulk, marketing, newsletter or automated mail; questions aimed at someone else"
+              },
+              "needs_answer_other": {
+                "name": "Reply from someone else",
+                "what": "A reply is expected, but from someone other than the owner, for example the owner is only copied or the question is aimed at a colleague"
+              },
+              "waiting_reply": {
+                "name": "Waiting for reply",
+                "what": "The owner sent the last message and is waiting for the other side to respond",
+                "not_for": "A closing thanks that ends the conversation"
+              },
+              "needs_approval": {
+                "name": "Needs approval",
+                "what": "The owner is asked to approve or authorize someone else's request or work: a pull request, a purchase, time off, an expense, or a document prepared for their sign-off",
+                "not_for": "Bills, invoices or payments the owner has to pay"
+              },
+              "scheduling": {
+                "name": "Scheduling",
+                "what": "Arranging or changing a meeting or a time, or a reminder or confirmation of an already-booked appointment with a concrete date and time, automated booking mail included",
+                "not_for": "Order, shipping or delivery updates"
+              },
+              "action_required": {
+                "name": "Action required",
+                "what": "The owner must personally complete a concrete task with a consequence: sign a contract, cancel a subscription, verify an account, upload a requested file or fill in a requested form",
+                "not_for": "Marketing calls to action such as get started, learn more or upgrade; bills, invoices or statements to pay or look over"
+              },
+              "fyi": {
+                "name": "FYI",
+                "what": "Informational, nothing is needed from the owner: announcements, promotions, product and service updates, threads the owner is only copied on, and anything else that asks nothing",
+                "not_for": "Newsletters and articles worth reading, receipts and order updates, automated system notifications"
+              },
+              "resolved": {
+                "name": "Resolved",
+                "what": "The matter is concluded and nothing is left to do, such as a closing thanks or a confirmation that it is done"
+              },
+              "payment_due": {
+                "name": "To pay",
+                "what": "The owner has to pay something: an invoice, bill, payment reminder, failed direct debit or renewal fee that is not already paid or collected automatically",
+                "not_for": "Receipts and invoices that say they are already paid or will be collected automatically"
+              },
+              "to_review": {
+                "name": "To review",
+                "what": "Data or a document for the owner to look over, with nothing to answer or do: bank or card statements, reports, dashboards, analytics, shared spreadsheets",
+                "not_for": "Documents the owner must sign or approve"
+              },
+              "read_later": {
+                "name": "Read later",
+                "what": "Something worth reading but not urgent: newsletters, articles, essays and product launch letters the owner subscribed to",
+                "not_for": "Promotions, sales and discount offers"
+              },
+              "receipt": {
+                "name": "Receipt",
+                "what": "A record of something already done or paid: a receipt, an invoice marked paid or collected automatically, an order, shipping or delivery confirmation"
+              },
+              "notification": {
+                "name": "Notification",
+                "what": "An automated system message: sign-in codes and links, security alerts, password resets, build, deploy, crash and monitoring alerts, app store processing notices",
+                "not_for": "Messages written by a real person"
+              }
+            }
+          },
+          "priority": {
+            "type": "score",
+            "instructions": "How soon does the owner of `thread` need to pay attention to it?",
+            "criteria": [
+              "No attention needed: can be ignored, archived, or read whenever",
+              "Low: worth reading eventually, no action or deadline",
+              "Normal: needs a response or action within the next few days",
+              "High: needs a response or action today, or blocks someone's work",
+              "Urgent: needs immediate attention, such as an outage, a security incident, or a deadline within hours"
+            ]
+          }
+        }
+      },
+      {
+        "name": "custom label appended, one built-in disabled, two spaces (blank description falls back to name)",
+        "labels": [
+          {
+            "slug": "needs_answer",
+            "name": "Needs answer",
+            "description": "A real person directly asked the owner a question or made a request and is waiting for the owner's personal reply",
+            "not_for": "Bulk, marketing, newsletter or automated mail; questions aimed at someone else",
+            "enabled": true
+          },
+          {
+            "slug": "needs_answer_other",
+            "name": "Reply from someone else",
+            "description": "A reply is expected, but from someone other than the owner, for example the owner is only copied or the question is aimed at a colleague",
+            "not_for": "",
+            "enabled": true
+          },
+          {
+            "slug": "waiting_reply",
+            "name": "Waiting for reply",
+            "description": "The owner sent the last message and is waiting for the other side to respond",
+            "not_for": "A closing thanks that ends the conversation",
+            "enabled": true
+          },
+          {
+            "slug": "needs_approval",
+            "name": "Needs approval",
+            "description": "The owner is asked to approve or authorize someone else's request or work: a pull request, a purchase, time off, an expense, or a document prepared for their sign-off",
+            "not_for": "Bills, invoices or payments the owner has to pay",
+            "enabled": true
+          },
+          {
+            "slug": "scheduling",
+            "name": "Scheduling",
+            "description": "Arranging or changing a meeting or a time, or a reminder or confirmation of an already-booked appointment with a concrete date and time, automated booking mail included",
+            "not_for": "Order, shipping or delivery updates",
+            "enabled": true
+          },
+          {
+            "slug": "action_required",
+            "name": "Action required",
+            "description": "The owner must personally complete a concrete task with a consequence: sign a contract, cancel a subscription, verify an account, upload a requested file or fill in a requested form",
+            "not_for": "Marketing calls to action such as get started, learn more or upgrade; bills, invoices or statements to pay or look over",
+            "enabled": true
+          },
+          {
+            "slug": "fyi",
+            "name": "FYI",
+            "description": "Informational, nothing is needed from the owner: announcements, promotions, product and service updates, threads the owner is only copied on, and anything else that asks nothing",
+            "not_for": "Newsletters and articles worth reading, receipts and order updates, automated system notifications",
+            "enabled": true
+          },
+          {
+            "slug": "resolved",
+            "name": "Resolved",
+            "description": "The matter is concluded and nothing is left to do, such as a closing thanks or a confirmation that it is done",
+            "not_for": "",
+            "enabled": false
+          },
+          {
+            "slug": "payment_due",
+            "name": "To pay",
+            "description": "The owner has to pay something: an invoice, bill, payment reminder, failed direct debit or renewal fee that is not already paid or collected automatically",
+            "not_for": "Receipts and invoices that say they are already paid or will be collected automatically",
+            "enabled": true
+          },
+          {
+            "slug": "to_review",
+            "name": "To review",
+            "description": "Data or a document for the owner to look over, with nothing to answer or do: bank or card statements, reports, dashboards, analytics, shared spreadsheets",
+            "not_for": "Documents the owner must sign or approve",
+            "enabled": true
+          },
+          {
+            "slug": "read_later",
+            "name": "Read later",
+            "description": "Something worth reading but not urgent: newsletters, articles, essays and product launch letters the owner subscribed to",
+            "not_for": "Promotions, sales and discount offers",
+            "enabled": true
+          },
+          {
+            "slug": "receipt",
+            "name": "Receipt",
+            "description": "A record of something already done or paid: a receipt, an invoice marked paid or collected automatically, an order, shipping or delivery confirmation",
+            "not_for": "",
+            "enabled": true
+          },
+          {
+            "slug": "notification",
+            "name": "Notification",
+            "description": "An automated system message: sign-in codes and links, security alerts, password resets, build, deploy, crash and monitoring alerts, app store processing notices",
+            "not_for": "Messages written by a real person",
+            "enabled": true
+          },
+          {
+            "slug": "legal_review",
+            "name": "Legal review",
+            "description": "Contracts, NDAs or terms that legal must read before anyone signs",
+            "not_for": "Signed contracts that only need filing",
+            "enabled": true,
+            "builtin": false
+          }
+        ],
+        "spaces": [
+          {
+            "slug": "support",
+            "name": "Support",
+            "description": "customer help, complaints, how-to questions",
+            "not_for": ""
+          },
+          {
+            "slug": "sales",
+            "name": "Sales",
+            "description": "",
+            "not_for": "Existing customers asking for help"
+          }
+        ],
+        "ask_label": true,
+        "expected": {
+          "label": {
+            "type": "choice",
+            "instructions": {
+              "question": "Which label describes what `thread` needs from its owner (`owner`) right now?",
+              "focus": "Judge the newest message in the context of the thread. Bulk, marketing, newsletter and automated mail never needs a personal reply from the owner: label it by what it is, such as a bill to pay, a booked appointment, a statement to review, something to read, a receipt or a system notification."
+            },
+            "criteria": {
+              "needs_answer": {
+                "name": "Needs answer",
+                "what": "A real person directly asked the owner a question or made a request and is waiting for the owner's personal reply",
+                "not_for": "Bulk, marketing, newsletter or automated mail; questions aimed at someone else"
+              },
+              "needs_answer_other": {
+                "name": "Reply from someone else",
+                "what": "A reply is expected, but from someone other than the owner, for example the owner is only copied or the question is aimed at a colleague"
+              },
+              "waiting_reply": {
+                "name": "Waiting for reply",
+                "what": "The owner sent the last message and is waiting for the other side to respond",
+                "not_for": "A closing thanks that ends the conversation"
+              },
+              "needs_approval": {
+                "name": "Needs approval",
+                "what": "The owner is asked to approve or authorize someone else's request or work: a pull request, a purchase, time off, an expense, or a document prepared for their sign-off",
+                "not_for": "Bills, invoices or payments the owner has to pay"
+              },
+              "scheduling": {
+                "name": "Scheduling",
+                "what": "Arranging or changing a meeting or a time, or a reminder or confirmation of an already-booked appointment with a concrete date and time, automated booking mail included",
+                "not_for": "Order, shipping or delivery updates"
+              },
+              "action_required": {
+                "name": "Action required",
+                "what": "The owner must personally complete a concrete task with a consequence: sign a contract, cancel a subscription, verify an account, upload a requested file or fill in a requested form",
+                "not_for": "Marketing calls to action such as get started, learn more or upgrade; bills, invoices or statements to pay or look over"
+              },
+              "fyi": {
+                "name": "FYI",
+                "what": "Informational, nothing is needed from the owner: announcements, promotions, product and service updates, threads the owner is only copied on, and anything else that asks nothing",
+                "not_for": "Newsletters and articles worth reading, receipts and order updates, automated system notifications"
+              },
+              "payment_due": {
+                "name": "To pay",
+                "what": "The owner has to pay something: an invoice, bill, payment reminder, failed direct debit or renewal fee that is not already paid or collected automatically",
+                "not_for": "Receipts and invoices that say they are already paid or will be collected automatically"
+              },
+              "to_review": {
+                "name": "To review",
+                "what": "Data or a document for the owner to look over, with nothing to answer or do: bank or card statements, reports, dashboards, analytics, shared spreadsheets",
+                "not_for": "Documents the owner must sign or approve"
+              },
+              "read_later": {
+                "name": "Read later",
+                "what": "Something worth reading but not urgent: newsletters, articles, essays and product launch letters the owner subscribed to",
+                "not_for": "Promotions, sales and discount offers"
+              },
+              "receipt": {
+                "name": "Receipt",
+                "what": "A record of something already done or paid: a receipt, an invoice marked paid or collected automatically, an order, shipping or delivery confirmation"
+              },
+              "notification": {
+                "name": "Notification",
+                "what": "An automated system message: sign-in codes and links, security alerts, password resets, build, deploy, crash and monitoring alerts, app store processing notices",
+                "not_for": "Messages written by a real person"
+              },
+              "legal_review": {
+                "name": "Legal review",
+                "what": "Contracts, NDAs or terms that legal must read before anyone signs",
+                "not_for": "Signed contracts that only need filing"
+              }
+            }
+          },
+          "priority": {
+            "type": "score",
+            "instructions": "How soon does the owner of `thread` need to pay attention to it?",
+            "criteria": [
+              "No attention needed: can be ignored, archived, or read whenever",
+              "Low: worth reading eventually, no action or deadline",
+              "Normal: needs a response or action within the next few days",
+              "High: needs a response or action today, or blocks someone's work",
+              "Urgent: needs immediate attention, such as an outage, a security incident, or a deadline within hours"
+            ]
+          },
+          "space": {
+            "type": "choice",
+            "instructions": {
+              "question": "Which team space should `thread` be filed in?",
+              "focus": "Judge the main purpose of the thread."
+            },
+            "criteria": {
+              "support": {
+                "name": "Support",
+                "what": "customer help, complaints, how-to questions"
+              },
+              "sales": {
+                "name": "Sales",
+                "what": "Sales",
+                "not_for": "Existing customers asking for help"
+              },
+              "no_match": {
+                "what": "A genuine email that none of the spaces above clearly covers"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "rule already decided the label: priority + space only",
+        "labels": "builtin",
+        "spaces": [
+          {
+            "slug": "support",
+            "name": "Support",
+            "description": "customer help, complaints, how-to questions",
+            "not_for": ""
+          },
+          {
+            "slug": "sales",
+            "name": "Sales",
+            "description": "",
+            "not_for": "Existing customers asking for help"
+          }
+        ],
+        "ask_label": false,
+        "expected": {
+          "priority": {
+            "type": "score",
+            "instructions": "How soon does the owner of `thread` need to pay attention to it?",
+            "criteria": [
+              "No attention needed: can be ignored, archived, or read whenever",
+              "Low: worth reading eventually, no action or deadline",
+              "Normal: needs a response or action within the next few days",
+              "High: needs a response or action today, or blocks someone's work",
+              "Urgent: needs immediate attention, such as an outage, a security incident, or a deadline within hours"
+            ]
+          },
+          "space": {
+            "type": "choice",
+            "instructions": {
+              "question": "Which team space should `thread` be filed in?",
+              "focus": "Judge the main purpose of the thread."
+            },
+            "criteria": {
+              "support": {
+                "name": "Support",
+                "what": "customer help, complaints, how-to questions"
+              },
+              "sales": {
+                "name": "Sales",
+                "what": "Sales",
+                "not_for": "Existing customers asking for help"
+              },
+              "no_match": {
+                "what": "A genuine email that none of the spaces above clearly covers"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "otp": {
+    "_fn": "OtpDetector.detect(subject:, body_plain:, body_html:, snippet:)  <->  otp::detect(subject, body_plain, body_html, snippet). null, {code} or {link, host}. Contract: docs/Notifications.md 'Sign-in codes and links'",
+    "agreed": [
+      {
+        "name": "code after the keyword",
+        "subject": "Verify your email",
+        "body_plain": "Your verification code is valid for 10 minutes: 482910",
+        "body_html": null,
+        "snippet": null,
+        "expected": {
+          "code": "482910"
+        }
+      },
+      {
+        "name": "code leads the subject",
+        "subject": "482910 is your Instagram code",
+        "body_plain": "Someone tried to log in.",
+        "body_html": null,
+        "snippet": null,
+        "expected": {
+          "code": "482910"
+        }
+      },
+      {
+        "name": "grouped code",
+        "subject": "Sign in to Slack",
+        "body_plain": "Confirmation code:\n\n123-456",
+        "body_html": null,
+        "snippet": null,
+        "expected": {
+          "code": "123-456"
+        }
+      },
+      {
+        "name": "alphanumeric code",
+        "subject": "Login attempt",
+        "body_plain": "Enter this code: X7K2QP to continue",
+        "body_html": null,
+        "snippet": null,
+        "expected": {
+          "code": "X7K2QP"
+        }
+      },
+      {
+        "name": "code from the snippet when there is no body",
+        "subject": "Your login code",
+        "body_plain": null,
+        "body_html": null,
+        "snippet": "Use code 5521 to sign in.",
+        "expected": {
+          "code": "5521"
+        }
+      },
+      {
+        "name": "html sign-in link, unsubscribe skipped",
+        "subject": "Your magic link",
+        "body_plain": "Click to sign in.",
+        "body_html": "<a href=\"https://x.com/unsubscribe\">Unsubscribe</a><a href=\"https://app.example.com/auth?t=a&amp;b=1\"><b>Sign in</b></a>",
+        "snippet": null,
+        "expected": {
+          "link": "https://app.example.com/auth?t=a&b=1",
+          "host": "app.example.com"
+        }
+      },
+      {
+        "name": "sign-in button beats an earlier Continue",
+        "subject": "Verify your email",
+        "body_plain": "Please verify.",
+        "body_html": "<a href=\"https://shop.example.com/cart\">Continue shopping</a><a href=\"https://example.com/v?t=1\">Verify email</a>",
+        "snippet": null,
+        "expected": {
+          "link": "https://example.com/v?t=1",
+          "host": "example.com"
+        }
+      },
+      {
+        "name": "bare link in plain text",
+        "subject": "Log in to Foo",
+        "body_plain": "Use https://foo.dev/login/token/abc to log in.",
+        "body_html": null,
+        "snippet": null,
+        "expected": {
+          "link": "https://foo.dev/login/token/abc",
+          "host": "foo.dev"
+        }
+      },
+      {
+        "name": "Messy login mail (2026-10-13)",
+        "subject": "Your login link for Messy",
+        "body_plain": "Click the button below to sign in.\n\nhttps://app.messy.sh/validate/0b0f0d60140b6d3ec28f",
+        "body_html": "<p>Click the button below to sign in to your Messy account.</p><a href=\"https://app.messy.sh/validate/0b0f0d60140b6d3ec28f\" style=\"x\">\r\n        Sign in to Messy\r\n      </a>",
+        "snippet": null,
+        "expected": {
+          "link": "https://app.messy.sh/validate/0b0f0d60140b6d3ec28f",
+          "host": "app.messy.sh"
+        }
+      },
+      {
+        "name": "Husttle cockpit mail (2026-10-13): the href says login, the button does not",
+        "subject": "Your Husttle cockpit login link",
+        "body_plain": "here is your login link for the WhatsApp cockpit.\r\n\r\nhttps://husttle.com/cockpit/login/eyJfcmFpbHMiOnsiZGF0YSI6WzIsIjIwMjYtMTAtMTNUMTQ6MTE6MjEuNDIwMzIyWiJdfQ==--04afe54515091a3f003c2b3a36aaf6ef84cadc67",
+        "body_html": "<a href=\"https://husttle.com/cockpit/login/eyJfcmFpbHMiOnsiZGF0YSI6WzIsIjIwMjYtMTAtMTNUMTQ6MTE6MjEuNDIwMzIyWiJdfQ==--04afe54515091a3f003c2b3a36aaf6ef84cadc67\" style=\"x\">Open the cockpit</a><p>Questions? <a href=\"https://wa.me/31687026099\">message us on WhatsApp</a>.</p>",
+        "snippet": null,
+        "expected": {
+          "link": "https://husttle.com/cockpit/login/eyJfcmFpbHMiOnsiZGF0YSI6WzIsIjIwMjYtMTAtMTNUMTQ6MTE6MjEuNDIwMzIyWiJdfQ==--04afe54515091a3f003c2b3a36aaf6ef84cadc67",
+          "host": "husttle.com"
+        }
+      },
+      {
+        "name": "plain-text validate link",
+        "subject": "Your login link for Messy",
+        "body_plain": "Sign in: https://app.messy.sh/validate/abc",
+        "body_html": null,
+        "snippet": null,
+        "expected": {
+          "link": "https://app.messy.sh/validate/abc",
+          "host": "app.messy.sh"
+        }
+      },
+      {
+        "name": "ordinary mail",
+        "subject": "Lunch?",
+        "body_plain": "Room 4021 at noon",
+        "body_html": null,
+        "snippet": null,
+        "expected": null
+      },
+      {
+        "name": "promo code",
+        "subject": "20% off",
+        "body_plain": "Use code SAVE2024 at checkout",
+        "body_html": null,
+        "snippet": null,
+        "expected": null
+      },
+      {
+        "name": "order confirmation with a discount code",
+        "subject": "Order confirmation",
+        "body_plain": "Thanks! Next time use discount code SAVE2024",
+        "body_html": null,
+        "snippet": null,
+        "expected": null
+      },
+      {
+        "name": "Husttle promo (2026-10-13)",
+        "subject": "10% off your Hoodie design",
+        "body_plain": "Order it with the button below and you get 10% off.\r\n\r\n[Order with 10% off](https://husttle.com/order?design=CAoB&offer=eyJf)",
+        "body_html": null,
+        "snippet": null,
+        "expected": null
+      },
+      {
+        "name": "GitLab failed pipeline whose commit message says \"Sign-in codes\" (2026-10-13)",
+        "subject": "inbox2 | Failed pipeline for main | 30931582",
+        "body_plain": "\r\n\r\nPipeline #134929 has failed!\r\n\r\nProject: inbox2 ( https://git.erip.me/inbox2/inbox2 )\r\nBranch: main ( https://git.erip.me/inbox2/inbox2/-/commits/main )\r\n\r\nCommit: 30931582 ( https://git.erip.me/inbox2/inbox2/-/commit/30931582b3763c4fe13a5f6c4531d00325854306 )\r\nCommit Message: Sign-in codes and links on notification cards (desktop, iOS, A...\r\nCommit Author: waseem\r\n\r\n\r\nPipeline #134929 ( https://git.erip.me/inbox2/inbox2/-/pipelines/134929 ) triggered by Waseem ( https://git.erip.me/waseem )\r\nhad 1 failed job.\r\n\r\nJob #455990 ( https://git.erip.me/inbox2/inbox2/-/jobs/455990/raw )\r\n\r\nStage: deploy\r\nName: deploy_pages\r\n\r\n-- \r\nYou're receiving this email because of your account on git.erip.me.\r\n",
+        "body_html": null,
+        "snippet": null,
+        "expected": null
+      },
+      {
+        "name": "Newsletter with an 'inloggen' footer and tracking links is not a sign-in link (reconi.nl, 2026-10-20)",
+        "subject": "Maak kennis met Digitaal ondertekenen",
+        "body_plain": "Beste relatie,\n\nMet Digitaal ondertekenen zet u uw handtekening overal en altijd. Lees meer over de mogelijkheden en bekijk de webinar.\n\nLees meer ( https://eds14.mailcamp.nl/c/verify/abc123 )\n\nNieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. Nieuws en evenementen van Reconi. \n\nInloggen op Mijn Reconi ( https://eds14.mailcamp.nl/c/login/def456 )\n\nU ontvangt deze e-mail omdat u lid bent. Afmelden ( https://eds14.mailcamp.nl/u/xyz )",
+        "body_html": null,
+        "snippet": null,
+        "expected": null
+      },
+      {
+        "name": "Magic link with the sign-in in the subject still works even with a footer",
+        "subject": "Your sign-in link for Linear",
+        "body_plain": "Click the link below to sign in.\n\nhttps://linear.app/auth/magic?token=xyz123\n\nUnsubscribe from product updates",
+        "body_html": null,
+        "snippet": null,
+        "expected": {
+          "link": "https://linear.app/auth/magic?token=xyz123",
+          "host": "linear.app"
+        }
+      }
+    ],
+    "divergences": []
+  },
+  "next_action": {
+    "_fn": "NextActionExtractor.extract(label:, subject:, text:, message_date:)  <->  next_action::extract(label, subject, text, message_date). {due_on, amount_cents, currency}. Contract: docs/Triage.md 'Next-action fields'",
+    "agreed": [
+      {
+        "name": "dutch invoice, euro comma, uiterlijk + month name",
+        "label": "payment_due",
+        "subject": "Factuur 2026-118",
+        "text": "Het bedrag van € 386,00 dient uiterlijk 24 oktober 2026 te worden voldaan.",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2026-10-24",
+          "amount_cents": 38600,
+          "currency": "EUR"
+        }
+      },
+      {
+        "name": "dutch te betalen, code suffix, vóór numeric EU date",
+        "label": "payment_due",
+        "subject": "Uw rekening",
+        "text": "Te betalen: 1.234,56 EUR vóór 01-11-2026",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2026-11-01",
+          "amount_cents": 123456,
+          "currency": "EUR"
+        }
+      },
+      {
+        "name": "cued total beats line items",
+        "label": "payment_due",
+        "subject": "Invoice INV-77",
+        "text": "Subtotal €300.00\nVAT €86.00\nTotal €386.00\nDue date: Oct 30, 2026",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2026-10-30",
+          "amount_cents": 38600,
+          "currency": "EUR"
+        }
+      },
+      {
+        "name": "US dollars with thousands, relative days",
+        "label": "payment_due",
+        "subject": "Payment reminder",
+        "text": "Please pay $1,234.56 within 14 days.",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2026-11-03",
+          "amount_cents": 123456,
+          "currency": "USD"
+        }
+      },
+      {
+        "name": "dutch binnen N dagen, no cue: largest amount",
+        "label": "payment_due",
+        "subject": "Herinnering",
+        "text": "Kosten € 12,50 en € 99,95. Graag betalen binnen 30 dagen.",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2026-11-19",
+          "amount_cents": 9995,
+          "currency": "EUR"
+        }
+      },
+      {
+        "name": "pounds, ISO date after by",
+        "label": "action_required",
+        "subject": "Renew your licence",
+        "text": "The fee of £45 must be paid by 2026-11-15.",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2026-11-15",
+          "amount_cents": 4500,
+          "currency": "GBP"
+        }
+      },
+      {
+        "name": "AED amount, month-day without year",
+        "label": "payment_due",
+        "subject": "DEWA bill",
+        "text": "Amount due AED 1,250.00. Please pay before November 5.",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2026-11-05",
+          "amount_cents": 125000,
+          "currency": "AED"
+        }
+      },
+      {
+        "name": "PKR prefix, slash date EU order",
+        "label": "payment_due",
+        "subject": "Fee challan",
+        "text": "Balance PKR 25,000 due 05/12/2026",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2026-12-05",
+          "amount_cents": 2500000,
+          "currency": "PKR"
+        }
+      },
+      {
+        "name": "HK dollars",
+        "label": "payment_due",
+        "subject": "Statement",
+        "text": "Total HK$ 880.00 payable by 3rd December 2026",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2026-12-03",
+          "amount_cents": 88000,
+          "currency": "HKD"
+        }
+      },
+      {
+        "name": "date before the message date is ignored",
+        "label": "payment_due",
+        "subject": "Old notice",
+        "text": "This was due 2026-01-05. Total €10",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": null,
+          "amount_cents": 1000,
+          "currency": "EUR"
+        }
+      },
+      {
+        "name": "no year, already passed this year rolls to next",
+        "label": "scheduling",
+        "subject": "Workshop",
+        "text": "Please confirm before 3 March whether you can join.",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2027-03-03",
+          "amount_cents": null,
+          "currency": null
+        }
+      },
+      {
+        "name": "weekday filler between cue and date",
+        "label": "needs_answer",
+        "subject": "Quick question",
+        "text": "Could you reply before Friday, 23 October?",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2026-10-23",
+          "amount_cents": null,
+          "currency": null
+        }
+      },
+      {
+        "name": "vervaldatum with dutch month abbreviation",
+        "label": "needs_approval",
+        "subject": "Offerte",
+        "text": "Vervaldatum: 7 nov. 2026. Bedrag € 2.400,-",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2026-11-07",
+          "amount_cents": 240000,
+          "currency": "EUR"
+        }
+      },
+      {
+        "name": "label outside the set gets nothing",
+        "label": "fyi",
+        "subject": "Newsletter",
+        "text": "Total €5, due 2026-10-25",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": null,
+          "amount_cents": null,
+          "currency": null
+        }
+      },
+      {
+        "name": "no amount, no date",
+        "label": "needs_answer",
+        "subject": "Lunch?",
+        "text": "Are you free sometime next week?",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": null,
+          "amount_cents": null,
+          "currency": null
+        }
+      },
+      {
+        "name": "invalid date skipped, later cue used",
+        "label": "payment_due",
+        "subject": "Bill",
+        "text": "due 31-02-2026, deadline 2026-12-01. Total: USD 99",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": "2026-12-01",
+          "amount_cents": 9900,
+          "currency": "USD"
+        }
+      },
+      {
+        "name": "amount in subject",
+        "label": "payment_due",
+        "subject": "Your invoice of €49.99 is ready",
+        "text": "Thanks for being a customer.",
+        "message_date": "2026-10-20",
+        "expected": {
+          "due_on": null,
+          "amount_cents": 4999,
+          "currency": "EUR"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,3 @@
+.page { padding: var(--space-4); }
+.list { margin: var(--space-4) 0 0; padding-left: var(--space-5); }
+.count { font-size: var(--text-3xs); color: var(--m-ink-faint); }

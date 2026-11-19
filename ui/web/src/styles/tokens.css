@@ -1,0 +1,1123 @@
+/* ═══════════════════════════════════════════════════════ */
+/* Inbox2 — Premium Operational Desktop Design System     */
+/* Vista Aero atmosphere × Modern SaaS × AI-native        */
+/* ═══════════════════════════════════════════════════════ */
+
+/* Atelier/Soirée theme faces (SIL OFL, self-hosted variable woff2, Latin subset). */
+@font-face {
+  font-family: "Jost";
+  src: url('/fonts/jost.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Bodoni Moda";
+  src: url('/fonts/bodoni-moda.woff2') format('woff2');
+  font-weight: 400 900;
+  font-display: swap;
+}
+/* Groovebox theme faces (SIL OFL, self-hosted variable woff2, Latin subset). */
+@font-face {
+  font-family: "Figtree";
+  src: url('/fonts/figtree.woff2') format('woff2');
+  font-weight: 300 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Rubik";
+  src: url('/fonts/rubik.woff2') format('woff2');
+  font-weight: 300 900;
+  font-display: swap;
+}
+
+:root {
+  /* Day / night art for the light-dark choice (setup Look step): fixed in every theme. */
+  --mode-night-bg: linear-gradient(180deg, #1d2440 0%, #0c1022 100%);
+  --mode-night-fg: #e8ecf6;
+  --mode-day-bg: linear-gradient(180deg, #8cc8f2 0%, #d9eefb 100%);
+  --mode-day-fg: #f0a91e;
+  --font-ui: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Fira Code", "SF Mono", "Cascadia Code", "JetBrains Mono", monospace;
+  /* Mail text face — compose editor + draft preview. Deliberately NOT
+   * --font-ui: SF Pro Display is a display face (tight, light at body sizes).
+   * Mirrors the reading-pane iframe stack in MessageCard/buildSrcDoc.js so the
+   * mail you write looks like the mail you read. */
+  --font-email: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Terminal Grotesque (Velvetyne, OFL) — the display wordmark face; @font-face
+   * loads globally in styles/management.css. Use this var, never the raw name. */
+  --font-grotesque: "Terminal Grotesque", "Clash Display", var(--font-ui);
+  /* Title face — the reading-pane subject. Plain UI type by default; the
+     Atelier/Soirée variants swap in Bodoni Moda (see the bottom of this file). */
+  --font-display: var(--font-ui);
+  --display-weight: var(--weight-bold);
+  --display-size: var(--text-md);
+
+  /* Type scale — one shared, roomier ramp. This used to be a tight desktop
+     scale with light mode overriding every step ~1px larger; the larger one
+     reads better everywhere, so it's the only scale now. */
+  --text-3xs: 0.75rem;      /* 12px — micro labels */
+  --text-2xs: 0.8125rem;    /* 13px — metadata */
+  --text-xs: 0.875rem;      /* 14px — labels */
+  --text-sm: 0.9375rem;     /* 15px — secondary */
+  --text-base: 1rem;        /* 16px — body */
+  --text-md: 1.0625rem;     /* 17px — emphasis */
+  --text-lg: 1.1875rem;     /* 19px — headers */
+  --text-xl: 1.3125rem;     /* 21px — titles */
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --tracking-tight: -0.02em;
+  --tracking-wide: 0.05em;
+
+  /* 4px grid */
+  --space-px: 1px;
+  --space-0h: 2px;
+  --space-1: 4px;
+  --space-1h: 6px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  /* Half-steps — the 4px grid is really a 2px grid in dense UI. These fill the
+     even gaps (10/14/18/22/26px) + one 7-unit step (28px). Odd-px values
+     (3/5/7/9/11px) stay literal: a --space-<n> name would collide with the
+     unit scale (--space-3 = 12px, not 3px). */
+  --space-2h: 10px;
+  --space-3h: 14px;
+  --space-4h: 18px;
+  --space-5h: 22px;
+  --space-6h: 26px;
+  --space-7: 28px;
+
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+  /* Extended radii — the word scale is too coarse for the real corner sizes in
+     use; px-named so they never collide with the xs/sm/md/lg/xl steps. */
+  --radius-4: 4px;
+  --radius-6: 6px;
+  --radius-7: 7px;
+  --radius-8: 8px;          /* fixed 8px — --radius-lg is re-tuned per variant (Groovebox: 14px) */
+  --radius-9: 9px;
+  --radius-10: 10px;
+  --radius-14: 14px;
+  --radius-16: 16px;
+
+  --duration-fast: 100ms;
+  --duration-normal: 180ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout */
+  --chrome-height: 54px;
+  --toolbar-height: 38px;
+  --sidebar-width: 200px;
+  --list-width: 340px;
+  --context-width: 280px;
+
+  /* Compose popup */
+  --compose-width: 60vw;
+  --compose-height: 80vh;
+  --compose-min-width: 480px;
+  --compose-min-height: 400px;
+  --draftbar-height: 42px;
+
+  /* Micro-interaction timing */
+  --duration-micro: 60ms;
+
+  /* Off-scale micro type sizes (below --text-3xs) */
+  --text-4xs: 0.625rem;     /* 10px — dense badges, log gutters */
+  --text-5xs: 0.5625rem;    /* 9px — micro badges, mini-calendar */
+  --text-6xs: 0.5rem;       /* 8px — smallest decorative labels */
+
+  /* Display type steps — large headings / empty-state numerals. Constant across
+     themes (big text needs no reading-comfort bump). */
+  --text-2xl: 1.375rem;     /* 22px */
+  --text-3xl: 1.625rem;     /* 26px */
+  --text-4xl: 1.875rem;     /* 30px */
+
+  /* Z-index layering scale — theme-independent.
+     sticky < scrim < drawer < sidebar < bar < float < dropdown < popover < modal < toast < tooltip < blocking */
+  --z-sticky: 20;           /* sticky page bars, in-flow dropdown panels */
+  --z-scrim: 30;            /* the scrim under a mobile drawer */
+  --z-drawer: 40;           /* mobile nav drawer, page-level request panel */
+  --z-sidebar: 100;         /* fixed app / console sidebars */
+  --z-bar: 600;             /* fixed bottom bars (DraftBar) — under the floats */
+  --z-float: 700;           /* floating compose / event-editor popups */
+  --z-dropdown: 1000;
+  --z-popover: 1100;
+  --z-modal: 1200;
+  --z-toast: 1300;
+  --z-tooltip: 1400;
+  --z-blocking: 1500;       /* signed-out wall — over everything */
+
+  /* Toast surface — the undo/action toast floats over whatever is behind it, so it
+     needs to read as a separate object. Defaults to the float surface (the base
+     themes carry their separation in the vivid --gradient-ring); themes whose ring
+     is a low-contrast metallic override this with a genuinely different value. */
+  --toast-surface: var(--surface-float);
+
+  /* Selection rail gradient — warm-accent endpoints, light-accent mid-stop.
+     Used by ConversationItem / CalendarSidebar / NavGroup selection bars. */
+  --gradient-selection-rail: linear-gradient(180deg, var(--accent-warning) 0%, #7EB0F7 40%, var(--accent-warning) 100%);
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* DARK THEME — deep graphite, navy-charcoal, warm steel  */
+/* ═══════════════════════════════════════════════════════ */
+[data-theme="dark"], :root {
+  /* Surface layers — deep atmospheric depth */
+  --bg-base: #090a0e;
+  --bg-sidebar: #0e1016;
+  --bg-panel: rgba(14, 16, 22, 0.96);
+  --bg-raised: rgba(24, 26, 34, 0.92);
+  --bg-elevated: rgba(32, 34, 44, 0.94);
+  --bg-input: rgba(6, 7, 12, 0.85);
+  --bg-hover: rgba(255, 255, 255, 0.04);
+  --bg-active: rgba(255, 255, 255, 0.065);
+  --bg-recessed: rgba(4, 5, 8, 0.6);
+  --bg-workspace: linear-gradient(180deg, rgba(8, 9, 14, 1) 0%, rgba(6, 7, 11, 1) 100%);
+  --bg-inset: linear-gradient(180deg, rgba(4, 5, 9, 0.8) 0%, rgba(8, 10, 16, 0.6) 100%);
+
+  /* Overlay system — theme-aware white/black overlays */
+  --overlay-2: rgba(255, 255, 255, 0.02);
+  --overlay-3: rgba(255, 255, 255, 0.03);
+  --overlay-4: rgba(255, 255, 255, 0.04);
+  --overlay-5: rgba(255, 255, 255, 0.05);
+  --overlay-6: rgba(255, 255, 255, 0.06);
+  --overlay-7: rgba(255, 255, 255, 0.07);
+  --overlay-8: rgba(255, 255, 255, 0.08);
+  --overlay-10: rgba(255, 255, 255, 0.10);
+  --overlay-12: rgba(255, 255, 255, 0.12);
+  --overlay-15: rgba(255, 255, 255, 0.15);
+  --overlay-18: rgba(255, 255, 255, 0.18);
+  --overlay-25: rgba(255, 255, 255, 0.25);
+
+  /* Bevel highlights — ALWAYS white, in every theme (Aero edge illumination
+     on colored/raised surfaces). Tint via
+     color-mix(in srgb, var(--bevel) N%, transparent), or use the named steps.
+     Use --overlay-* instead when the tint should flip to ink in light mode. */
+  --bevel: #fff;
+  --bevel-15: color-mix(in srgb, var(--bevel) 15%, transparent);
+  --bevel-25: color-mix(in srgb, var(--bevel) 25%, transparent);
+  --bevel-50: color-mix(in srgb, var(--bevel) 50%, transparent);
+
+  /* Shadow/border ink — tint via color-mix(in srgb, var(--ink) N%, transparent).
+     Neutral black in every theme; light mode deliberately does NOT tint it navy
+     (that cool cast is what made the light theme read as an inverted dark one). */
+  --ink: #000;
+
+  /* Dimming scrim — ALWAYS black (modal backdrops, image-darkening gradients
+     dim the content behind them in every theme). Tint via color-mix. */
+  --scrim: #000;
+
+  /* Floating surface gradients */
+  --surface-float: linear-gradient(180deg, rgba(28, 30, 40, 0.97) 0%, rgba(18, 20, 28, 0.98) 100%);
+  --surface-float-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  --surface-float-footer: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.02) 100%);
+  --surface-bar: linear-gradient(180deg, rgba(32, 36, 48, 0.92) 0%, rgba(22, 24, 32, 0.95) 50%, rgba(18, 20, 26, 0.98) 100%);
+  --surface-composer: linear-gradient(180deg, rgba(28, 30, 40, 0.96) 0%, rgba(22, 24, 32, 0.94) 100%);
+
+  /* Section / toolbar header shading. Dark themes let the surface behind show
+     through; light paints the macOS bevel (see the light block). One recipe for
+     ListViewColumns' column headers, the reading-pane toolbar and ChannelBar. */
+  --header-surface: transparent;
+  --header-edge: none;
+
+  /* Layout surface gradients */
+  --surface-sidebar-grad: linear-gradient(180deg, rgba(20, 22, 30, 1) 0%, rgba(14, 16, 22, 1) 15%, rgba(11, 13, 18, 1) 50%, rgba(9, 11, 15, 1) 80%, rgba(8, 9, 13, 1) 100%);
+  --surface-list-grad: linear-gradient(180deg, rgba(12, 14, 20, 0.98) 0%, rgba(14, 16, 22, 0.96) 100%);
+  --chrome-surface:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 30%, transparent 50%),
+    linear-gradient(180deg, rgba(94, 132, 174, 0.35) 0%, rgba(82, 120, 164, 0.30) 15%, rgba(72, 110, 154, 0.28) 30%, rgba(62, 100, 144, 0.25) 50%, rgba(52, 90, 134, 0.25) 70%, rgba(44, 80, 124, 0.28) 85%, rgba(36, 70, 112, 0.30) 100%);
+  --chrome-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 1px 4px rgba(0, 0, 0, 0.15);
+  --chrome-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --chrome-inset-bg: rgba(0, 0, 0, 0.25);
+  --chrome-inset-bg-hover: rgba(0, 0, 0, 0.35);
+  --tab-active-bg:
+    linear-gradient(180deg,
+      rgba(16, 18, 24, 0.75) 0%,
+      rgba(14, 16, 22, 0.65) 100%
+    );
+  --tab-active-fg: var(--text-primary);
+  --tab-active-border: rgba(255, 255, 255, 0.07);
+  --tab-active-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 8px rgba(0, 0, 0, 0.1);
+  --chrome-btn-fg: rgba(255, 255, 255, 0.7);
+  --chrome-btn-fg-hover: rgba(255, 255, 255, 0.95);
+  --tab-inactive-fg: rgba(255, 255, 255, 0.5);
+  --chrome-placeholder: rgba(255, 255, 255, 0.5);
+  --chrome-border: #142840;
+  --list-border: rgba(0, 0, 0, 0.3);
+  --sidebar-border: rgba(0, 0, 0, 0.35);
+
+  /* Acrylic system */
+  --acrylic-blur: blur(24px) saturate(135%);
+  --acrylic-border: 1px solid rgba(255, 255, 255, 0.07);
+  --acrylic-border-strong: 1px solid rgba(255, 255, 255, 0.11);
+  --acrylic-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* Panel depth system — soft atmospheric layering */
+  --panel-inset: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+  --panel-groove: 0 0 0 1px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --panel-deep-inset: inset 0 1px 4px rgba(0, 0, 0, 0.2);
+  --panel-ambient: 0 0 20px rgba(0, 0, 0, 0.1);
+
+  /* Text */
+  --text-primary: #e0e0e8;
+  --text-secondary: #a0a0b0;
+  --text-tertiary: #707080;
+  --text-muted: #4a4a58;
+  --text-inverse: #0b0c10;
+  --text-link: #a0a8b8;
+  --text-sender: #e8e8ee;
+
+  /* Borders */
+  --border-default: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.03);
+  --border-strong: rgba(255, 255, 255, 0.1);
+  --border-groove: rgba(0, 0, 0, 0.5);
+  /* Electric blue focus ring — consistent across all inputs (never white). */
+  --border-focus: var(--accent-warm-bright);
+
+  /* Accents — warm steel & operational tones */
+  --accent-primary: #a0a8b8;
+  --accent-primary-dim: rgba(160, 168, 184, 0.12);
+  --accent-warm: rgba(27, 105, 212, 0.85);
+  --accent-warm-bright: rgba(40, 120, 230, 1);
+  --accent-gold: #4488cc;
+  --accent-success: #7aaa8c;
+  --accent-success-dim: rgba(122, 170, 140, 0.1);
+  --accent-warning: #1B69D4;
+  --accent-warning-dim: rgba(27, 105, 212, 0.12);
+  --accent-danger: #c48a88;
+  --accent-danger-dim: rgba(196, 138, 136, 0.1);
+  --accent-purple: #a898c0;
+  --accent-purple-dim: rgba(168, 152, 192, 0.1);
+  --accent-amber: #d0b468;
+  --accent-amber-dim: rgba(208, 180, 104, 0.10);
+  /* The yellow "Admin settings" button (avatar menu): its own identity, same in every theme. */
+  --btn-admin-border: #e6b800;
+  --btn-admin-bg: linear-gradient(180deg, #ffd84f 0%, #ffcb1f 100%);
+  --btn-admin-bg-hover: linear-gradient(180deg, #ffe066 0%, #ffd23f 100%);
+  --btn-admin-text: #1a1a1f;
+
+  /* Calendar zones (docs/Calendar.md "Zones") — the palette keys the API stores
+     (blue/amber/violet/green/rose/teal), resolved per theme so a zone keeps its
+     contrast on every surface. Fills/outlines mix these over the surface. */
+  --zone-blue: #6f9cf2;
+  --zone-amber: #dcab4c;
+  --zone-violet: #a797cc;
+  --zone-green: #74b891;
+  --zone-rose: #de8ea0;
+  --zone-teal: #62b9b9;
+  --accent-teal: #78a8a0;
+  --accent-teal-dim: rgba(120, 168, 160, 0.1);
+
+  /* Calendar clock (Clock.jsx) — its own token so it can be retinted without
+     dragging every other --accent-warm-bright call site along. */
+  --clock-digits: var(--accent-warm-bright);
+  --clock-label: var(--accent-warm-bright);
+
+  /* Button system — modern desktop, translucent surfaces */
+  --btn-bg: rgba(255, 255, 255, 0.06);
+  --btn-bg-hover: rgba(255, 255, 255, 0.10);
+  --btn-bg-active: rgba(255, 255, 255, 0.03);
+  --btn-border: 1px solid rgba(255, 255, 255, 0.08);
+  --btn-highlight: inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
+  --btn-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.12);
+  --btn-shadow-active: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  --btn-primary-bg: linear-gradient(180deg, rgba(180, 135, 90, 0.85) 0%, rgba(155, 112, 68, 0.9) 100%);
+  --btn-primary-bg-hover: linear-gradient(180deg, rgba(195, 148, 100, 0.9) 0%, rgba(168, 125, 78, 0.95) 100%);
+  --btn-primary-highlight: inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
+  /* Label on --btn-primary-bg. White everywhere except Soirée's bright gold. */
+  --btn-primary-fg: #ffffff;
+
+  /* Filled destructive button (Button variant="danger") — ported from the
+     former ConfirmDialog .dangerBtn so it adopts without visual change. */
+  --btn-danger-bg: linear-gradient(180deg, #c04040 0%, #a83030 35%, #902828 65%, #782020 100%);
+  --btn-danger-bg-hover: linear-gradient(180deg, #d04848 0%, #b83838 35%, #a03030 65%, #882828 100%);
+  --btn-danger-border: 1px solid var(--overlay-15);
+  --btn-danger-highlight: inset 0 1px 0 var(--overlay-15);
+  --btn-danger-highlight-hover: inset 0 1px 0 var(--overlay-18);
+  --btn-danger-focus-ring: 0 0 0 2px rgba(200, 60, 60, 0.3);
+
+  /* Form controls (switch track, checked checkbox) — default to the warm steel
+     accent; per-theme overrides can retint these to match the primary button. */
+  --control-checked: var(--accent-warm);
+  --control-checked-ring: var(--accent-warm-bright);
+  --control-checked-fg: #ffffff;
+
+  /* Elevation — soft atmospheric depth */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.22), 0 2px 6px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-inset: inset 0 1px 4px rgba(0, 0, 0, 0.18);
+  --shadow-glow-warm: 0 0 10px rgba(200, 168, 122, 0.04);
+  --glow-hover: 0 0 6px rgba(160, 168, 200, 0.04);
+  --glow-focus: 0 0 0 2px rgba(160, 168, 200, 0.12), 0 0 8px rgba(160, 168, 200, 0.04);
+
+  /* Status */
+
+  /* Status / log-level TEXT colors — bright, saturated, for badges and
+     log viewers (SyncConsole, LogViewerSettings). Distinct from the muted
+     --accent-* family so log output stays legible. */
+  --status-success-text: #4ade80;
+  --status-danger-text: #f87171;
+  --status-warn-text: #facc15;
+  --status-caution-text: #fbbf24;
+  --status-info-text: #60a5fa;
+  --status-debug-text: #6b7280;
+
+  /* Agent-run status palette — RoutingPanel, RunDetailModal, LocalAgentsCard,
+     CreateRulePopup, TriageLab. Softer than --status-*-text (these sit on
+     panel chrome, not log output). The -deep variants anchor fills/borders;
+     tint them via color-mix(in srgb, var(--run-*-deep) N%, transparent). */
+  --run-success: #5fce8a;
+  --run-success-deep: #46be78;
+  --run-danger: #e98080;
+  --run-danger-deep: #e06060;
+  --accent-info: #6ea8fe;
+  --accent-bento-violet: #7b6cf6;
+
+  /* Electric glow — selection rails, unread dots, active-channel rings.
+     Deliberately constant across themes (it reads as light emission). */
+  --glow-blue: #64a0f0;
+
+  /* Semantic aliases — used by CSS modules */
+  --surface-base: var(--bg-base);
+  --surface-sidebar: var(--bg-sidebar);
+  --surface-raised: var(--bg-raised);
+  --surface-elevated: var(--bg-elevated);
+  --surface-input: var(--bg-input);
+  /* A recessed well INSIDE a panel — the inputs, code blocks and inset bars in
+     modals. Referenced by CSS modules since forever but never defined, so every
+     one of them took its hardcoded fallback: a dark wash that reads as a grey
+     blob on a light panel. Defined here, both themes, one place. */
+  --surface-sunken: rgba(0, 0, 0, 0.2);
+  --surface-hover: var(--bg-hover);
+  --surface-active: var(--bg-active);
+
+}
+
+/* ── Shared by both token sets — declared on every data-theme scope so each
+   var() resolves against THAT scope's accents (same as when each theme block
+   carried its own copy; only --surface-sunken genuinely differs per theme). ── */
+:root,
+[data-theme] {
+  --status-danger-bg: var(--accent-danger-dim);
+  --status-danger-border: var(--accent-danger);
+  --status-danger-fg: var(--accent-danger);
+
+  --avatar-size: 28px;
+  --avatar-bg: var(--accent-primary-dim);
+  --avatar-fg: var(--accent-primary);
+  --avatar-font: var(--text-2xs);
+  --gradient-ring: linear-gradient(180deg, #9B99FF 0%, #7B79FF 20%, #EC00C2 50%, #FF0080 70%, #FF754E 82%, #FFBF40 90%, #F9C071 100%);
+  --tag-bg: var(--accent-primary-dim);
+  --tag-fg: var(--accent-primary);
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* LIGHT THEME — Precision luxury desktop                  */
+/* Crisp hierarchy, architectural depth, tactile controls  */
+/* Bloomberg × Apple Pro × refined Vista Aero              */
+/* ═══════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  /* Overlays — warm-neutral, ambient, never harsh */
+  --overlay-2: rgba(0, 0, 0, 0.025);
+  --overlay-3: rgba(0, 0, 0, 0.04);
+  --overlay-4: rgba(0, 0, 0, 0.055);
+  --overlay-5: rgba(0, 0, 0, 0.07);
+  --overlay-6: rgba(0, 0, 0, 0.08);
+  --overlay-7: rgba(0, 0, 0, 0.09);
+  --overlay-8: rgba(0, 0, 0, 0.11);
+  --overlay-10: rgba(0, 0, 0, 0.13);
+  --overlay-12: rgba(0, 0, 0, 0.16);
+  --overlay-15: rgba(0, 0, 0, 0.19);
+  --overlay-18: rgba(0, 0, 0, 0.23);
+  --overlay-25: rgba(0, 0, 0, 0.30);
+
+  /* ── Floating surfaces — elevated, clean, cool white ─── */
+  --surface-float: linear-gradient(180deg, #ffffff 0%, #f7f8fa 100%);
+  --surface-float-highlight: linear-gradient(180deg, rgba(0, 0, 0, 0.035) 0%, transparent 100%);
+  --surface-float-footer: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.02) 100%);
+  --surface-bar: linear-gradient(180deg, #b2b6c0 0%, #a4a8b4 50%, #9a9eac 100%);
+  --surface-composer: linear-gradient(180deg, #ffffff 0%, #f6f7f9 100%);
+
+  /* macOS section header: near-white → grey bevel with a white top edge. */
+  --header-surface: linear-gradient(180deg, #fdfdfe 0%, #f2f2f4 100%);
+  --header-edge: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+
+  /* ── Panel hierarchy — distinct desktop surfaces ──────── */
+  /* Window #ececee · Sidebar #e8e8ea (recessed) · List #f6f6f8 · Content #fff
+     · Inspector #f5f5f7 — the macOS system grey ramp. */
+  --surface-sidebar-grad: var(--bg-sidebar);
+  --surface-list-grad: linear-gradient(180deg, #f8f8fa 0%, #f5f5f7 100%);
+
+  /* ── Chrome — a macOS title bar: light, opaque, dark glyphs ──────────────
+     Opaque on purpose. The window sits over a dark HudWindow vibrancy material
+     (setup.rs), so a translucent light bar goes muddy — the native look is a
+     solid #F6F6F8→#ECECEE bar with a hairline base. */
+  --chrome-surface: linear-gradient(180deg, #f7f7f9 0%, #ececee 100%);
+  --chrome-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0.5px 0 rgba(0, 0, 0, 0.04);
+  --chrome-text-shadow: none;
+  --chrome-inset-bg: rgba(255, 255, 255, 0.85);
+  --chrome-inset-bg-hover: #ffffff;
+  --tab-active-bg: #ffffff;
+  --tab-active-fg: #1d1d1f;
+  --tab-active-border: rgba(0, 0, 0, 0.14);
+  /* Top bevel only — the outer shadow bled out under the tab's bottom edge. */
+  --tab-active-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --chrome-btn-fg: rgba(0, 0, 0, 0.62);
+  --chrome-btn-fg-hover: #1d1d1f;
+  --tab-inactive-fg: rgba(0, 0, 0, 0.55);
+  --chrome-placeholder: rgba(0, 0, 0, 0.38);
+  --chrome-border: rgba(0, 0, 0, 0.14);
+  --list-border: rgba(0, 0, 0, 0.09);
+  --sidebar-border: rgba(0, 0, 0, 0.11);
+
+  /* ── Surfaces — crisp tonal hierarchy ────────────────── */
+  /* Sidebar: cool steel-gray (recessed, dense) */
+  /* List: medium warm gray (secondary workspace) */
+  /* Detail: bright warm white (primary focus) */
+  /* Context: cool gray (intelligence rail) */
+  /* Neutral greys, not steel-blue — macOS light is a warm-neutral system grey
+     (window #ECECEE, sidebar #E8E8EA, content #FFF). The blue cast was the main
+     reason the light theme read as "a dark app inverted" rather than native. */
+  --bg-base: #ececee;
+  --bg-sidebar: #f2f2f7;
+  --bg-panel: #f6f6f8;
+  --bg-raised: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-input: rgba(0, 0, 0, 0.05);
+  --bg-hover: rgba(0, 0, 0, 0.05);
+  --bg-active: rgba(0, 0, 0, 0.08);
+  --bg-recessed: rgba(0, 0, 0, 0.04);
+  /* Traditional list selection (light only): pale blue fill + normal dark text,
+     the Explorer/Finder-inactive convention. Used by mail rows + nav items
+     instead of the dark theme's accent tint + sweep rail. Deliberately far off
+     the saturated brand blue so selection doesn't read as an accent surface. */
+  --select-fill: #d3e2f5;
+  --select-fg: var(--text-primary);
+  /* Detail workspace sits one step below content white so message cards lift off it */
+  --bg-workspace: linear-gradient(180deg, #f2f2f4 0%, #ededef 100%);
+  --bg-inset: linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.015) 100%);
+
+  /* ── Acrylic — soft, ambient ─────────────────────────── */
+  --acrylic-blur: blur(18px) saturate(135%);
+  --acrylic-border: 1px solid rgba(0, 0, 0, 0.06);
+  --acrylic-border-strong: 1px solid rgba(0, 0, 0, 0.08);
+  --acrylic-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+
+  /* ── Panel depth — soft ambient layering ───────────── */
+  --panel-inset: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  --panel-groove: 0 0 0 1px rgba(0, 0, 0, 0.09), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  --panel-deep-inset: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  --panel-ambient: 0 0 16px rgba(0, 0, 0, 0.03);
+
+  /* ── Typography — cool graphite, authoritative ───────── */
+  /* macOS label colors: label #1d1d1f, secondary/tertiary neutral greys. */
+  --text-primary: #1d1d1f;
+  --text-secondary: #3c3c43;
+  --text-tertiary: #6e6e73;
+  --text-muted: #8e8e93;
+  --text-inverse: #ffffff;
+  --text-link: #0069d9;
+  --text-sender: #000000;
+  --text-preview: #6e6e73;
+
+  /* ── Separators — desktop hairlines, not card outlines ── */
+  --border-default: rgba(0, 0, 0, 0.11);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  /* macOS-style hairline — the old 0.06 vanished on white and left panels
+     reading as one undivided wash. */
+  --border-groove: rgba(0, 0, 0, 0.11);
+  --border-focus: var(--accent-warm-bright);
+
+  /* ── Accents — macOS system colors (light variants) ──────────────────────
+     systemBlue/Green/Orange/Red/Purple/Teal. `--accent-warning` used to be
+     another blue here, which is why warm/attention surfaces read as links. */
+  --accent-primary: #0069d9;
+  --accent-primary-dim: rgba(0, 122, 255, 0.12);
+  --accent-warm: rgba(0, 105, 217, 0.9);
+  --accent-warm-bright: #007aff;
+  --accent-gold: #b25000;
+  --accent-success: #248a3d;
+  --accent-success-dim: rgba(36, 138, 61, 0.12);
+  /* NB: `--accent-warning` is this theme's *accent* in practice (94 call sites —
+     selected nav rows, rails, active chips), not a warning color. It stays
+     systemBlue; genuinely amber things use --accent-amber. */
+  --accent-warning: #0069d9;
+  --accent-warning-dim: rgba(0, 122, 255, 0.12);
+  --accent-danger: #d70015;
+  --accent-danger-dim: rgba(215, 0, 21, 0.10);
+  --accent-purple: #8944ab;
+  --accent-purple-dim: rgba(137, 68, 171, 0.12);
+  /* Light theme: the bright accent is a cool blue, which reads as a link, not a
+     clock. Classic red-LED alarm clock instead. */
+  --clock-digits: #d92b1c;
+  --clock-label: #b52418;
+  --accent-amber: #b25000;
+  --accent-amber-dim: rgba(178, 80, 0, 0.10);
+
+  /* Calendar zones — deeper shades so stripes and labels hold on white. */
+  --zone-blue: #2f64d0;
+  --zone-amber: #a8701a;
+  --zone-violet: #6d5aa8;
+  --zone-green: #3d8a5f;
+  --zone-rose: #b8506a;
+  --zone-teal: #2a8585;
+  --accent-teal: #0b7f8c;
+  --accent-teal-dim: rgba(11, 127, 140, 0.12);
+
+  /* ── Buttons — crisp bevels, tactile, desktop-grade ──── */
+  /* Default: faint convex chip — a top bevel + hairline border read as a real
+     push-button without boxing toolbar icons (kept translucent to stay integrated). */
+  /* macOS push button: near-flat white chip, hairline border, half-pixel drop
+     shadow. No heavy gloss — the OS dropped that years ago. */
+  --btn-bg: linear-gradient(180deg, #ffffff 0%, #fafafb 100%);
+  --btn-bg-hover: linear-gradient(180deg, #ffffff 0%, #f0f0f2 100%);
+  --btn-bg-active: rgba(0, 0, 0, 0.08);
+  --btn-border: 1px solid rgba(0, 0, 0, 0.14);
+  --btn-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --btn-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.10);
+  --btn-shadow-active: inset 0 1px 2px rgba(0, 0, 0, 0.10);
+  /* Primary: filled systemBlue, faint top light */
+  --btn-primary-bg: linear-gradient(180deg, #1a86ff 0%, #007aff 55%, #0070ec 100%);
+  --btn-primary-bg-hover: linear-gradient(180deg, #3d9bff 0%, #178aff 55%, #0f80fa 100%);
+  --btn-primary-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  --btn-danger-bg: linear-gradient(180deg, #ef4a44 0%, #e02b22 55%, #d21f18 100%);
+  --btn-danger-bg-hover: linear-gradient(180deg, #f56059 0%, #e83c33 55%, #dc2c24 100%);
+  --btn-danger-border: 1px solid var(--overlay-15);
+  --btn-danger-highlight: inset 0 1px 0 var(--overlay-15);
+  --btn-danger-highlight-hover: inset 0 1px 0 var(--overlay-18);
+  --btn-danger-focus-ring: 0 0 0 2px rgba(200, 60, 60, 0.3);
+
+  /* Shadows — very soft on light. Floats lift by blur, not by darkness: a
+     tight contact shadow plus a wide, faint ambient one, blue-grey rather than
+     black so they don't go muddy on white. No hairline rings — the surfaces
+     carry their own borders, and a ring read as a hard outline. */
+  --shadow-xs: 0 1px 2px rgba(20, 24, 40, 0.04);
+  --shadow-sm: 0 1px 2px rgba(20, 24, 40, 0.04), 0 4px 12px rgba(20, 24, 40, 0.04);
+  --shadow-md: 0 2px 6px rgba(20, 24, 40, 0.04), 0 10px 28px rgba(20, 24, 40, 0.06);
+  --shadow-lg: 0 4px 10px rgba(20, 24, 40, 0.04), 0 18px 48px rgba(20, 24, 40, 0.08);
+  --shadow-xl: 0 6px 16px rgba(20, 24, 40, 0.05), 0 30px 80px rgba(20, 24, 40, 0.10);
+  --shadow-inset: inset 0 1px 2px rgba(20, 24, 40, 0.04);
+  --shadow-glow-warm: 0 0 10px rgba(140, 110, 60, 0.03);
+
+  /* Focus ring — macOS draws a 3px systemBlue halo, not a glow. */
+  --glow-hover: 0 0 6px rgba(0, 0, 0, 0.04);
+  --glow-focus: 0 0 0 3px rgba(0, 122, 255, 0.35);
+
+  /* ── Status — clear, decisive ────────────────────────── */
+
+  /* Status / log-level text — darkened for legibility on light surfaces */
+  --status-success-text: #1f8a4c;
+  --status-danger-text: #c0392b;
+  --status-warn-text: #b07a00;
+  --status-caution-text: #a86c00;
+  --status-info-text: #2563c8;
+  --status-debug-text: #6b7280;
+
+  /* Agent-run palette — follow the darkened status text on light surfaces */
+  --run-success: var(--status-success-text);
+  --run-success-deep: var(--status-success-text);
+  --run-danger: var(--status-danger-text);
+  --run-danger-deep: var(--status-danger-text);
+  --accent-info: var(--status-info-text);
+  --accent-bento-violet: #7b6cf6;
+
+  /* Selection / focus blue — systemBlue, the hue macOS highlights with. */
+  --glow-blue: #007aff;
+
+  /* Shadow/border ink — neutral black; every hand-written light rule mixes
+     against this, so a navy ink tinted the entire theme cool. */
+  --ink: #000000;
+
+  /* Control geometry — macOS radii (6px controls, 10px panels/popovers). */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  /* ── Semantic aliases ────────────────────────────────── */
+  --surface-base: var(--bg-base);
+  --surface-sidebar: var(--bg-sidebar);
+  --surface-raised: var(--bg-raised);
+  --surface-elevated: var(--bg-elevated);
+  --surface-input: var(--bg-input);
+  /* Light: a faint grey well, in the same family as --bg-input (0.05). */
+  --surface-sunken: rgba(0, 0, 0, 0.04);
+  --surface-hover: var(--bg-hover);
+  --surface-active: var(--bg-active);
+}
+
+/* ── 'Dark' variant: warm gold control accents (checkbox, switch, view switcher)
+   to match its bronze primary buttons. Keyed on the variant attribute that
+   applyTheme() always sets, so it applies on boot — pure CSS, no JS override.
+   Placed last so it wins over the base dark block. */
+[data-theme-variant="dark"] {
+  --control-checked: rgba(190, 142, 90, 0.95);
+  --control-checked-ring: rgba(210, 160, 105, 1);
+}
+
+/* 'Warm' variant: violet primary button + matching controls. Must be keyed on
+   the variant attribute rather than set inline on <html> from JS: the app is
+   wrapped in a nested `[data-theme="dark"]` element (AppChrome's `.app`) whose
+   base rule re-declares `--btn-primary-bg` to the bronze default, shadowing any
+   html-level value for everything in-app. `.app` carries the variant attribute
+   too, so this wins on that closer ancestor. */
+[data-theme-variant="dark-warm"] {
+  --btn-primary-bg: linear-gradient(180deg, rgba(138, 106, 250, 0.95) 0%, rgba(112, 80, 234, 0.97) 100%);
+  --btn-primary-bg-hover: linear-gradient(180deg, rgba(152, 122, 252, 0.97) 0%, rgba(124, 92, 244, 0.98) 100%);
+  --control-checked: rgba(124, 92, 244, 0.95);
+  --control-checked-ring: rgba(152, 122, 252, 1);
+}
+
+/* 'Stars' variant: cosmic purple accents. Retints the electric-blue identity
+   (active nav item, selection bar, focus ring, glows) + the control fills to
+   purple, to match the deep-space backdrop. */
+[data-theme-variant="dark-stars"] {
+  --control-checked: rgba(159, 122, 246, 0.95);
+  --control-checked-ring: rgba(182, 150, 252, 1);
+  --accent-warning: #9a78f4;
+  --accent-warm: rgba(138, 104, 240, 0.9);
+  --accent-warm-bright: rgba(170, 138, 250, 1);
+  --accent-bento-violet: #7b6cf6;
+  --glow-blue: #a98bf6;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* ATELIER + SOIRÉE — the quiet-luxury pair                */
+/* Atelier rides the light token set (ivory, cognac leather, */
+/* brushed gold); Soirée rides the dark one (bottle green,  */
+/* champagne, gold). Both swap the UI face to Jost and the  */
+/* title face to Bodoni Moda. Email bodies keep --font-email. */
+/* Mockups: the "inbox2 Atelier Theme" design canvas.       */
+/* ═══════════════════════════════════════════════════════ */
+[data-theme-variant="atelier"],
+[data-theme-variant="soiree"] {
+  --font-ui: "Jost", "Avenir Next", "Futura", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --display-weight: 500;
+  --display-size: var(--text-lg);
+  /* Tailored corners — tighter than either base set. */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 6px;
+  --radius-xl: 10px;
+  --gradient-ring: linear-gradient(180deg, #E7CF98 0%, #B8914A 40%, #F1DFB4 70%, #A97F3C 100%);
+}
+
+[data-theme-variant="atelier"] {
+  /* Surfaces — ivory paper, parchment sidebar, cream cards */
+  --bg-base: #f5efe6;
+  --bg-sidebar: #f0e8dc;
+  --bg-panel: #fbf8f3;
+  --bg-raised: #fffdf9;
+  --bg-elevated: #fffdf9;
+  --bg-input: rgba(90, 60, 30, 0.05);
+  --bg-hover: rgba(90, 60, 30, 0.05);
+  --bg-active: rgba(90, 60, 30, 0.08);
+  --bg-recessed: rgba(90, 60, 30, 0.04);
+  --select-fill: #f1e5d3;
+  --bg-workspace: linear-gradient(180deg, #f6f1e9 0%, #f2ebe0 100%);
+  --bg-inset: linear-gradient(180deg, rgba(90, 60, 30, 0.04) 0%, rgba(90, 60, 30, 0.015) 100%);
+  --surface-list-grad: linear-gradient(180deg, #fcf9f4 0%, #fbf8f3 100%);
+  --surface-float: linear-gradient(180deg, #fffdf9 0%, #faf6ef 100%);
+  /* Toasts go the other way — a darker parchment label on the ivory page, since a
+     cream-on-cream float with a gold hairline disappears. */
+  --toast-surface: linear-gradient(180deg, #e8dcc7 0%, #dccdb2 100%);
+  --surface-composer: linear-gradient(180deg, #fffdf9 0%, #faf6ef 100%);
+  --surface-bar: linear-gradient(180deg, #d9cbb5 0%, #cdbda4 100%);
+  --header-surface: linear-gradient(180deg, #fbf7f0 0%, #f3ece1 100%);
+
+  /* Chrome — a parchment title bar */
+  --chrome-surface: linear-gradient(180deg, #efe6d8 0%, #e7dccb 100%);
+  --chrome-shadow: inset 0 1px 0 rgba(255, 253, 249, 0.8), 0 0.5px 0 rgba(90, 60, 30, 0.08);
+  --chrome-inset-bg: rgba(255, 253, 249, 0.85);
+  --chrome-inset-bg-hover: #fffdf9;
+  --tab-active-bg: #f5efe6;
+  --tab-active-fg: #211b17;
+  --tab-active-border: #d6c7af;
+  --chrome-btn-fg: rgba(33, 27, 23, 0.62);
+  --chrome-btn-fg-hover: #211b17;
+  --tab-inactive-fg: rgba(33, 27, 23, 0.52);
+  --chrome-placeholder: rgba(33, 27, 23, 0.4);
+  --chrome-border: #d6c7af;
+  --list-border: #e4d9c8;
+  --sidebar-border: #ddd1bf;
+
+  /* Text — warm ink */
+  --text-primary: #211b17;
+  --text-secondary: #4a3f37;
+  --text-tertiary: #7a6d60;
+  --text-muted: #9a8d80;
+  --text-link: #8e4f28;
+  --text-sender: #1a1511;
+  --text-preview: #7a6d60;
+
+  --border-default: rgba(90, 60, 30, 0.14);
+  --border-subtle: rgba(90, 60, 30, 0.08);
+  --border-strong: rgba(90, 60, 30, 0.2);
+  --border-groove: rgba(90, 60, 30, 0.14);
+
+  /* Accents — cognac leather + antique gold */
+  --accent-primary: #8e4f28;
+  --accent-primary-dim: rgba(142, 79, 40, 0.12);
+  --accent-warm: rgba(142, 79, 40, 0.92);
+  --accent-warm-bright: #9c5a31;
+  --accent-gold: #9a7440;
+  --accent-warning: #8e4f28;
+  --accent-warning-dim: rgba(142, 79, 40, 0.12);
+  --accent-success: #5e7a52;
+  --accent-success-dim: rgba(94, 122, 82, 0.12);
+  --accent-danger: #9c3b36;
+  --accent-danger-dim: rgba(156, 59, 54, 0.1);
+  --accent-purple: #7b5b78;
+  --accent-purple-dim: rgba(123, 91, 120, 0.12);
+  --accent-amber: #9a7440;
+  --accent-amber-dim: rgba(154, 116, 64, 0.12);
+  --accent-teal: #4f7a6e;
+  --accent-teal-dim: rgba(79, 122, 110, 0.12);
+  --accent-bento-violet: #7b6cf6;
+  --clock-digits: #8e4f28;
+  --clock-label: #6f3b1c;
+  --glow-blue: #b08d57;
+  --glow-focus: 0 0 0 3px rgba(142, 79, 40, 0.28);
+  --gradient-selection-rail: linear-gradient(180deg, #b08d57 0%, #8e4f28 50%, #b08d57 100%);
+
+  /* Buttons — cream push buttons, saddle-leather primary */
+  --btn-bg: linear-gradient(180deg, #fffdf9 0%, #faf5ee 100%);
+  --btn-bg-hover: linear-gradient(180deg, #fffdf9 0%, #f3ebdf 100%);
+  --btn-bg-active: rgba(90, 60, 30, 0.08);
+  --btn-border: 1px solid rgba(90, 60, 30, 0.18);
+  --btn-primary-bg: linear-gradient(180deg, #9c5a31 0%, #84461f 100%);
+  --btn-primary-bg-hover: linear-gradient(180deg, #a8653a 0%, #8e4f28 100%);
+  --btn-primary-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  --control-checked: #8e4f28;
+  --control-checked-ring: #9c5a31;
+
+  /* Warm the shadows so floats sit on paper, not on grey */
+  --ink: #3a2412;
+}
+
+[data-theme-variant="soiree"] {
+  /* Surfaces — bottle green, emerald felt */
+  --bg-base: #0b110f;
+  --bg-sidebar: #0d1411;
+  --bg-panel: rgba(14, 21, 18, 0.96);
+  --bg-raised: rgba(22, 32, 27, 0.94);
+  --bg-elevated: rgba(26, 38, 32, 0.96);
+  --bg-input: rgba(5, 9, 7, 0.85);
+  --bg-hover: rgba(239, 231, 215, 0.04);
+  --bg-active: rgba(239, 231, 215, 0.065);
+  --bg-recessed: rgba(3, 6, 5, 0.6);
+  --bg-workspace: linear-gradient(180deg, #0c1411 0%, #09100d 100%);
+  --bg-inset: linear-gradient(180deg, rgba(3, 6, 5, 0.8) 0%, rgba(8, 14, 11, 0.6) 100%);
+  --surface-float: linear-gradient(180deg, rgba(24, 36, 30, 0.98) 0%, rgba(16, 24, 20, 0.98) 100%);
+  /* Toasts sit a full step above the float layer — lit felt, not more bottle green. */
+  --toast-surface: linear-gradient(180deg, #2b3d34 0%, #1e2c25 100%);
+  --surface-bar: linear-gradient(180deg, rgba(28, 42, 35, 0.92) 0%, rgba(18, 28, 23, 0.95) 50%, rgba(14, 21, 18, 0.98) 100%);
+  --surface-composer: linear-gradient(180deg, rgba(24, 36, 30, 0.96) 0%, rgba(18, 28, 23, 0.94) 100%);
+  --surface-sidebar-grad: linear-gradient(180deg, #111b17 0%, #0d1411 30%, #0a100d 100%);
+  --surface-list-grad: linear-gradient(180deg, rgba(14, 22, 18, 0.98) 0%, rgba(16, 24, 21, 0.96) 100%);
+
+  /* Chrome — a gold hairline over deep green */
+  --chrome-surface:
+    linear-gradient(180deg, rgba(201, 166, 97, 0.08) 0%, rgba(201, 166, 97, 0.02) 40%, transparent 60%),
+    linear-gradient(180deg, #0e1713 0%, #08100c 100%);
+  --chrome-shadow: inset 0 1px 0 rgba(201, 166, 97, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+  --chrome-border: rgba(201, 166, 97, 0.22);
+  --tab-active-bg: linear-gradient(180deg, rgba(16, 26, 21, 0.85) 0%, rgba(13, 20, 17, 0.8) 100%);
+  --tab-active-border: rgba(201, 166, 97, 0.2);
+  --chrome-btn-fg: rgba(239, 231, 215, 0.7);
+  --chrome-btn-fg-hover: rgba(239, 231, 215, 0.95);
+  --tab-inactive-fg: rgba(239, 231, 215, 0.5);
+  --chrome-placeholder: rgba(239, 231, 215, 0.45);
+
+  /* Text — champagne */
+  --text-primary: #efe7d7;
+  --text-secondary: #b9ae98;
+  --text-tertiary: #8a8270;
+  --text-muted: #5e594c;
+  --text-inverse: #0b110f;
+  --text-link: #d9bd82;
+  --text-sender: #f4ede0;
+
+  --border-default: rgba(239, 231, 215, 0.07);
+  --border-subtle: rgba(239, 231, 215, 0.035);
+  --border-strong: rgba(239, 231, 215, 0.11);
+
+  /* Accents — brushed gold */
+  --accent-primary: #c9a661;
+  --accent-primary-dim: rgba(201, 166, 97, 0.12);
+  --accent-warm: rgba(201, 166, 97, 0.85);
+  --accent-warm-bright: #d9ba78;
+  --accent-gold: #c9a661;
+  --accent-warning: #c9a661;
+  --accent-warning-dim: rgba(201, 166, 97, 0.12);
+  --accent-success: #7fa88a;
+  --accent-danger: #c98b84;
+  --accent-teal: #7fa89c;
+  --accent-bento-violet: #7b6cf6;
+  --clock-digits: #d9ba78;
+  --clock-label: #c9a661;
+  --glow-blue: #c9a661;
+  --glow-focus: 0 0 0 2px rgba(201, 166, 97, 0.25), 0 0 8px rgba(201, 166, 97, 0.08);
+  --gradient-selection-rail: linear-gradient(180deg, #a98543 0%, #e7cf98 50%, #a98543 100%);
+
+  --btn-primary-bg: linear-gradient(180deg, #dcbe7e 0%, #b38c47 100%);
+  --btn-primary-bg-hover: linear-gradient(180deg, #e6ca8c 0%, #bf9852 100%);
+  --btn-primary-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --btn-primary-fg: #1a140c;
+  --control-checked: rgba(201, 166, 97, 0.95);
+  --control-checked-ring: #d9ba78;
+  --control-checked-fg: #1a140c;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* GROOVEBOX — a toy synth on a guidebook grid             */
+/* Rides the dark token set: black island panels over a    */
+/* charcoal ground with a violet iso-grid (lib/groovebox.js),*/
+/* dark keycap buttons, a cream keycap for the active tab,  */
+/* a lavender dome for the primary action, LED-green unread.*/
+/* One pastel per role: lavender primary, teal success,     */
+/* mustard warning/clock, coral danger, pink tags.          */
+/* Mockups: the "inbox2 Groovebox Theme" design canvas.     */
+/* ═══════════════════════════════════════════════════════ */
+[data-theme-variant="groovebox"] {
+  --font-ui: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-display: "Rubik", "Figtree", -apple-system, system-ui, sans-serif;
+  --display-weight: 700;
+  --display-size: var(--text-lg);
+  /* Soft, toy-like corners — rounder than either base set. */
+  --radius-sm: 6px;
+  --radius-md: 9px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Surfaces — near-black islands */
+  --bg-base: #121214;
+  --bg-sidebar: #0f0f11;
+  --bg-panel: rgba(18, 18, 20, 0.96);
+  --bg-raised: rgba(27, 27, 31, 0.95);
+  --bg-elevated: rgba(34, 34, 39, 0.97);
+  --bg-input: #1b1b1f;
+  --bg-hover: rgba(243, 240, 234, 0.045);
+  --bg-active: rgba(166, 140, 240, 0.12);
+  --bg-recessed: rgba(6, 6, 8, 0.6);
+  --bg-workspace: linear-gradient(180deg, #141416 0%, #111113 100%);
+  --bg-inset: linear-gradient(180deg, rgba(6, 6, 8, 0.8) 0%, rgba(14, 14, 16, 0.6) 100%);
+  --surface-float: linear-gradient(180deg, #1f1f24 0%, #18181c 100%);
+  --toast-surface: linear-gradient(180deg, #2c2c33 0%, #222228 100%);
+  --surface-bar: linear-gradient(180deg, #1c1c20 0%, #141416 100%);
+  --surface-composer: linear-gradient(180deg, #1c1c21 0%, #161619 100%);
+  --surface-sidebar-grad: linear-gradient(180deg, #121214 0%, #0f0f11 100%);
+  --surface-list-grad: linear-gradient(180deg, rgba(18, 18, 20, 0.98) 0%, rgba(16, 16, 18, 0.97) 100%);
+
+  /* Chrome — a smoked-glass strip (the standard theme's sheen-over-tint, in
+     charcoal-violet) so the window material frosts through; the active tab is
+     a cream keycap */
+  --chrome-surface:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 30%, transparent 50%),
+    linear-gradient(180deg, rgba(44, 38, 60, 0.38) 0%, rgba(30, 27, 38, 0.34) 50%, rgba(18, 18, 22, 0.40) 100%);
+  --chrome-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(148, 121, 216, 0.25), 0 1px 4px rgba(0, 0, 0, 0.3);
+  --chrome-text-shadow: none;
+  --chrome-inset-bg: #1b1b1f;
+  --chrome-inset-bg-hover: #232328;
+  --chrome-border: rgba(148, 121, 216, 0.25);
+  /* The black of the island panels and of a bezel / LCD window (dashboard, zones). */
+  --gb-island: #0e0e10;
+  --gb-bezel: #0a0a0b;
+  --tab-active-bg: linear-gradient(180deg, #f6f2e9 0%, #e4ded1 100%);
+  --tab-active-fg: #1c1b1f;
+  --tab-active-border: #a9a192;
+  --tab-active-shadow: inset 0 1px 0 #fff, 0 2px 0 #a9a192;
+  --chrome-btn-fg: rgba(243, 240, 234, 0.7);
+  --chrome-btn-fg-hover: #f3f0ea;
+  --tab-inactive-fg: rgba(243, 240, 234, 0.55);
+  --chrome-placeholder: rgba(243, 240, 234, 0.45);
+  --list-border: rgba(0, 0, 0, 0.45);
+  --sidebar-border: rgba(0, 0, 0, 0.45);
+
+  /* Text — warm off-white */
+  --text-primary: #f3f0ea;
+  --text-secondary: #b4b0b8;
+  --text-tertiary: #85818c;
+  --text-muted: #5d5a63;
+  --text-inverse: #121214;
+  --text-link: #c4b2ff;
+  --text-sender: #f7f4ee;
+
+  --border-default: rgba(243, 240, 234, 0.07);
+  --border-subtle: rgba(243, 240, 234, 0.035);
+  --border-strong: rgba(243, 240, 234, 0.12);
+  --border-groove: rgba(0, 0, 0, 0.55);
+
+  /* Accents — one pastel per role */
+  --accent-primary: #a68cf0;
+  --accent-primary-dim: rgba(166, 140, 240, 0.14);
+  --accent-warm: rgba(166, 140, 240, 0.9);
+  --accent-warm-bright: #c4b2ff;
+  --accent-gold: #f0b545;
+  --accent-success: #44c2b3;
+  --accent-success-dim: rgba(68, 194, 179, 0.13);
+  /* --accent-warning is the dark set's selection identity (active nav item,
+     open row, rails), not just "warning": lavender, like Stars' purple. */
+  --accent-warning: #b49cf6;
+  --accent-warning-dim: rgba(180, 156, 246, 0.16);
+  --accent-danger: #f2785c;
+  --accent-danger-dim: rgba(242, 120, 92, 0.13);
+  --accent-purple: #a68cf0;
+  --accent-purple-dim: rgba(166, 140, 240, 0.14);
+  --accent-amber: #f0b545;
+  --accent-amber-dim: rgba(240, 181, 69, 0.13);
+  --accent-teal: #44c2b3;
+  --accent-teal-dim: rgba(68, 194, 179, 0.13);
+  --accent-bento-violet: #7b6cf6;
+  --clock-digits: #f0b545;
+  --clock-label: #a68cf0;
+  /* Unread dots + rails read as the synth's LEDs. */
+  --glow-blue: #5fd68a;
+  --glow-focus: 0 0 0 2px rgba(166, 140, 240, 0.35), 0 0 10px rgba(166, 140, 240, 0.12);
+  --gradient-selection-rail: linear-gradient(180deg, #8466e0 0%, #c4b2ff 50%, #8466e0 100%);
+  --gradient-ring: linear-gradient(180deg, #f2785c 0%, #f0b545 30%, #44c2b3 65%, #a68cf0 100%);
+  --tag-bg: rgba(240, 163, 189, 0.16);
+  --tag-fg: #f0a3bd;
+
+  /* Buttons — dark keycaps with a hard bottom edge; lavender dome primary */
+  --btn-bg: linear-gradient(180deg, #34343a 0%, #26262b 100%);
+  --btn-bg-hover: linear-gradient(180deg, #3d3d44 0%, #2d2d33 100%);
+  --btn-bg-active: #222226;
+  --btn-border: 1px solid rgba(0, 0, 0, 0.5);
+  --btn-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  --btn-shadow: 0 2px 0 #08080a, 0 3px 6px rgba(0, 0, 0, 0.35);
+  --btn-shadow-active: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+  --btn-primary-bg: radial-gradient(circle at 38% 28%, #d9ccff 0%, #a68cf0 55%, #8466e0 100%);
+  --btn-primary-bg-hover: radial-gradient(circle at 38% 28%, #e4daff 0%, #b49cf6 55%, #9174e8 100%);
+  --btn-primary-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  --btn-primary-fg: #1a1424;
+  --control-checked: #44c2b3;
+  --control-checked-ring: #6fd6c9;
+  --control-checked-fg: #121214;
+}
+
+/* Groovebox layout: the panels float apart over the guidebook grid. The grid
+   here is a CSS twin of lib/groovebox.js (same ground, colour, 30° lines) for
+   the gutters; the reading pane's canvas carries the outlined objects. */
+[data-theme-variant="groovebox"] {
+  --gb-gutter: 10px;
+  --gb-panel-radius: 20px;
+  --gb-panel-shadow: inset 0 0 0 1px rgba(243, 240, 234, 0.05), 0 14px 32px rgba(0, 0, 0, 0.45);
+  --gb-grid-bg:
+    repeating-linear-gradient(30deg, transparent 0 46.5px, rgba(148, 121, 216, 0.42) 46.5px 48px),
+    repeating-linear-gradient(-30deg, transparent 0 46.5px, rgba(148, 121, 216, 0.42) 46.5px 48px),
+    #2a2a2e;
+}
+
+/* ═══ Lore — the Notion-style workload wiki (components/Lore, docs/plans/lore.md §4c) ═══
+ * Its own flat palette (Notion's page + tag colours), dark by default and
+ * re-tinted for the light theme below. Only Lore surfaces read these. */
+:root {
+  --lore-bg: #191919;
+  --lore-side: #202020;
+  --lore-raised: #252525;
+  --lore-callout: #2a2a2a;
+  --lore-text: rgba(255, 255, 255, 0.87);
+  --lore-muted: rgba(255, 255, 255, 0.56);
+  --lore-faint: rgba(255, 255, 255, 0.4);
+  --lore-border: rgba(255, 255, 255, 0.09);
+  --lore-hover: rgba(255, 255, 255, 0.055);
+  --lore-active: rgba(255, 255, 255, 0.09);
+  --lore-blue: #2383e2;
+  /* Lore's own accent: the label, top rule and strip glyph that set it apart from mail lists. */
+  --lore-accent: #f0b545; /* the Touch Strip mustard */
+  /* The default Lore cover: deep space — a nebula over navy with a scatter of
+     stars. Dark in every theme, like a photo; a brand tint layers over it. */
+  --lore-space:
+    radial-gradient(1px 1px at 12% 28%, rgba(255, 255, 255, 0.9), transparent 60%),
+    radial-gradient(1px 1px at 27% 72%, rgba(255, 255, 255, 0.7), transparent 60%),
+    radial-gradient(1.5px 1.5px at 41% 18%, rgba(255, 255, 255, 0.85), transparent 60%),
+    radial-gradient(1px 1px at 55% 62%, rgba(255, 255, 255, 0.6), transparent 60%),
+    radial-gradient(1px 1px at 68% 34%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(1.5px 1.5px at 79% 78%, rgba(255, 255, 255, 0.75), transparent 60%),
+    radial-gradient(1px 1px at 88% 22%, rgba(255, 255, 255, 0.7), transparent 60%),
+    radial-gradient(1px 1px at 94% 58%, rgba(255, 255, 255, 0.55), transparent 60%),
+    radial-gradient(1px 1px at 6% 82%, rgba(255, 255, 255, 0.6), transparent 60%),
+    radial-gradient(1px 1px at 34% 44%, rgba(255, 255, 255, 0.5), transparent 60%),
+    radial-gradient(ellipse 55% 90% at 78% 30%, rgba(122, 92, 214, 0.45), transparent 70%),
+    radial-gradient(ellipse 45% 80% at 22% 85%, rgba(35, 131, 226, 0.35), transparent 70%),
+    radial-gradient(ellipse 30% 60% at 52% 10%, rgba(193, 76, 138, 0.25), transparent 70%),
+    linear-gradient(160deg, #0b1026 0%, #141a3a 45%, #0a0d1f 100%);
+  --lore-accent-ink: #1b1306;
+  --lore-blue-hover: #0b6bc4; /* button fill: white text at 5.3:1 */
+  --lore-blue-strong: #0a5aa6;
+  --lore-red: #ff7369;
+  --lore-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 4px 14px rgba(0, 0, 0, 0.4);
+  /* Ink colours: initials tiles and section dots (same in both themes). */
+  --lore-purple: #9065b0;
+  --lore-blue-ink: #337ea9;
+  --lore-green: #448361;
+  --lore-orange: #d9730d;
+  --lore-pink: #c14c8a;
+  --lore-gray: #787774;
+  --lore-yellow: #cb912f;
+  --lore-red-ink: #d44c47;
+  --lore-brown: #9f6b53;
+  /* Labels follow the Touch Strip's rainbow (TouchStrip.module.css), used as
+     text colour on the dark surface; the light theme deepens them below. */
+  --lore-tag-pay: #f0b545;      /* mustard (strip day) */
+  --lore-tag-reply: #44c2b3;    /* teal (strip up) */
+  --lore-tag-work: #a68cf0;     /* lavender (strip rain) */
+  --lore-tag-meet: #f0a3bd;     /* pink (strip dusk) */
+  --lore-tag-review: #6fd6c9;   /* light teal (strip up3) */
+  --lore-tag-waiting: #f69a84;  /* light coral (strip down3) */
+  --lore-tag-read: #8d8994;     /* grey (strip flat) */
+  --lore-tag-urgent: #f2785c;   /* coral (strip down) */
+}
+
+[data-theme="light"] {
+  --lore-bg: #ffffff;
+  --lore-side: #f7f7f5;
+  --lore-raised: #ffffff;
+  --lore-callout: #f1f1ef;
+  --lore-text: #37352f;
+  --lore-muted: #73726e;
+  --lore-faint: #9b9a97;
+  --lore-border: rgba(55, 53, 47, 0.09);
+  --lore-hover: rgba(55, 53, 47, 0.06);
+  --lore-active: rgba(55, 53, 47, 0.09);
+  --lore-red: #d44c47;
+  --lore-shadow: 0 0 0 1px rgba(15, 15, 15, 0.08), 0 4px 14px rgba(15, 15, 15, 0.1);
+  /* Labels are coloured text (option B, 2026-10-20): the strip pastels are too
+     faint on white, so the same hues deepen here, each >= 4.5:1. */
+  --lore-tag-pay: #8a6410;
+  --lore-tag-reply: #1d7f73;
+  --lore-tag-work: #6b5fa8;
+  --lore-tag-meet: #b03f6a;
+  --lore-tag-review: #0f7a8a;
+  --lore-tag-waiting: #b4543c;
+  --lore-tag-read: #6b6870;
+  --lore-tag-urgent: #c4472c;
+}

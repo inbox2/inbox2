@@ -1,0 +1,78 @@
+.table {
+  background: var(--ink);
+  color: #fff;
+  border-radius: 28px;
+  padding: 36px 40px 28px;
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.9fr) repeat(4, minmax(160px, 1fr));
+  gap: 24px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line-inv);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.head {
+  padding: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mode {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 20px;
+}
+
+.tier {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.free { color: var(--accent); }
+.paid { color: var(--offset); }
+.adv { color: #ff7a9e; }
+
+.label {
+  font-family: var(--display);
+  font-variation-settings: "wdth" 118;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--faint-inv);
+}
+
+.name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--dim-inv);
+  padding-top: 2px;
+}
+
+.cell {
+  font-size: 15px;
+  color: var(--mute-inv);
+}
+
+@media (max-width: 900px) {
+  .table {
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
+}

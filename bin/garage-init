@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# Bring the local Garage node from "started" to "actually serving S3", then
+# follow its logs. Run by the herdr "garage" pane; safe to run any time.
+#
+# A fresh Garage node accepts no reads or writes until three things exist, none
+# of which the container does for you:
+#   1. a cluster layout (capacity assigned to the node, then applied)
+#   2. an access key
+#   3. a bucket, with that key allowed on it
+#
+# Without them S3StorageService raises on every call and attachment downloads
+# 503 — which is exactly what "Garage is running" looked like before this.
+#
+# The key is IMPORTED rather than created so it matches the fixed dev credentials
+# in config/storage.yml. `key create` generates a random one, which would mean
+# copying it into the environment after every rebuild. Garage validates the
+# format: the ID must be "GK" + 24 hex chars and the secret 64 hex chars, so the
+# dev key can't be a friendly string like "inbox2".
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+COMPOSE=(docker compose -f "$ROOT/docker/docker-compose.yml")
+BUCKET="${S3_BUCKET:-inbox2-attachments}"
+# Disk keeps its own buckets, dev and test (api/config/storage.yml disk_bucket).
+DISK_BUCKETS=(inbox2-disk inbox2-test-disk)
+KEY_ID="${S3_ACCESS_KEY:-GK1b0a5c9d3e7f2a8b4c6d0e12}"
+KEY_SECRET="${S3_SECRET_KEY:-0f9d4c7a2b83e615d0c4a97b3e28f61d5a0c93b7e24f8d61a05c37b9e42d81f6}"
+PORT=4900
+
+g() { "${COMPOSE[@]}" exec -T garage /garage "$@"; }
+
+echo "waiting for Garage :$PORT ..."
+for _ in $(seq 1 120); do
+  nc -z localhost "$PORT" 2>/dev/null && break
+  sleep 0.5
+done
+nc -z localhost "$PORT" 2>/dev/null || {
+  echo "Garage never came up on :$PORT — is the storage profile running?" >&2
+  echo "  docker compose -f docker/docker-compose.yml --profile storage up -d" >&2
+  exit 1
+}
+
+# The RPC layer needs a moment past the port opening before `garage status` works.
+for _ in $(seq 1 60); do g status >/dev/null 2>&1 && break; sleep 0.5; done
+
+# ── 1. Layout ───────────────────────────────────────────────────────────────
+# `status` lists the node under "NO ROLE ASSIGNED" until a layout is applied.
+if g status 2>/dev/null | grep -q "NO ROLE ASSIGNED"; then
+  node_id="$(g node id -q 2>/dev/null | cut -d@ -f1)"
+  echo "assigning layout to node ${node_id:0:16}…"
+  g layout assign -z dev -c 10G "$node_id"
+  # The version to apply is always current + 1; `layout show` names it.
+  version="$(g layout show | sed -n 's/.*--version \([0-9]*\).*/\1/p' | tail -1)"
+  g layout apply --version "${version:-1}"
+else
+  echo "layout already applied"
+fi
+
+# ── 2. Key ──────────────────────────────────────────────────────────────────
+if g key info "$KEY_ID" >/dev/null 2>&1; then
+  echo "key $KEY_ID already exists"
+else
+  echo "importing key $KEY_ID"
+  g key import "$KEY_ID" "$KEY_SECRET" -n inbox2-dev --yes
+fi
+
+# ── 3. Buckets + grants ─────────────────────────────────────────────────────
+for b in "$BUCKET" "${DISK_BUCKETS[@]}"; do
+  if g bucket info "$b" >/dev/null 2>&1; then
+    echo "bucket $b already exists"
+  else
+    echo "creating bucket $b"
+    g bucket create "$b"
+  fi
+  g bucket allow --read --write --owner "$b" --key "$KEY_ID" >/dev/null
+done
+
+# Browsers talk to the Disk bucket directly, so it needs CORS for the web
+# origin. Garage's CLI has no CORS command; the S3 API sets it (idempotent).
+(cd "$ROOT/api" && bin/rails disk:storage:setup) || echo "warning: disk:storage:setup failed; run it from api/ once Rails boots" >&2
+
+echo
+echo "Garage ready — s3://$BUCKET and ${DISK_BUCKETS[*]} on http://localhost:$PORT (key: $KEY_ID)"
+echo "Rails reads these from config/storage.yml; no environment needed locally."
+echo
+
+exec "${COMPOSE[@]}" logs -f garage

@@ -1,0 +1,31 @@
+[project]
+name = "inbox2-saas"
+version = "0.1.0"
+license = "Apache-2.0"
+description = "Inbox2 SaaS operations TUI (Textual) — manage orgs/users over the saas API via mTLS"
+requires-python = ">=3.11"
+dependencies = [
+    "textual>=0.50.0",
+    "rich>=13.7.0",
+    "click>=8.1.0",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[project.scripts]
+inbox2-saas = "inbox2_saas.app:main"
+
+[tool.setuptools]
+packages = ["inbox2_saas"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

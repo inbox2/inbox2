@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Declares inbox2 as a templated Android Auto app (Car App Library). Required by the
+     `com.google.android.gms.car.application` meta-data for the Auto host to surface it. -->
+<automotiveApp>
+    <uses name="template" />
+</automotiveApp>

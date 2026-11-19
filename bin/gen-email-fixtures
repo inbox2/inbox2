@@ -1,0 +1,36 @@
+#!/usr/bin/env node
+// Flatten the email rendering corpus (manifest.json + cases/*.html) into ONE
+// self-contained JSON the native test harnesses embed as a resource. The web/JS
+// tests read the source files directly; iOS (WKWebView) and Android (WebView) run
+// on a device with no repo filesystem, so they load this single bundled file plus
+// the shipped email-body.js. Regenerate after changing any fixture:
+//   bin/gen-email-fixtures
+// The freshness guard (packages/email-body/__tests__/fixturesGen.test.js) fails CI
+// if this file is stale.
+const fs = require('node:fs');
+const path = require('node:path');
+
+const dir = path.resolve(__dirname, '../fixtures/email');
+
+// Pure: build the flattened JSON string from manifest + case files. No side effects
+// (the freshness guard imports this and compares against the committed file).
+function build() {
+  const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+  const cases = manifest.cases.map((c) => ({
+    name: c.name,
+    title: c.title,
+    html: fs.readFileSync(path.join(dir, c.file), 'utf8'),
+    expect: c.expect || {},
+  }));
+  // Stable, pretty output so diffs are reviewable and the freshness guard is exact.
+  return JSON.stringify({ cases }, null, 2) + '\n';
+}
+
+module.exports = { build };
+
+// Write only when run directly as a CLI — never as a side effect of import.
+if (require.main === module) {
+  const dest = path.join(dir, 'fixtures.gen.json');
+  fs.writeFileSync(dest, build());
+  console.log(`wrote ${dest}`);
+}

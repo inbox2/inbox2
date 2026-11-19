@@ -1,0 +1,21 @@
+.page { min-height: 100dvh; display: flex; flex-direction: column; font-family: var(--m-text); }
+.brand { display: flex; align-items: baseline; gap: var(--space-2); padding: 20px 28px; }
+.brand b { font: 620 22px var(--m-display); color: var(--m-char); }
+.brand i { font: 600 12px var(--m-text); letter-spacing: 0.09em; text-transform: uppercase; color: var(--m-accent-ink); font-style: normal; }
+.main { flex: 1; width: 100%; max-width: 860px; margin: 0 auto; padding: 0 var(--space-4) 40px; }
+.card { display: flex; flex-direction: column; gap: var(--space-3h); padding: 22px; border: 1.5px solid var(--m-line); border-radius: var(--m-r-xl); background: var(--m-surface); }
+.state { align-items: center; text-align: center; color: var(--m-ink-soft); padding: 60px 22px; }
+.title { display: flex; align-items: center; gap: var(--space-2h); margin: 0; font: 580 24px var(--m-display); color: var(--m-ink); overflow-wrap: anywhere; }
+.error { margin: 0; color: var(--m-pink); }
+.muted { padding: var(--space-3); color: var(--m-ink-soft); }
+.crumbs { font: 500 var(--text-xs) var(--m-mono); color: var(--m-ink-faint); }
+.crumbs button { padding: var(--space-0h) var(--space-1h); border: 0; border-radius: var(--radius-6); background: none; font: inherit; color: var(--m-accent-ink); cursor: pointer; }
+.crumbs button[aria-current] { color: var(--m-ink); font-weight: 600; }
+.list { margin: 0; padding: 0; list-style: none; }
+.row { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: 9px var(--space-2h); border: 0; border-bottom: 1px solid var(--m-line-soft); background: none; font: inherit; color: var(--m-ink); text-align: left; cursor: pointer; }
+.row:hover { background: var(--m-surface-2); }
+.row:focus-visible, .crumbs button:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 1px; }
+.name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 550; }
+.size { font: 13px var(--m-mono); color: var(--m-ink-soft); }
+.foot { padding: 20px 28px; color: var(--m-ink-faint); font-size: var(--text-3xs); text-align: center; }
+.foot a { color: var(--m-accent-ink); }

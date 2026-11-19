@@ -1,0 +1,298 @@
+/* ═══════════════════════════════════════════════════════ */
+/* Ghosts — low-fidelity skeleton scaffolding for empty     */
+/* states. Faint, decorative, theme-aware. Mirrors the live */
+/* triage layout: intake rail → card stream → 2×2 matrix.   */
+/* ═══════════════════════════════════════════════════════ */
+
+.triageBackdrop,
+.ghostColumn {
+  --ghost-fill: color-mix(in srgb, var(--bevel) 11%, transparent);
+  --ghost-fill-soft: color-mix(in srgb, var(--bevel) 6%, transparent);
+}
+
+:global([data-theme="light"]) .triageBackdrop,
+:global([data-theme="light"]) .ghostColumn {
+  --ghost-fill: rgba(0, 0, 0, 0.08);
+  --ghost-fill-soft: rgba(0, 0, 0, 0.045);
+}
+
+.line {
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--ghost-fill);
+}
+
+/* ── Ghost list row (matrix quadrant + column) ── */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: var(--ghost-fill);
+  flex-shrink: 0;
+}
+
+.lines {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1h);
+}
+
+.linePreview {
+  height: 6px;
+  background: var(--ghost-fill-soft);
+}
+
+/* Organic width variation so rows don't read as a rigid pattern (widths set
+   per row below; .lineTitle has no base width of its own). */
+.row:nth-child(3n + 1) .lineTitle { width: 70%; }
+.row:nth-child(3n + 2) .lineTitle { width: 50%; }
+.row:nth-child(3n + 3) .lineTitle { width: 60%; }
+.row:nth-child(3n + 1) .linePreview { width: 90%; }
+.row:nth-child(3n + 2) .linePreview { width: 74%; }
+.row:nth-child(3n + 3) .linePreview { width: 82%; }
+
+/* ═══ TRIAGE BACKDROP ═══ */
+.triageBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.66;
+}
+
+:global([data-theme="light"]) .triageBackdrop {
+  opacity: 0.78;
+}
+
+/* ── Intake rail header ── */
+.railHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--overlay-3);
+  flex-shrink: 0;
+}
+
+.railHeaderLabel {
+  width: 64px;
+  opacity: 0.7;
+}
+
+.railHeaderCount {
+  width: 16px;
+  opacity: 0.5;
+}
+
+/* ── Card stream ── */
+.rail {
+  display: flex;
+  gap: var(--space-1h);
+  padding: var(--space-1h) var(--space-3) var(--space-2);
+  height: 110px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-bottom: 1px solid var(--overlay-4);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bevel) 1.2%, transparent) 0%, transparent 100%);
+}
+
+.railCard {
+  position: relative;
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2h) var(--space-3) var(--space-2h) var(--space-3h);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--overlay-6);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bevel) 3%, transparent) 0%, color-mix(in srgb, var(--bevel) 1%, transparent) 100%);
+  overflow: hidden;
+}
+
+:global([data-theme="light"]) .railCard {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.railStripe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--ghost-fill);
+}
+
+.railTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.railDot {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: var(--ghost-fill);
+  flex-shrink: 0;
+}
+
+.railName {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.railNameLine { width: 58%; }
+.railEmailLine { width: 80%; height: 6px; background: var(--ghost-fill-soft); }
+.railSubject { width: 88%; }
+.railTime { width: 30%; height: 6px; margin-top: auto; background: var(--ghost-fill-soft); }
+
+/* ── 2×2 matrix ── */
+.matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: var(--space-px);
+  flex: 1;
+  min-height: 0;
+  margin: var(--space-1h) var(--space-3) var(--space-3);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--bevel) 2.5%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 22%, transparent);
+}
+
+:global([data-theme="light"]) .matrix {
+  background: rgba(0, 0, 0, 0.03);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.quadrant {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2h) var(--space-3);
+  min-height: 0;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--bevel) 1.5%, transparent);
+}
+
+:global([data-theme="light"]) .quadrant {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.qHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  margin-bottom: var(--space-2h);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid color-mix(in srgb, var(--bevel) 4%, transparent);
+}
+
+:global([data-theme="light"]) .qHeader {
+  border-bottom-color: var(--border-subtle);
+}
+
+.qBar {
+  width: 3px;
+  height: 14px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+  background: var(--ghost-fill);
+}
+
+.qLabel {
+  width: 64px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--ghost-fill);
+}
+
+/* Per-quadrant accent tints — echo the real matrix (danger / primary / teal /
+   neutral) at low saturation so the scaffolding hints at the live colours. */
+.accentDanger { background: color-mix(in srgb, var(--accent-danger) 42%, transparent); }
+.accentPrimary { background: color-mix(in srgb, var(--accent-primary) 38%, transparent); }
+.accentTeal { background: color-mix(in srgb, var(--accent-teal) 38%, transparent); }
+.accentNeutral { background: color-mix(in srgb, var(--text-muted) 32%, transparent); }
+
+.qBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-px);
+  flex: 1;
+  min-height: 0;
+}
+
+/* ═══ COLUMN GHOST STACK ═══ */
+.ghostColumn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-px);
+  padding: var(--space-1) 0;
+  opacity: 0.68;
+  pointer-events: none;
+}
+
+:global([data-theme="light"]) .ghostColumn {
+  opacity: 0.78;
+}
+
+/* ═══ SHIMMER SWEEP ═══ */
+/* A slow, very subtle highlight passes across the scaffolding to sell the
+   "loading" read without drawing attention away from the empty-state copy.
+   Three passes, then still: an empty folder isn't loading, and without a GPU each
+   frame repaints the whole window on the CPU (four cores, forever, on Linux). */
+.shimmer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 35%,
+    color-mix(in srgb, var(--bevel) 6%, transparent) 50%,
+    transparent 65%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  animation: ghostSweep 6.5s ease-in-out 3;
+}
+
+:global([data-theme="light"]) .shimmer {
+  background: linear-gradient(
+    100deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 65%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+}
+
+@keyframes ghostSweep {
+  0% { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer { animation: none; }
+}

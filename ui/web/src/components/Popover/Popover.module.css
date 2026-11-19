@@ -1,0 +1,24 @@
+/* ═══════════════════════════════════════════════════════ */
+/* Popover — anchored, scrim-less, portal floating surface  */
+/* Positioning shell only; content styling lives in the     */
+/* consumer's own module (EmailPreviewPopup, ContactPopup…) */
+/* ═══════════════════════════════════════════════════════ */
+
+.popover {
+  position: fixed;
+  top: var(--popover-top, 0);
+  left: var(--popover-left, 0);
+  z-index: var(--z-popover);
+  animation: popoverIn var(--duration-fast) var(--ease-out);
+}
+
+@keyframes popoverIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

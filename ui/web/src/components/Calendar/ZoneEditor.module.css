@@ -1,0 +1,240 @@
+/* Zone editor (docs/Calendar.md "Zones"). Theme tokens only — the zone colour
+   arrives as --zone (a tokens.css --zone-* var, set per chip), so every theme
+   gets its own shade. */
+
+.panel {
+  width: min(560px, calc(100vw - var(--space-8)));
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - var(--space-8));
+}
+
+.header {
+  padding: var(--space-5) var(--space-6) var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.subtitle {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.body {
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow-y: auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1h);
+}
+
+.label {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+.optional {
+  font-weight: var(--weight-normal);
+  color: var(--text-tertiary);
+}
+
+.input,
+.textarea {
+  background: var(--surface-input, var(--bg-input));
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-family: var(--font-ui);
+  outline: none;
+  color-scheme: inherit;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: var(--glow-focus);
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip,
+.chipAdd {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1h);
+  height: 30px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: background var(--duration-fast), border-color var(--duration-fast);
+}
+
+.chip {
+  border: 1px solid var(--border-default);
+  background: var(--overlay-3);
+  color: var(--text-secondary);
+}
+
+.chip:hover {
+  background: color-mix(in srgb, var(--zone) 10%, transparent);
+}
+
+.chipOn {
+  border-color: var(--zone);
+  background: color-mix(in srgb, var(--zone) 18%, transparent);
+  color: var(--text-primary);
+  font-weight: var(--weight-semibold);
+}
+
+.chip:focus-visible,
+.chipAdd:focus-visible,
+.swatch:focus-visible {
+  outline: none;
+  box-shadow: var(--glow-focus);
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--zone);
+}
+
+.chipAdd {
+  border: 1px dashed var(--border-strong);
+  background: transparent;
+  color: var(--text-tertiary);
+}
+
+.chipAdd:hover {
+  color: var(--text-primary);
+}
+
+.newCat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.newCat .input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.swatches {
+  display: flex;
+  gap: var(--space-1h);
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: var(--zone);
+  cursor: pointer;
+}
+
+.swatchOn {
+  border-color: var(--text-primary);
+}
+
+.when {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.dash {
+  color: var(--text-tertiary);
+}
+
+.length {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.toggles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--overlay-2);
+  border: 1px solid var(--border-subtle);
+}
+
+.error {
+  font-size: var(--text-xs);
+  color: var(--accent-danger);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-top: 1px solid var(--border-default);
+}
+
+.delete {
+  margin-right: auto;
+}
+
+.manage {
+  border: none;
+  background: none;
+  padding: 0 var(--space-1);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--text-link);
+  cursor: pointer;
+}
+
+.manage:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
+.until {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.hint {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+}

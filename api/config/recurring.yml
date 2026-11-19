@@ -1,0 +1,79 @@
+# examples:
+#   periodic_cleanup:
+#     class: CleanSoftDeletedRecordsJob
+#     queue: background
+#     args: [ 1000, { batch_size: 500 } ]
+#     schedule: every hour
+#   periodic_cleanup_with_command:
+#     command: "SoftDeletedRecord.due.delete_all"
+#     priority: 2
+#     schedule: at 5am every day
+
+production:
+  refresh_mailbox_graphs:
+    class: RefreshMailboxGraphJob
+    queue: default
+    schedule: every 2 minutes
+  clear_solid_queue_finished_jobs:
+    command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+    schedule: every hour at minute 12
+  sweep_channel_push_subscriptions:
+    class: ChannelPushSubscriptionSweeperJob
+    queue: default
+    schedule: every day at 4am
+  requeue_stranded_esp_deliveries:
+    class: Esp::RequeueJob
+    queue: default
+    schedule: every 5 minutes
+  purge_esp_message_bodies:
+    class: Esp::PurgeJob
+    queue: default
+    schedule: every day at 3am
+  prune_sync_tombstones:
+    class: SyncTombstonePruneJob
+    queue: default
+    schedule: every day at 4:30am
+  sweep_meta_webhook_events:
+    class: MetaWebhookEventSweeperJob
+    queue: default
+    schedule: every 10 minutes
+  sweep_meta_channel_subscriptions:
+    class: MetaChannelSubscriptionSweeperJob
+    queue: default
+    schedule: every day at 4am
+  check_dns_records:
+    class: DnsCheckJob
+    queue: default
+    schedule: every 5 minutes
+  lore_retriage:
+    class: LoreRetriageJob
+    queue: default
+    schedule: every hour at minute 40
+  purge_expired_junk:
+    class: PurgeExpiredJunkJob
+    queue: default
+    schedule: every day at 3am
+  sweep_data_exports:
+    command: "DataExport.sweep!"
+    schedule: every day at 3:30am
+  # Disk (docs/plans/disk-build.md section 8)
+  disk_expire_uploads:
+    class: Disk::ExpireUploadsJob
+    queue: default
+    schedule: every hour at minute 20
+  disk_purge_trash:
+    class: Disk::PurgeTrashJob
+    queue: default
+    schedule: every day at 2:30am
+  disk_lifecycle:
+    class: Disk::LifecycleJob
+    queue: default
+    schedule: every day at 3:10am
+  disk_expire_versions:
+    class: Disk::ExpireVersionsJob
+    queue: default
+    schedule: every day at 2:45am
+  disk_reconcile_storage:
+    class: Disk::ReconcileStorageJob
+    queue: default
+    schedule: every day at 5am

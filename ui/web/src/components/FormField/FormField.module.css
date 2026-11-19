@@ -1,0 +1,46 @@
+/* FormField — shared form primitives */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+.input {
+  background: var(--surface-input, var(--bg-input));
+  border: 1px solid var(--border-default, var(--border-subtle));
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-family: var(--font-ui);
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--border-focus);
+}
+
+.input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.hint {
+  font-size: var(--text-3xs);
+  color: var(--text-muted);
+}
+
+.error {
+  background: rgba(200, 80, 80, 0.08);
+  border: 1px solid rgba(200, 80, 80, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--accent-danger);
+  font-size: var(--text-xs);
+  padding: var(--space-2) var(--space-3);
+}

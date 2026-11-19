@@ -1,0 +1,28 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ring" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9B99FF"/><stop offset="20%" stop-color="#7B79FF"/>
+      <stop offset="50%" stop-color="#EC00C2"/><stop offset="70%" stop-color="#FF0080"/>
+      <stop offset="82%" stop-color="#FF754E"/><stop offset="90%" stop-color="#FFBF40"/>
+      <stop offset="100%" stop-color="#F9C071"/>
+    </linearGradient>
+
+    <linearGradient id="gloss" x1="0" y1="0" x2="0.12" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/><stop offset="48%" stop-color="#F3F0FF"/><stop offset="100%" stop-color="#DAD3FF"/>
+    </linearGradient>
+
+    <clipPath id="card"><path d="M 679.200 84.000 c 91.289 0 136.933 0 171.800 17.766 a 163.000 163.000 0 0 1 71.234 71.234 c 17.766 34.868 17.766 80.512 17.766 171.800 L 940.000 679.200 c 0 91.289 0 136.933 -17.766 171.800 a 163.000 163.000 0 0 1 -71.234 71.234 c -34.868 17.766 -80.512 17.766 -171.800 17.766 L 344.800 940.000 c -91.289 0 -136.933 0 -171.800 -17.766 a 163.000 163.000 0 0 1 -71.234 -71.234 c -17.766 -34.868 -17.766 -80.512 -17.766 -171.800 L 84.000 344.800 c 0 -91.289 0 -136.933 17.766 -171.800 a 163.000 163.000 0 0 1 71.234 -71.234 c 34.868 -17.766 80.512 -17.766 171.800 -17.766 Z"/></clipPath>
+    <filter id="twoLift" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#2A1466" flood-opacity="0.45"/></filter>
+  </defs>
+
+  <path d="M 648.000 32.000 c 120.411 0 180.617 0 226.608 23.434 a 215.000 215.000 0 0 1 93.958 93.958 c 23.434 45.991 23.434 106.197 23.434 226.608 L 992.000 648.000 c 0 120.411 0 180.617 -23.434 226.608 a 215.000 215.000 0 0 1 -93.958 93.958 c -45.991 23.434 -106.197 23.434 -226.608 23.434 L 376.000 992.000 c -120.411 0 -180.617 0 -226.608 -23.434 a 215.000 215.000 0 0 1 -93.958 -93.958 c -23.434 -45.991 -23.434 -106.197 -23.434 -226.608 L 32.000 376.000 c 0 -120.411 0 -180.617 23.434 -226.608 a 215.000 215.000 0 0 1 93.958 -93.958 c 45.991 -23.434 106.197 -23.434 226.608 -23.434 Z" fill="url(#ring)"/>
+  <path d="M 648.000 32.000 c 120.411 0 180.617 0 226.608 23.434 a 215.000 215.000 0 0 1 93.958 93.958 c 23.434 45.991 23.434 106.197 23.434 226.608 L 992.000 648.000 c 0 120.411 0 180.617 -23.434 226.608 a 215.000 215.000 0 0 1 -93.958 93.958 c -45.991 23.434 -106.197 23.434 -226.608 23.434 L 376.000 992.000 c -120.411 0 -180.617 0 -226.608 -23.434 a 215.000 215.000 0 0 1 -93.958 -93.958 c -23.434 -45.991 -23.434 -106.197 -23.434 -226.608 L 32.000 376.000 c 0 -120.411 0 -180.617 23.434 -226.608 a 215.000 215.000 0 0 1 93.958 -93.958 c 45.991 -23.434 106.197 -23.434 226.608 -23.434 Z" fill="none" stroke="#000" stroke-opacity="0.22" stroke-width="3"/>
+
+  <g clip-path="url(#card)">
+    <rect x="84" y="84" width="856" height="856" fill="#5E4AE3"/>
+    <g filter="url(#twoLift)" transform="rotate(-6 512 512)">
+      <text x="512" y="742" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="660" fill="url(#gloss)">2</text>
+      <text x="512" y="742" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="660" fill="none" stroke="#B7A9F5" stroke-opacity="0.4" stroke-width="3">2</text>
+    </g>
+  </g>
+</svg>

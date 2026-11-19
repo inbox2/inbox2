@@ -1,0 +1,78 @@
+/* Night sky for the dark heroes: tiled star dust + a few four-point twinkles.
+   Fills its (position: relative) parent; put it first so the content stacks above. */
+.sky {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Odd tile sizes so the two dust layers never line up into a visible grid. */
+.stars,
+.stars::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mask-image: linear-gradient(#000 50%, transparent 95%);
+}
+
+.stars {
+  background-image:
+    radial-gradient(1px 1px at 23px 41px, #fff, transparent),
+    radial-gradient(1px 1px at 151px 97px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 89px 173px, #fff, transparent),
+    radial-gradient(1px 1px at 197px 211px, rgba(255, 255, 255, 0.6), transparent);
+  background-size: 233px 229px;
+  opacity: 0.5;
+}
+
+.stars::after {
+  content: "";
+  background-image:
+    radial-gradient(1.5px 1.5px at 61px 283px, #fff, transparent),
+    radial-gradient(1px 1px at 257px 37px, #fff, transparent),
+    radial-gradient(2px 2px at 311px 157px, rgba(255, 255, 255, 0.8), transparent);
+  background-size: 347px 331px;
+  animation: dust 5s ease-in-out infinite alternate;
+}
+
+@keyframes dust {
+  from { opacity: 1; }
+  to { opacity: 0.3; }
+}
+
+/* Each twinkle flashes briefly, then rests; the base (static) style is what
+   reduced-motion falls back to once the global override ends the animation. */
+.twinkles i {
+  position: absolute;
+  width: var(--s);
+  aspect-ratio: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 0 5px var(--c, #fff));
+  transform: scale(0.5);
+  opacity: 0.6;
+  animation: twinkle var(--d) ease-in-out var(--t) infinite;
+}
+
+.twinkles i::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--c, #fff);
+  clip-path: polygon(50% 0, 57% 43%, 100% 50%, 57% 57%, 50% 100%, 43% 57%, 0 50%, 43% 43%);
+}
+
+.twinkles i:nth-child(1) { left: 62%; top: 8%; --s: 18px; --d: 4.2s; --t: -1s; }
+.twinkles i:nth-child(2) { left: 84%; top: 18%; --s: 12px; --d: 5.6s; --t: -3.1s; }
+.twinkles i:nth-child(3) { left: 14%; top: 5%; --s: 14px; --d: 6.4s; --t: -0.4s; --c: var(--accent); }
+.twinkles i:nth-child(4) { left: 28%; top: 2%; --s: 10px; --d: 3.6s; --t: -2.2s; }
+.twinkles i:nth-child(5) { left: 93%; top: 40%; --s: 16px; --d: 5.1s; --t: -4.4s; }
+.twinkles i:nth-child(6) { left: 38%; top: 3%; --s: 11px; --d: 4.8s; --t: -1.7s; }
+.twinkles i:nth-child(7) { left: 72%; top: 34%; --s: 13px; --d: 6s; --t: -5.2s; --c: var(--accent); }
+.twinkles i:nth-child(8) { left: 4%; top: 48%; --s: 12px; --d: 4.5s; --t: -2.9s; }
+.twinkles i:nth-child(9) { left: 56%; top: 50%; --s: 9px; --d: 3.9s; --t: -0.9s; }
+.twinkles i:nth-child(10) { left: 97%; top: 7%; --s: 14px; --d: 5.3s; --t: -3.8s; }
+
+@keyframes twinkle {
+  0%, 30%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+  15% { transform: scale(1) rotate(45deg); opacity: 1; }
+}

@@ -1,0 +1,50 @@
+.pill {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  border-radius: var(--radius-full, 999px);
+  background: var(--overlay-4);
+  border: 1px solid var(--border-default);
+}
+
+/* One sliding thumb, not a background per button, so the move reads as a switch. */
+.thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  box-sizing: border-box;
+  border-radius: var(--radius-full, 999px);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-focus);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+.pill[data-mode='light'] .thumb { transform: translateX(100%); }
+
+.option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1h);
+  min-width: 96px;
+  padding: var(--space-1h) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-full, 999px);
+  cursor: pointer;
+  transition: color var(--duration-normal) var(--ease-out);
+}
+.option:hover { color: var(--text-primary); }
+.on { color: var(--text-primary); }
+.option:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .thumb, .option { transition: none; }
+}

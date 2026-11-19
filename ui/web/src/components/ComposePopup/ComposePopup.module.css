@@ -1,0 +1,271 @@
+/* ═══════════════════════════════════════════════════════ */
+/* ComposePopup — Floating compose window                  */
+/* Fixed bottom-right, Vista Aero glass                    */
+/* ═══════════════════════════════════════════════════════ */
+
+.popup {
+  --compose-offset-x: 0px;
+  --compose-offset-y: 0px;
+
+  position: fixed;
+  bottom: calc(var(--draftbar-height) + var(--space-4) + var(--compose-offset-y));
+  right: calc(var(--space-4) + var(--compose-offset-x));
+  width: var(--compose-width);
+  height: var(--compose-height);
+  min-width: var(--compose-min-width);
+  min-height: var(--compose-min-height);
+  z-index: var(--z-float);
+
+  display: flex;
+  flex-direction: column;
+
+  /* Vista Aero glass surface. Blur only — the surface itself stays the solid
+     float gradient. On macOS the window is transparent over native vibrancy,
+     and CSS backdrop-filter can only blur WEB content, not the desktop behind
+     the webview: a translucent surface here lets raw desktop brightness wash
+     the popup out (tried, unreadable). The blur still frosts any in-window
+     bleed (entrance animation, overlays). */
+  background: var(--surface-float);
+  -webkit-backdrop-filter: var(--acrylic-blur);
+  backdrop-filter: var(--acrylic-blur);
+  border: 1px solid var(--overlay-12);
+  border-radius: var(--radius-md);
+  box-shadow:
+    var(--shadow-lg),
+    var(--acrylic-highlight);
+  overflow: hidden;
+
+  /* Entrance animation */
+  animation: composeSlideUp var(--duration-fast) var(--ease-out);
+}
+
+/* Top-left resize grip. The popup is anchored bottom-right, so dragging here
+   grows it up-and-left. Sits above the header so the corner is grabbable. */
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  z-index: 3;
+  cursor: nwse-resize;
+  border-top-left-radius: var(--radius-md);
+  background:
+    linear-gradient(135deg, var(--overlay-12) 0 22%, transparent 22%);
+  opacity: 0;
+  transition: opacity var(--duration-fast);
+}
+
+.popup:hover .resizeHandle,
+.resizeHandle:hover {
+  opacity: 1;
+}
+
+/* Top edge glow */
+.popup::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--space-4);
+  right: var(--space-4);
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--overlay-8),
+    var(--overlay-4),
+    transparent
+  );
+  z-index: 1;
+}
+
+@keyframes composeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Split body — editor (left) + preview (right) */
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.editorPane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── Attachment row (below subject): label, chips, then the toggle + buttons, all
+   one wrapping flow so many attachments fill rows instead of a narrow column. ── */
+.attachmentBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1h) var(--space-3);
+  border-bottom: 1px solid var(--overlay-6);
+  /* Deliberately a whisper above the glass, not the sunken well the other
+     inset bars use. */
+  background: var(--overlay-3);
+}
+
+.attachmentLabel {
+  flex-shrink: 0;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+
+.attachmentChips {
+  display: contents;
+}
+
+/* Mirrors the message-detail attachment token (MessageDetails.module.css) so
+   composed and received attachments read identically — icon + name + size — with
+   a remove button appended. */
+.attachmentChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-0h) var(--space-2);
+  background: var(--overlay-3);
+  border: 1px solid var(--overlay-6);
+  border-radius: var(--radius-sm);
+  max-width: 100%;
+}
+
+/* Truncate the filename (not the chip) so the × stays visible: max 180px,
+   then ellipsis. */
+.attachmentName {
+  font-size: var(--text-2xs);
+  color: var(--text-secondary);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachmentSize {
+  font-size: var(--text-3xs);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* A forward whose bytes are still downloading — dim it and spin a ring where the
+   file icon would be. */
+.attachmentPending {
+  opacity: 0.75;
+}
+
+.attachmentSpinner {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--overlay-8);
+  border-top-color: var(--accent-blue, var(--text-secondary));
+  animation: attachmentSpin 0.7s linear infinite;
+}
+
+@keyframes attachmentSpin {
+  to { transform: rotate(360deg); }
+}
+
+.attachmentRemove {
+  all: unset;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.attachmentRemove:hover {
+  color: var(--text-primary);
+}
+
+/* Sending: the composer is locked (inert) and dimmed, with the conversation
+   list's indeterminate progress line across the top edge. */
+.sendingBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.locked {
+  opacity: 0.6;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+/* Preview toggle in the attachment row — the shared Checkbox scaled down to the
+   compact bar's type size. */
+.previewToggle {
+  flex-shrink: 0;
+  gap: var(--space-1h);
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+}
+
+.previewToggle input {
+  width: 14px;
+  height: 14px;
+}
+
+/* Phones: the composer is a full-screen sheet (the phone shell, src/mobile/,
+   matches the apps' compose sheet) — no floating, resizing or side preview. */
+/* Keyed on the touch layout, not width: a narrow desktop-app window keeps
+   the desktop UI (PhoneSwitch), so it must keep these styles too. */
+:global(html[data-layout='phone']) .popup {
+    inset: 0;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    border: 0;
+    border-radius: 0;
+    z-index: var(--z-modal);
+  }
+:global(html[data-layout='phone']) .resizeHandle,
+:global(html[data-layout='phone']) .previewToggle,
+:global(html[data-layout='phone']) .popup::before { display: none; }
+:global(html[data-layout='phone']) .body > :not(.editorPane) { display: none; }
+
+/* Tablets (iPad, the touch layout): a centred form sheet, as iPad Mail does —
+   not the desktop's floating, resizable bottom-right window. */
+:global(html[data-layout='tablet']) .popup {
+  /* Centred in the space right of the shell's nav rail (--rail-w). */
+  inset: 0 0 0 var(--rail-w, 0px);
+  margin: auto;
+  width: min(760px, calc(100vw - var(--rail-w, 0px) - 48px));
+  height: min(88dvh, 920px);
+  min-width: 0;
+  min-height: 0;
+  z-index: var(--z-modal);
+  border-radius: var(--radius-14);
+  /* The sheet dims what's behind it, like an iPad form sheet. */
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.45), var(--shadow-lg);
+}
+:global(html[data-layout='tablet']) .resizeHandle { display: none; }

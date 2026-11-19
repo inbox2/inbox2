@@ -1,0 +1,17 @@
+# Holding manifest for the first production deploy (pushleft robot-migration-plan
+# phase 1 step 4): it creates the managed database and runs nothing that touches
+# it, so `pl db import` finds it empty. Use it in place of .pl.yaml once:
+#   cp deploy/pushleft/holding.pl.yaml .pl.yaml && pl up --production && git checkout .pl.yaml
+version: 1
+project: inbox2
+build: { dockerfile: deploy/pushleft/Dockerfile, context: . }
+production:
+  regions: [fsn1]
+data:
+  postgres:
+    plan: starter
+    databases: [{ name: inbox2 }]
+roles:
+  hold:
+    kind: worker
+    command: sleep infinity

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hardened-runtime entitlements for the notarized macOS build.
+
+  The app links ONNX Runtime (the `ort` crate) and bundles on-device AI model
+  runtimes that JIT-compile and allocate executable memory. Under hardened
+  runtime (required for notarization) those operations are blocked by default
+  and the app crashes on first inference. The two memory entitlements below
+  re-permit them. disable-library-validation lets the dynamically-loaded
+  ONNX Runtime dylib (not signed with our Team ID) load.
+
+  Keep this list MINIMAL — every entitlement widens the attack surface and
+  Apple scrutinizes them during notarization.
+-->
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+</dict>
+</plist>

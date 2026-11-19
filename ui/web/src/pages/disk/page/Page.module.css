@@ -1,0 +1,116 @@
+/* A Disk page, full screen (mockup: .wiki, .wtree, .wbar, .doc, .embed). */
+.shell {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-float);
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  background: var(--m-surface);
+}
+.single { grid-template-columns: minmax(0, 1fr); } /* a .md file in the editor: no page tree */
+.center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); text-align: center; color: var(--m-ink-soft); }
+
+.tree { padding: 20px var(--space-3); overflow-y: auto; border-right: 1px solid var(--m-line-soft); background: var(--m-bg); font-size: var(--text-2xs); }
+.treeHead { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-2h) var(--space-2h); font-size: var(--text-4xs); font-weight: 600; color: var(--m-ink-faint); }
+.treeList { margin: 0; padding: 0; list-style: none; }
+.treeList .treeList { padding-left: var(--space-4); }
+.treeItem { display: block; padding: 5px var(--space-2h); border-radius: var(--m-r-sm); color: var(--m-ink-soft); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.treeItem:hover { background: rgba(24, 34, 66, 0.06); color: var(--m-ink); text-decoration: none; }
+.treeItem:focus-visible, .treeNew:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 1px; }
+.treeOn { background: rgba(24, 34, 66, 0.08); color: var(--m-ink); font-weight: 600; }
+.treeNew { margin-top: var(--space-1h); padding: 5px var(--space-2h); border: 0; background: none; font: inherit; font-weight: 600; color: var(--m-accent-ink); cursor: pointer; }
+
+.main { min-width: 0; overflow-y: auto; }
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) 22px;
+  background: var(--m-surface);
+  border-bottom: 1px solid var(--m-line-soft);
+}
+.crumbs { flex: 1; min-width: 200px; }
+.present { display: inline-flex; gap: var(--space-0h); }
+.status { font: 12px var(--m-mono); color: var(--m-ink-faint); }
+
+.doc { max-width: 760px; margin: 0 auto; padding: 46px 30px 120px; }
+.title { margin: 0 0 var(--space-1h); font: 580 42px/1.15 var(--m-display); color: var(--m-ink); overflow-wrap: anywhere; }
+.by { margin: 0 0 26px; color: var(--m-ink-faint); font-size: var(--text-2xs); min-height: 1.4em; }
+.error { color: var(--m-pink); }
+
+/* The shared RichEditor, in the page's light type. */
+.editor :global(.ProseMirror) { min-height: 50vh; font-family: var(--m-text); font-size: var(--text-base); line-height: 1.65; color: var(--m-ink); }
+.editor :global(.ProseMirror h1),
+.editor :global(.ProseMirror h2),
+.editor :global(.ProseMirror h3) { font-family: var(--m-display); color: var(--m-ink); }
+.editor :global(.ProseMirror h1) { font-size: var(--text-4xl); }
+.editor :global(.ProseMirror h2) { font-size: 23px; }
+.editor :global(.ProseMirror h3) { font-size: var(--text-lg); }
+.editor :global(.ProseMirror a) { color: var(--m-accent-ink); }
+.editor :global(.ProseMirror code) { padding: 1px 5px; border-radius: var(--radius-4); background: var(--m-surface-2); font: 0.85em var(--m-mono); }
+.editor :global(.ProseMirror pre) { padding: var(--space-3h) var(--space-4); border-radius: var(--radius-8); background: #182242; color: #dfe6f7; font: 13px/1.6 var(--m-mono); }
+.editor :global(.ProseMirror pre code) { padding: 0; background: none; color: inherit; }
+.editor :global(.ProseMirror blockquote) { margin: var(--space-2h) 0; padding-left: var(--space-3h); border-left: 3px solid var(--m-line); color: var(--m-ink-soft); }
+.editor :global(.ProseMirror div[data-callout]) { margin: var(--space-2h) 0; padding: var(--space-3) var(--space-4); border-radius: var(--m-r-lg); background: var(--m-surface-2); }
+/* The global reset strips list markers; pages want them back (to-do lists keep their boxes instead). */
+.editor :global(.ProseMirror ul) { list-style: disc; }
+.editor :global(.ProseMirror ol) { list-style: decimal; }
+.editor :global(.ProseMirror ul[data-type='taskList']) { padding-left: 4px; list-style: none; }
+.editor :global(.ProseMirror ul[data-type='taskList'] li) { display: flex; gap: var(--space-2h); align-items: flex-start; }
+.editor :global(.ProseMirror ul[data-type='taskList'] li > label) { margin-top: 3px; }
+.editor :global(.ProseMirror ul[data-type='taskList'] li[data-checked='true'] > div) { color: var(--m-ink-faint); text-decoration: line-through; }
+.editor :global(.ProseMirror table) { width: 100%; margin: var(--space-2h) 0; border-collapse: collapse; table-layout: fixed; }
+.editor :global(.ProseMirror td),
+.editor :global(.ProseMirror th) { padding: var(--space-1h) var(--space-2h); border: 1px solid var(--m-line); vertical-align: top; }
+.editor :global(.ProseMirror th) { background: var(--m-surface-2); font-weight: 600; text-align: left; }
+.editor :global(.ProseMirror .selectedCell) { background: color-mix(in srgb, var(--m-accent) 12%, transparent); }
+.editor :global(.ProseMirror p.is-editor-empty:first-child::before) { color: var(--m-ink-faint); }
+
+.embed { margin: var(--space-2h) 0; }
+.embedBtn, .embedLocked {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2h) var(--space-3h);
+  border: 1.5px solid var(--m-line);
+  border-radius: var(--m-r-lg);
+  background: var(--m-surface);
+  font: inherit;
+  font-size: var(--text-xs);
+  text-align: left;
+  color: var(--m-ink);
+}
+.embedBtn { cursor: pointer; }
+.embedBtn:hover { border-color: var(--m-ink); }
+.embedBtn small, .embedLocked small { display: block; color: var(--m-ink-faint); font-size: var(--text-3xs); }
+.embedLocked { color: var(--m-ink-soft); }
+.embedOn .embedBtn { border-color: var(--m-accent); }
+
+.slash { min-width: 220px; max-height: 340px; overflow-y: auto; padding: var(--space-1h); background: var(--m-surface); border: 1px solid var(--m-line); border-radius: var(--m-r-lg); box-shadow: 0 16px 40px rgba(24, 34, 66, 0.22); }
+.slashItem { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 7px var(--space-2h); border: 0; border-radius: var(--m-r-sm); background: none; font: inherit; font-size: var(--text-2xs); color: var(--m-ink); text-align: left; cursor: pointer; }
+.slashItem:hover, .slashItem:focus-visible { background: var(--m-surface-2); outline: 0; }
+.slashItem kbd { font: 11px var(--m-mono); color: var(--m-ink-faint); }
+
+.history { padding: var(--space-3h) var(--space-4h); }
+.versions { margin: 0; padding: 0; list-style: none; }
+.version { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1h) 0; border-top: 1px solid var(--m-line-soft); }
+.versionBtn { flex: 1; padding: 4px var(--space-1h); border: 0; border-radius: var(--m-r-sm); background: none; font: inherit; color: var(--m-ink); text-align: left; cursor: pointer; }
+.versionBtn[aria-pressed='true'] { background: var(--m-surface-2); }
+.versionBtn small { display: block; color: var(--m-ink-faint); }
+.versionText { max-height: 50vh; margin: var(--space-3) 0 0; padding: var(--space-3h); overflow: auto; border-radius: var(--radius-8); background: var(--m-surface-2); font: 12.5px/1.6 var(--m-mono); white-space: pre-wrap; }
+
+@media (max-width: 760px) {
+  .shell { grid-template-columns: 1fr; }
+  .tree { display: none; }
+  .bar { padding: var(--space-2h) var(--space-3h); }
+  .doc { padding: 26px var(--space-4h) 80px; }
+  .title { font-size: var(--text-4xl); }
+}
+.editor > div { padding: 0; } /* the shared editor's inner padding; the page sets its own margins */
+.notice { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-4h); padding: var(--space-2h) var(--space-3h); border-radius: var(--m-r-md); background: color-mix(in srgb, var(--m-amber) 18%, #fff); font-size: var(--text-2xs); }
+.notice > span { flex: 1 1 260px; }

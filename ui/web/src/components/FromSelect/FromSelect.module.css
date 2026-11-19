@@ -1,0 +1,125 @@
+/* ═══════════════════════════════════════════════════════ */
+/* FromSelect — "From" identity dropdown (icon + email)     */
+/* ═══════════════════════════════════════════════════════ */
+
+.trigger {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-base);
+  font-family: var(--font-ui);
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--overlay-4);
+  outline: none;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--duration-fast);
+}
+
+.trigger:hover,
+.trigger:focus-visible {
+  border-bottom-color: var(--border-focus);
+}
+
+.triggerIcon {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.triggerEmail {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.triggerPlaceholder {
+  color: var(--text-muted);
+}
+
+.triggerChevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.menu {
+  position: fixed;
+  top: var(--from-menu-top);
+  left: var(--from-menu-left);
+  min-width: var(--from-menu-width);
+  max-width: 360px;
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: var(--z-dropdown);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-1);
+  background: var(--surface-float);
+  border: 1px solid var(--overlay-12);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1h) var(--space-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  transition: background var(--duration-fast);
+}
+
+.option:hover,
+.option:focus-visible {
+  background: var(--overlay-8);
+  outline: none;
+}
+
+.optionActive {
+  background: var(--overlay-6);
+}
+
+.optionIcon {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.optionText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-px);
+  min-width: 0;
+  flex: 1;
+}
+
+.optionLabel {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optionEmail {
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optionCheck {
+  flex-shrink: 0;
+  color: var(--accent-primary);
+}

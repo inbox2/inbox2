@@ -1,0 +1,421 @@
+/* ═══════════════════════════════════════════════════════ */
+/* AddAccountModal — classic Inbox2 channel setup          */
+/* Provider grid left, 3D box logo right                   */
+/* ═══════════════════════════════════════════════════════ */
+
+.modal {
+  width: 900px;
+  height: 660px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 60px);
+  overflow: hidden;
+  position: relative;
+  /* Flex column so the step layouts fill the modal and their inner form scrolls
+     within it (rather than overflowing past the fixed height and clipping). */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Light theme only: frost the panel so the page faintly shows through.
+   Dark theme keeps the solid Aero float surface. */
+:global([data-theme="light"]) .modal {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(247, 248, 250, 0.03) 100%);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+}
+
+/* Light theme only: clear the scrim almost entirely so the page behind the
+   glass panel reads through. Dark keeps the standard scrim. */
+:global([data-theme="light"]) .glassOverlay {
+  background: color-mix(in srgb, var(--scrim) 2%, transparent);
+}
+
+.devIndicator {
+  position: absolute;
+  top: var(--space-3);
+  /* Clear the Modal close button (28px wide, anchored at right: space-3). */
+  right: calc(var(--space-3) + 28px + var(--space-2));
+  z-index: 3;
+}
+
+.modalExit {
+  animation: modalOut 500ms var(--ease-out) forwards;
+}
+
+@keyframes modalOut {
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+/* ── Step 1: Provider select ───────────────────────── */
+
+.selectLayout {
+  display: flex;
+  height: 100%;
+}
+
+.selectLeft {
+  flex: 1;
+  padding: var(--space-8) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  /* Scroll the channel list rather than squishing it when many channels
+     (mailboxes + social) push past the modal height. */
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.selectRight {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.headline {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+  line-height: var(--leading-snug);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Reconnect mode: one line of context under the headline naming the expired
+   mailbox, in the same amber as the settings re-auth banner. */
+.reconnectHint {
+  font-size: var(--text-sm);
+  color: var(--status-caution-text);
+  line-height: var(--leading-normal);
+  margin: 0;
+}
+
+.reconnectHint strong {
+  font-weight: var(--weight-semibold);
+}
+
+.heroLogo {
+  height: 400px;
+  object-fit: contain;
+  opacity: 0.85;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.groupLabel {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+.grid {
+  display: flex;
+  gap: var(--space-5);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.tile:hover .tileIcon {
+  transform: scale(1.08);
+}
+
+.tileDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tileDisabled:hover .tileIcon {
+  transform: none;
+}
+
+.tileIcon {
+  transition: transform var(--duration-fast);
+  image-rendering: auto;
+}
+
+.tileLabel {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  opacity: 0.65;
+}
+
+/* ── Step 2: Configure ─────────────────────────────── */
+
+.configureLayout {
+  display: flex;
+  flex-direction: column;
+  /* Fill the modal's flex column and let the form scroll inside it (not overflow
+     past it) — otherwise tall forms (the Meta BYOK fields) clip the Connect button. */
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.configureHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  padding: 0;
+  margin-right: var(--space-2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.backBtn:hover {
+  color: var(--text-primary);
+}
+
+.configureName {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  /* Fill the modal's remaining height; the inner region scrolls, the footer is fixed. */
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.formScroll {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+  /* Scroll the fields within the modal's remaining height (header above, footer below). */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.fieldGroupSmall {
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.fieldRow {
+  display: flex;
+  gap: var(--space-3);
+}
+
+/* The Meta credential-reuse picker is the shared MgmtSelect (bare + compact). */
+
+.actions {
+  /* Fixed-height footer pinned at the modal's bottom edge; the button is
+     vertically centred in the row and right-aligned. */
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 72px;
+  padding: 0 var(--space-6);
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Dev-mode preview of the Instagram OAuth URLs (authorize + redirect-to-register). */
+.devUrlBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+}
+
+.devUrlLabel {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-top: var(--space-1);
+}
+
+.devUrl {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.btnPrimary {
+  composes: settingsButton from '../../pages/settings/settings.module.css';
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── MX inline login ───────────────────────────────── */
+
+.mxLayout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.mxLayout > .configureHeader,
+.mxBody {
+  position: relative;
+  z-index: 1;
+}
+
+.mxBody {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
+.mxForm {
+  width: 100%;
+  max-width: 380px;
+}
+
+/* ── OAuth waiting state ───────────────────────────── */
+
+.oauthWaiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-8);
+  min-height: 380px;
+  text-align: center;
+}
+
+.oauthTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.oauthDesc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 300px;
+}
+
+.oauthCancel {
+  background: none;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  margin-top: var(--space-4);
+}
+
+.oauthCancel:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong, var(--border-default));
+}
+
+/* ── Genie animation ───────────────────────────────── */
+
+.genieWrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.genie {
+  animation: genieFly 650ms var(--ease-out) forwards;
+}
+
+@keyframes genieFly {
+  0% {
+    transform: scale(1) translate(0, 0);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1.15) translate(0, -15px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.1) translate(200px, 0);
+    opacity: 0;
+  }
+}
+
+/* Cloud credential backup toggle in the provider-select step (docs/E2EE.md). */
+.backupToggle {
+  margin-top: var(--space-5);
+  max-width: 420px;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* "Use WhatsApp on this Mac" — the local read-only WhatsApp, under Social channels. */
+.localLink {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-primary);
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.linkButton:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}

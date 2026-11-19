@@ -1,0 +1,185 @@
+.section {
+  background: var(--grey);
+  padding: 110px 0 130px;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  text-align: center;
+}
+
+.head .lede {
+  max-width: 60ch;
+}
+
+.h2 {
+  font-size: var(--h2s);
+  max-width: 18ch;
+}
+
+.plans {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+
+/* Every card is a 1.5px gradient rim; the featured one fills it in. */
+.plan {
+  border-radius: var(--r);
+  padding: 1.5px;
+  background: var(--line);
+  display: flex;
+}
+
+.featured {
+  background: var(--grad);
+  box-shadow: 0 28px 60px rgba(17, 17, 17, 0.22);
+}
+
+.planInner {
+  background: var(--paper);
+  border-radius: calc(var(--r) - 1.5px);
+  padding: 30px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.featured .planInner {
+  background: var(--ink);
+  color: #fff;
+}
+
+.tier {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+
+.pop {
+  font-family: var(--body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.amt {
+  font-family: var(--display);
+  font-variation-settings: "wdth" 118;
+  font-weight: 900;
+  font-size: 52px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.cur {
+  font-size: 28px;
+  vertical-align: 0.28em;
+  margin-right: 2px;
+}
+
+.per {
+  font-family: var(--body);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--mute);
+}
+
+.featured .per {
+  color: var(--faint-inv);
+}
+
+.sub {
+  font-size: 15px;
+  color: var(--mute);
+}
+
+.featured .sub {
+  color: var(--mute-inv);
+}
+
+.list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 15px;
+  flex: 1;
+}
+
+.list li {
+  position: relative;
+  padding-left: 24px;
+  color: #3a3a3a;
+}
+
+.featured .list li {
+  color: var(--mute-inv);
+}
+
+/* Checkmark, drawn rather than shipped as an icon font. */
+.list li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 6px;
+  width: 5px;
+  height: 9px;
+  border: solid var(--offset);
+  border-width: 0 2px 2px 0;
+  transform: rotate(42deg);
+}
+
+.list b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.featured .list b {
+  color: #fff;
+}
+
+.cta {
+  margin-top: 8px;
+  justify-content: center;
+  text-align: center;
+}
+
+.foot {
+  font-size: 14px;
+  color: var(--mute);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .plans {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .section {
+    padding: 70px 0 80px;
+  }
+}

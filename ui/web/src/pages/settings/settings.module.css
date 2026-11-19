@@ -1,0 +1,1311 @@
+.settingsPage {
+  height: 100vh;
+  display: flex;
+  background: var(--surface-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.settingsSidebar {
+  width: 242px;
+  min-width: 242px;
+  background: var(--surface-sidebar);
+  border-right: 1px solid var(--border-subtle);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+}
+
+.settingsBack {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  font-family: var(--font-ui);
+  text-decoration: none;
+  padding: var(--space-2);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-md);
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.settingsBack:hover { color: var(--text-primary); background: var(--surface-hover); }
+
+/* Admin shortcut — org admins only, jumps to the admin console. Yellow + dark
+   ink to match the management/admin theme (--m-yellow / --m-char), which this
+   app-side button can't reach via the .management-scoped tokens. */
+:global([data-tauri]) .settingsBack {
+  margin-top: var(--space-7);
+}
+
+.settingsNavItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: none;
+  background: none;
+  text-align: left;
+  width: 100%;
+  font-family: var(--font-ui);
+}
+.settingsNavItem:hover { background: var(--surface-hover); color: var(--text-primary); }
+.settingsNavItemActive { background: var(--surface-active); color: var(--text-primary); font-weight: var(--weight-medium); }
+
+.settingsNavIcon {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+.settingsNavItemActive .settingsNavIcon { opacity: 1; }
+
+.settingsSidebarSpacer {
+  flex: 1;
+}
+
+.settingsLogout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  color: var(--accent-danger);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: none;
+  background: none;
+  text-align: left;
+  width: 100%;
+  font-family: var(--font-ui);
+}
+.settingsLogout:hover { background: color-mix(in srgb, var(--accent-danger) 12%, transparent); }
+
+.settingsContent {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.settingsContentInner {
+  padding: var(--space-8);
+  max-width: 680px;
+}
+
+/* Wider column for the Preferences 2×2 grid (two panels side by side). */
+.settingsContentWide {
+  max-width: 1120px;
+}
+
+/* Preferences panels in a 2×2 grid. align-items: stretch (grid default) makes
+   both panels in a row share the taller one's height, so none collapse to a
+   sliver; the per-panel margin is replaced by the grid gap. */
+.prefGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+.prefGrid .settingsPanel {
+  margin-bottom: 0;
+  height: 100%;
+}
+
+/* Single column when the content area is too narrow for two panels. */
+@media (max-width: 1100px) {
+  .prefGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Full-width mode for log viewer — fills available space */
+.settingsContentFull {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.settingsContentFull .settingsContentInner {
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ═══ Section panel ═══
+   Each logical settings section sits in its own raised panel so stacked
+   sections read as distinct cards instead of one busy, run-together column. */
+.settingsPanel {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--panel-groove), var(--acrylic-highlight), var(--shadow-sm);
+}
+.settingsPanel:last-child {
+  margin-bottom: 0;
+}
+
+/* The first heading inside a panel shouldn't add extra top space. */
+.settingsPanel > :first-child {
+  margin-top: 0;
+}
+
+/* Separates logical sub-groups within a single panel. Bleeds out to the panel
+   edges (negative margin == panel padding) so it reads as a clean card divider. */
+.settingsGroupDivider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: var(--space-5) calc(-1 * var(--space-6));
+}
+
+/* ═══ Inner card ═══
+   A recessed card nested inside a panel — used for mini-forms (invite, add
+   webhook, block/allow) and danger zones. Mirrors the On-device AI cards. */
+.settingsInnerCard {
+  background: var(--overlay-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.settingsInnerCard > :first-child {
+  margin-top: 0;
+}
+
+/* The mini-form's section title sits flush at the top of its card. */
+.settingsInnerCard .settingsSectionTitle {
+  margin-top: 0;
+}
+
+.settingsInnerCardDanger {
+  margin-top: var(--space-6);
+  background: color-mix(in srgb, var(--status-danger-text) 5%, transparent);
+  border-color: color-mix(in srgb, var(--status-danger-text) 25%, transparent);
+}
+
+.settingsInnerCardDanger .settingsSectionTitle {
+  color: var(--accent-danger);
+}
+
+.settingsTitle {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-6);
+}
+
+/* Title + right-aligned CTA (e.g. "New space", "Invite member"). */
+.settingsTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.settingsTitleRow .settingsTitle {
+  margin-bottom: 0;
+}
+
+/* ═══ Create/add forms presented as modal popups ═══ */
+.settingsModal {
+  width: 440px;
+  max-width: calc(100vw - var(--space-8));
+  padding: var(--space-6);
+}
+.settingsModalTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-5) 0;
+}
+.settingsModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+.settingsModalActions .settingsButton {
+  margin-top: 0;
+}
+
+.settingsSection {
+  margin-bottom: var(--space-6);
+}
+
+.settingsSectionTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin-bottom: var(--space-3);
+}
+
+.settingsField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.settingsField label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+/* Dropdowns in settings fields are the shared MgmtSelect (compact). */
+.settingsField input {
+  box-sizing: border-box;
+  height: 38px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-family: var(--font-ui);
+  outline: none;
+}
+
+.settingsField input:focus {
+  border-color: var(--border-focus);
+}
+
+/* Multi-line values (an IdP certificate): same skin as the input, taller. */
+.settingsField textarea {
+  box-sizing: border-box;
+  min-height: 120px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  resize: vertical;
+  outline: none;
+}
+
+.settingsField textarea:focus {
+  border-color: var(--border-focus);
+}
+
+.settingsHint {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  /* Break long URLs/tokens only when they'd overflow — break-all split
+     ordinary words mid-word ("you’r|e"). */
+  overflow-wrap: anywhere;
+}
+
+/* Layout shim for the catalog <Button> in settings forms: stacks the primary
+   action under its field. Visuals come from components/Button. */
+.settingsButton {
+  align-self: flex-start;
+  margin-top: var(--space-3);
+}
+
+/* Sounds panel: a select with an inline preview (play) button. */
+.soundRow {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+/* Layout shim for the shared MgmtSelect in the row; visuals come from it. */
+.soundSelect { flex: 1; min-width: 0; }
+.soundPreviewBtn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: var(--surface-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.soundPreviewBtn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+}
+
+/* A field directly followed by a button shouldn't stack its bottom margin on
+   top of the button's top margin — let the button own the single gap. */
+.settingsField:has(+ .settingsButton) {
+  margin-bottom: 0;
+}
+
+/* A section after a form's save button (Availability › Out of office). */
+.settingsButton + .settingsField {
+  margin-top: var(--space-6);
+}
+
+.settingsNavGroupLabel {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  padding: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-1);
+}
+
+.sectionTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-2) 0;
+}
+
+/* Bottom-left action footer for a panel — the Add Account CTA anchors the
+   bottom of the Connected accounts card. A top divider bleeds out to the panel
+   edges (matching .settingsGroupDivider) so the action reads as a footer. */
+.panelFooter {
+  display: flex;
+  justify-content: flex-start;
+  margin: var(--space-5) calc(-1 * var(--space-6)) 0;
+  padding: var(--space-5) var(--space-6) 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Primary call-to-action sized to sit in a panel header. */
+.addAccountCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  height: 34px;
+  padding: 0 var(--space-4);
+  background: var(--btn-primary-bg);
+  color: var(--text-inverse);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: opacity 120ms;
+}
+.addAccountCta:hover { opacity: 0.9; }
+
+.sectionDesc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-4) 0;
+  line-height: 1.5;
+}
+
+.addAccountBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1h);
+  padding: var(--space-2) var(--space-4);
+  background: var(--btn-bg);
+  border: var(--btn-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  box-shadow: var(--btn-shadow), var(--btn-highlight);
+  transition: all 120ms;
+}
+
+.addAccountBtn:hover {
+  background: var(--btn-bg-hover);
+}
+
+.accountList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.accountRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.accountRowInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.accountRowName {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+
+.accountRowEmail {
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+}
+
+.accountRowStatus {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  padding: var(--space-0h) var(--space-2);
+  border-radius: var(--radius-xs);
+  color: var(--status-debug-text);
+  background: color-mix(in srgb, var(--status-debug-text) 10%, transparent);
+}
+
+.accountRowStatus[data-status="connected"] {
+  color: var(--status-success-text);
+  background: color-mix(in srgb, var(--status-success-text) 10%, transparent);
+}
+
+.accountRowStatus[data-status="error"] {
+  color: var(--status-danger-text);
+  background: color-mix(in srgb, var(--status-danger-text) 10%, transparent);
+}
+
+.accountRowStatus[data-status="needs_reauth"] {
+  color: var(--status-caution-text);
+  background: color-mix(in srgb, var(--status-caution-text) 10%, transparent);
+}
+
+.accountItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Inline failure strip under an account row with a transient sync error.
+   An expired sign-in has no banner — the row's status badge + Reconnect say it. */
+.accountBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-2xs);
+}
+
+.accountBanner[data-kind="error"] {
+  color: var(--status-danger-text);
+  background: color-mix(in srgb, var(--status-danger-text) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-danger-text) 20%, transparent);
+}
+
+.accountBannerText {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.accountRowReconnect {
+  background: none;
+  border: 1px solid var(--accent-warm);
+  border-radius: var(--radius-sm);
+  color: var(--accent-warm-bright);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  padding: var(--space-0h) var(--space-2);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.accountRowReconnect:hover {
+  background: color-mix(in srgb, var(--accent-warning) 10%, transparent);
+  color: white;
+}
+
+.accountRowResync {
+  background: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  padding: var(--space-0h) var(--space-2);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.accountRowResync:hover:not(:disabled) {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+}
+
+.accountRowResync:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ═══ Developer mode ═══ */
+
+.devBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+  background: color-mix(in srgb, var(--accent-warning) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-warning) 20%, transparent);
+  border-radius: var(--radius-md);
+  color: var(--accent-warm-bright);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+}
+
+.devIndicator {
+  /* Visual styling provided by the DevModeIndicator component; this only
+     positions it within the settings sidebar. */
+  margin: var(--space-2) var(--space-3);
+}
+
+/* ═══ Provider cards ═══ */
+
+.providerCard {
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+  background: var(--overlay-2);
+}
+
+.providerLogo {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.providerHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.providerName {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+  line-height: var(--leading-tight);
+}
+
+.providerDesc {
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+  margin: var(--space-0h) 0 0 0;
+}
+
+.providerStatus {
+  margin-left: auto;
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  padding: var(--space-0h) var(--space-2);
+  border-radius: var(--radius-xs);
+  color: var(--status-success-text);
+  background: color-mix(in srgb, var(--status-success-text) 10%, transparent);
+}
+
+.providerStatus[data-status="error"] {
+  color: var(--accent-danger);
+  background: color-mix(in srgb, var(--accent-danger) 10%, transparent);
+}
+
+.providerStatus[data-status="idle"] {
+  color: var(--text-tertiary);
+  background: var(--overlay-2);
+}
+
+.providerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* The action row sits below a field that already provides the gap, so the
+   button must not add its stacked top margin (which also offsets it from the
+   hint in this centered row). */
+.providerActions .settingsButton {
+  margin-top: 0;
+}
+
+.providerHint {
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+}
+
+/* ═══ Connected-key display + danger confirm link ═══
+
+   A connected API key is shown as a monospace preview pill with a small status
+   dot, and removal is a low-emphasis red link below it (two-step confirm) rather
+   than a heavy button — destructive but rarely used. */
+
+.keyConnected {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  padding: var(--space-1) var(--space-3);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.keyConnected::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-success, #7fbf7f);
+  box-shadow: 0 0 0 2px var(--accent-success-dim, rgba(127, 191, 127, 0.18));
+}
+
+.keyPreview {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.dangerLinkRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+/* ═══ Org icon field ═══ */
+
+.iconUrlRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.iconUrlRow input {
+  flex: 1;
+}
+
+.iconPreview {
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--border-subtle);
+}
+
+/* Circular variant for user profile pictures. */
+.avatarPreview {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--btn-shadow);
+}
+
+/* ═══ Settings table ═══ */
+
+.settingsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.settingsTable th {
+  text-align: left;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.settingsTable td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.settingsTable tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+.settingsTable th:last-child,
+.settingsTable td:last-child {
+  text-align: right;
+  width: 1%;
+  white-space: nowrap;
+}
+
+.tablePrimary {
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  display: block;
+}
+
+.tableSecondary {
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+  display: block;
+}
+
+.tableSelect {
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--text-xs);
+  font-family: var(--font-ui);
+  outline: none;
+}
+.tableSelect:focus { border-color: var(--border-focus); }
+
+.tableBadge {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  padding: var(--space-0h) var(--space-2);
+  border-radius: var(--radius-xs);
+  color: var(--status-debug-text);
+  background: color-mix(in srgb, var(--status-debug-text) 10%, transparent);
+}
+.tableBadge[data-status="active"] { color: var(--status-success-text); background: color-mix(in srgb, var(--status-success-text) 10%, transparent); }
+.tableBadge[data-status="invited"] { color: var(--status-caution-text); background: color-mix(in srgb, var(--status-caution-text) 10%, transparent); }
+.tableBadge[data-status="disabled"] { color: var(--status-danger-text); background: color-mix(in srgb, var(--status-danger-text) 10%, transparent); }
+
+.tableActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+.tableAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.tableAction:hover { color: var(--text-primary); background: var(--overlay-4); }
+
+.tableEmpty {
+  padding: var(--space-4) var(--space-3);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+/* ═══ Danger zone ═══ */
+
+.dangerZone {
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--status-danger-text) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-danger-text) 25%, transparent);
+  border-radius: var(--radius-lg);
+}
+
+.dangerZone .settingsSectionTitle {
+  color: var(--accent-danger);
+  margin-top: 0;
+}
+
+.dangerZoneRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+/* Layout helper for danger-outline Buttons sitting in a danger-zone row:
+   preserves the original padding/no-shrink while the look comes from the
+   shared Button variant="danger-outline". */
+.dangerZoneBtn {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-4);
+}
+
+/* ── Device-link (browser sign-in) under the Cloud Proxy key field ────── */
+
+.linkTop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+/* The separator sits above the "or" (between the top link option and the manual
+ * key field) and spans the column. */
+.linkTop .settingsGroupDivider {
+  width: 100%;
+  margin: var(--space-1) 0 0;
+}
+
+.linkOr {
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+/* Dark (secondary) Save-key button — subordinate to the primary "Link" option. */
+.saveKeyBtn {
+  align-self: flex-start;
+  margin-top: var(--space-3);
+}
+
+/* Text link, not a button: signing in is an alternative to the key field below,
+   not a competing primary action. Mirrors .linkAction in setup.module.css. */
+.linkAction {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--accent, #7c6cf0);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.linkAction:hover {
+  color: var(--accent-hover, #9385f4);
+}
+.linkAction:focus-visible {
+  outline: 2px solid var(--accent, #7c6cf0);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.linkHint {
+  margin: 0;
+  font-size: var(--text-2xs);
+  line-height: 1.4;
+  color: var(--text-tertiary);
+}
+
+/* ── Availability: working hours + out of office (docs/Calendar.md) ──── */
+
+.settingsHint {
+  margin: calc(var(--space-1) * -1) 0 var(--space-3);
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  max-width: 52ch;
+  line-height: 1.5;
+}
+
+.inlineRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.inlineRow input {
+  width: auto;
+  flex: 0 1 auto;
+}
+
+.inlineSep {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+}
+
+.dayToggles {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.dayToggle {
+  min-width: 44px;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-3xs);
+  color: var(--text-secondary);
+  background: var(--overlay-4);
+  border: 1px solid var(--overlay-8);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.dayToggle:hover {
+  background: var(--overlay-8);
+  color: var(--text-primary);
+}
+
+.dayToggle:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+.dayToggleOn {
+  color: var(--text-primary);
+  background: var(--accent-warm);
+  border-color: var(--accent-warm-bright);
+}
+
+.settingsError {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-3xs);
+  color: var(--accent-danger);
+}
+
+/* ═══ Filter lists (Spam & filtering) ═══
+   Each list = a prefGrid row of two panels: the add form left, the entries
+   scrolling inline on the right. */
+.filterScroll {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+.filterRow:last-child { border-bottom: none; }
+
+.filterValue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filterRemove {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--accent-primary);
+  cursor: pointer;
+}
+.filterRemove:hover { text-decoration: underline; }
+
+.filterEmpty {
+  padding: var(--space-2) 0;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.filterError {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--accent-danger);
+}
+
+/* ── Scheduling (meet links) ── */
+
+.settingsIntro {
+  margin: 0 0 var(--space-4);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  max-width: 62ch;
+}
+
+.schedHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.schedHead .sectionTitle {
+  margin-bottom: 0;
+}
+
+.schedForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--overlay-4);
+}
+
+/* Six fields on an even 3-column grid: Label spans two, then one row of three. */
+.schedFormGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.schedFormGrid .settingsField {
+  margin-bottom: 0;
+}
+
+.schedFormWide {
+  grid-column: span 2;
+}
+
+@media (max-width: 640px) {
+  .schedFormGrid { grid-template-columns: minmax(0, 1fr); }
+  .schedFormWide { grid-column: auto; }
+}
+
+.schedFormSubmit {
+  align-self: flex-start;
+}
+
+.schedFormNote {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+.schedEmpty {
+  margin: var(--space-2) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* Section breaks after the first (Meet links) section — a clear gap so
+   "Conferencing" doesn't sit on the previous section's last line. */
+.schedSectionTitle {
+  margin-top: var(--space-8);
+}
+
+/* Right-align a row's single action (Connect / Disconnect), matching the
+   "+ New link" button above. */
+.schedRowAction {
+  margin-left: auto;
+}
+
+.schedLinkRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-sm);
+}
+
+.schedLinkRevoked {
+  opacity: 0.55;
+}
+
+.schedLinkName {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0h);
+  min-width: 150px;
+  font-weight: 600;
+}
+
+.schedLinkMeta {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 400;
+}
+
+.schedLinkUrlLine {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.schedLinkUrl {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 4px var(--space-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--overlay-6);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.schedLinkStats {
+  margin-left: auto;
+  color: var(--text-muted, var(--text-secondary));
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+/* Row actions never wrap ("Copy link" used to break over two lines). */
+.schedRowBtn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.schedRevoke {
+  color: var(--danger, #d98a82);
+}
+
+.schedNotice {
+  color: var(--success, #7fd0a2);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-2);
+}
+
+/* Out of office (Settings › Scheduling › Availability): a button when off, a
+   status card with Edit / End now when set. */
+.oooButton {
+  align-self: flex-start;
+}
+
+.oooCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--overlay-4);
+  font-size: var(--text-sm);
+}
+
+.oooCardText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-0h);
+  min-width: 0;
+}
+
+.oooStatus {
+  font-weight: 600;
+}
+
+.oooMessage {
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.oooEditor {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.oooEditor textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-input);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  resize: vertical;
+}
+
+.oooEditor .settingsHint {
+  margin: 0;
+}
+
+/* Phones: one section at a time under the phone shell's top bar (the section
+   list lives on the More screen, src/mobile/MobileMore.jsx) — no sidebar. */
+/* Keyed on the touch layout, not width: a narrow desktop-app window keeps
+   the desktop UI (PhoneSwitch), so it must keep these styles too. */
+:global(html[data-layout='phone']) .settingsPage { height: auto; flex: 1; min-height: 0; }
+:global(html[data-layout='phone']) .settingsSidebar { display: none; }
+:global(html[data-layout='phone']) .settingsContent { padding-bottom: env(safe-area-inset-bottom); }
+:global(html[data-layout='phone']) .settingsContentInner { padding: var(--space-4); max-width: none; }
+:global(html[data-layout='phone']) .prefGrid { grid-template-columns: minmax(0, 1fr); }
+:global(html[data-layout='phone']) .settingsPanel { padding: var(--space-4); }
+
+/* Tablets (iPad — the touch layout, src/mobile/): same as phones above, one
+   section under the More screen's top bar; a width query can't tell an iPad
+   from a desktop window, so this keys off html[data-layout]. */
+:global(html[data-layout='tablet']) .settingsPage { height: auto; flex: 1; min-height: 0; }
+:global(html[data-layout='tablet']) .settingsSidebar { display: none; }
+:global(html[data-layout='tablet']) .settingsContentInner { padding: var(--space-6); max-width: 760px; }
+
+/* Settings › Account: take your own C:\ out as a zip. */
+.exportRow { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-top: var(--space-6); }
+.exportBtn { flex-shrink: 0; display: inline-flex; align-items: center; gap: var(--space-1h); }
+.importMail .exportRow { flex-wrap: wrap; }
+.importMail .exportRow > div:first-child { flex: 1 1 16rem; min-width: 0; }
+.importMail .tableSelect { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.importMailRow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4); margin-top: var(--space-2); }
+.importMailHead { display: flex; align-items: center; gap: var(--space-3); }
+.importMailIcons { display: inline-flex; align-items: center; gap: var(--space-1); flex-shrink: 0; }
+.importMailRow { align-items: flex-end; }
+.importProgress {
+  flex: 1 1 16rem; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1h);
+  margin-top: var(--space-3); padding: var(--space-3); overflow-wrap: anywhere;
+  background: var(--overlay-4); border: 1px solid var(--overlay-8); border-radius: var(--radius-md);
+}
+.importProgressHead { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.importProgressPct { font-family: var(--font-mono); font-size: var(--text-md); font-weight: 600; color: var(--accent-warm-bright); }
+.importProgressTrack {
+  position: relative; height: 10px; overflow: hidden;
+  background: var(--overlay-8); border-radius: var(--radius-full); box-shadow: inset 0 1px 2px var(--overlay-15);
+}
+.importProgressFill {
+  position: relative; height: 100%; width: var(--import-pct, 0%); overflow: hidden;
+  border-radius: inherit; transition: width 0.6s ease-out;
+  background: linear-gradient(90deg, var(--accent-warm), var(--accent-warm-bright));
+}
+/* A sheen sweeping the fill while the work is live. */
+.importProgressFill[data-active]::after {
+  content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--overlay-25), transparent);
+  animation: importSheen 1.6s ease-in-out infinite;
+}
+@keyframes importSheen { to { transform: translateX(100%); } }
+.importProgress[data-state='done'] .importProgressFill { background: var(--status-success-text); }
+.importProgress[data-state='done'] .importProgressPct { color: var(--status-success-text); }
+.importProgress[data-state='paused'] .importProgressFill,
+.importProgress[data-state='cancelled'] .importProgressFill { background: var(--text-tertiary); }
+@media (prefers-reduced-motion: reduce) { .importProgressFill[data-active]::after { animation: none; } }

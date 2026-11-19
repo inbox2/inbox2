@@ -1,0 +1,89 @@
+.wrap {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-2h);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+.toggle {
+  width: 34px;
+  height: 19px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--overlay-18);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--bevel);
+  transition: transform 0.15s;
+}
+.on { background: var(--accent-success); }
+.on::after { transform: translateX(15px); }
+
+.body { margin-top: var(--space-2); display: flex; flex-direction: column; gap: var(--space-1h); }
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--text-2xs);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.hostRow { display: flex; gap: var(--space-1h); margin-top: var(--space-0h); }
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 5px var(--space-2);
+  border-radius: var(--radius-6);
+  border: 1px solid var(--border-default);
+  background: var(--surface-input);
+  color: var(--text-primary);
+  font-size: var(--text-2xs);
+}
+
+.save {
+  padding: 5px var(--space-2h);
+  border-radius: var(--radius-6);
+  border: 1px solid var(--border-default);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  font-size: var(--text-2xs);
+  cursor: pointer;
+}
+.save:disabled { opacity: 0.5; cursor: default; }
+
+.hint { margin: var(--space-0h) 0 0; font-size: var(--text-3xs); color: var(--text-secondary); }
+
+.dns { margin-top: var(--space-2); display: flex; flex-direction: column; gap: var(--space-2); }
+
+.verifyRow { display: flex; align-items: center; gap: var(--space-2h); flex-wrap: wrap; }
+
+.okMsg { margin: var(--space-0h) 0 0; font-size: var(--text-3xs); color: var(--accent-success); }

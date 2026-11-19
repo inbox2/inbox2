@@ -1,0 +1,255 @@
+/* The WhatsApp media viewer: a dark popup over the whole window. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+}
+
+.bar {
+  /* Above the media: a big video must never cover Close. */
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub {
+  display: flex;
+  gap: var(--space-2);
+  font-size: var(--text-3xs);
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.count {
+  font-variant-numeric: tabular-nums;
+}
+
+.status {
+  font-size: var(--text-2xs);
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 40ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+}
+
+.action,
+.iconAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  height: 28px;
+  padding: 0 var(--space-2h);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  font-size: var(--text-2xs);
+  cursor: pointer;
+}
+
+.iconAction {
+  width: 28px;
+  padding: 0;
+}
+
+.action:hover,
+.iconAction:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.action:focus-visible,
+.iconAction:focus-visible,
+.nav:focus-visible,
+.zoomBtn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  /* WebKit doesn't size media to a flexed height, so a tall video would spill
+     over the header: clip, and cap media by the window (--viewer-media-h). */
+  overflow: hidden;
+  --viewer-media-h: calc(100vh - 110px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4) var(--space-8);
+}
+
+.nav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+}
+
+.nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.prev { left: var(--space-3); }
+.next { right: var(--space-3); }
+
+.note {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.video {
+  max-width: 100%;
+  max-height: var(--viewer-media-h);
+  border-radius: var(--radius-md);
+  background: #000;
+}
+
+.audio {
+  width: min(520px, 100%);
+}
+
+/* Documents: Disk's preview engine, as a sheet (it carries the management look). */
+.sheet {
+  width: min(1000px, 100%);
+  max-height: var(--viewer-media-h);
+  overflow: auto;
+  border-radius: var(--radius-lg);
+  background: var(--m-surface-2, #f4efe4);
+}
+
+/* ── ZoomImage ── */
+.zoomWrap {
+  position: relative;
+  width: 100%;
+  height: var(--viewer-media-h);
+  display: flex;
+  flex-direction: column;
+}
+
+.stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: none;
+  cursor: zoom-in;
+}
+
+.stagePan {
+  cursor: grab;
+}
+
+.stagePan:active {
+  cursor: grabbing;
+}
+
+.zoomImg {
+  max-width: 100%;
+  max-height: calc(var(--viewer-media-h) - 48px);
+  object-fit: contain;
+  user-select: none;
+  transform: translate(var(--pan-x, 0), var(--pan-y, 0)) scale(var(--zoom, 1)) rotate(var(--rot, 0deg));
+  transition: transform 0.08s ease-out;
+}
+
+.zoomBar {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-2);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.zoomBtn {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 var(--space-1h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: #fff;
+  font-size: var(--text-2xs);
+  cursor: pointer;
+}
+
+.zoomBtn:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.zoomBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.zoomPct {
+  min-width: 44px;
+  text-align: center;
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zoomImg { transition: none; }
+}

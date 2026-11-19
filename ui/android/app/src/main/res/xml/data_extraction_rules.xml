@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ (cloud backup + device-to-device transfer). Exclude the encrypted secret
+     store and any legacy plaintext-secret prefs, plus the entire `inbox2/` engine data dir
+     (local mail DB + the Rust core's encrypted channel-credential store + tokens), so mail
+     and credentials stay on-device. Mail re-syncs from the server/channels on a new device. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="inbox2/" />
+        <exclude domain="sharedpref" path="inbox2_secure.xml" />
+        <exclude domain="sharedpref" path="inbox2_cloud.xml" />
+        <exclude domain="sharedpref" path="inbox2_voice.xml" />
+        <exclude domain="sharedpref" path="inbox2_privacy.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="inbox2/" />
+        <exclude domain="sharedpref" path="inbox2_secure.xml" />
+        <exclude domain="sharedpref" path="inbox2_cloud.xml" />
+        <exclude domain="sharedpref" path="inbox2_voice.xml" />
+        <exclude domain="sharedpref" path="inbox2_privacy.xml" />
+    </device-transfer>
+</data-extraction-rules>

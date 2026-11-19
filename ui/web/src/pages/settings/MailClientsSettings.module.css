@@ -1,0 +1,33 @@
+/* Settings › Mail clients: only what settings.module.css does not cover. */
+.clients { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); }
+.client {
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
+  min-width: 112px; padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
+  background: var(--overlay-2); color: var(--text-secondary);
+  font: inherit; font-size: var(--text-xs); cursor: pointer;
+}
+.client:hover { color: var(--text-primary); }
+.client:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+.clientOn { border-color: var(--accent-primary); color: var(--text-primary); background: color-mix(in srgb, var(--accent-primary) 14%, transparent); }
+.logo { width: 44px; height: 44px; display: grid; place-items: center; }
+
+.steps { list-style: decimal; margin: 0 0 var(--space-4); padding-left: var(--space-6); display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-primary); line-height: var(--leading-normal); }
+
+/* A phone scrolls the table sideways; the panel keeps its width. */
+.scroll { overflow-x: auto; }
+.servers { width: 100%; border-collapse: collapse; font-size: var(--text-xs); color: var(--text-primary); }
+.servers th { text-align: left; font-weight: var(--weight-medium); color: var(--text-tertiary); padding: var(--space-2) var(--space-3); }
+.servers td { padding: var(--space-2) var(--space-3); border-top: 1px solid var(--border-subtle); }
+.mono { font-family: var(--font-mono); user-select: all; }
+
+.reveal { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-4); border: 1px solid var(--accent-primary); border-radius: var(--radius-lg); font-size: var(--text-sm); color: var(--text-primary); }
+.revealRow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.token { flex: 1 1 260px; min-width: 0; overflow-x: auto; white-space: nowrap; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--overlay-2); font-family: var(--font-mono); font-size: var(--text-xs); user-select: all; }
+
+.createRow { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); margin-bottom: var(--space-3); }
+.createRow > :first-child { flex: 1 1 240px; margin-bottom: 0; }
+/* The button is as tall as the input and sits on its line, not on the label's. */
+.createRow input { height: 40px; box-sizing: border-box; }
+.createRow > button { margin: 0; height: 40px; }
+.password { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--border-subtle); }

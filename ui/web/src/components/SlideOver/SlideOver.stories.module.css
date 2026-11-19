@@ -1,0 +1,6 @@
+.preview {
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+  background: var(--m-surface-2);
+}

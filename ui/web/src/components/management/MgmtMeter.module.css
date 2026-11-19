@@ -1,0 +1,2 @@
+.meter { height: 4px; background: rgba(24, 34, 66, 0.1); border-radius: 2px; margin-top: var(--space-3); overflow: hidden; }
+.meterFill { display: block; height: 100%; width: var(--meter-fill, 0%); background: var(--meter-color, var(--m-accent)); border-radius: 2px; }

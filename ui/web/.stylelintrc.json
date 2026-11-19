@@ -1,0 +1,10 @@
+{
+  "//": "Token guardrail for CSS Modules. Activate with: yarn add -D stylelint --ignore-scripts, then `npx stylelint 'src/**/*.css'`. color-no-hex flags raw hex (use var(--color-*)/--accent-*/--m-* tokens); the intentional bevel whites are rgba() and accent tints are color-mix() over a token, so neither trips this rule. Set to 'warning' so it surfaces drift in diffs/CI without blocking the build (the codebase has pre-existing literals to migrate incrementally). tokens.css/management.css are ignored since they DEFINE the tokens.",
+  "ignoreFiles": ["src/styles/tokens.css", "src/styles/management.css", "dist/**/*", "node_modules/**/*"],
+  "rules": {
+    "color-no-hex": [true, {
+      "severity": "warning",
+      "message": "Hardcoded hex — use a design token (var(--color-*) / --accent-* / --m-*). Bevel highlights use rgba(); accent tints use color-mix() over a token."
+    }]
+  }
+}

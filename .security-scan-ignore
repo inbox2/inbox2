@@ -1,0 +1,39 @@
+# Accepted findings for Pushleft's daily source scan (SECURITY.md, "Automated
+# scanning"). One entry per line: `<path>  # reason`. A path matches that file
+# exactly, or a directory and everything under it; it is never a raw prefix.
+# The scan sees only what .plignore uploads (api/, mta/, deploy/pushleft/);
+# the ui/ entries matter to a scan of the whole repository.
+# A real credential never goes here: rotate it and remove it from the tree.
+
+# Local-dev Garage key, the one bin/garage-init imports; the production section
+# reads S3_ACCESS_KEY/S3_SECRET_KEY with no fallback, and production's Garage
+# key is a different one (checked 2026-11-07).
+api/config/storage.yml  # local-dev Garage key, not production's
+
+# Demo and e2e passwords: seeds.rb seeds demo users only outside production
+# (none exist there, checked 2026-11-07), demo.rake aborts in production,
+# e2e_disk.rake refuses any database not named *e2e*.
+api/db/seeds.rb  # demo seed password, never seeded in production
+api/lib/tasks/demo.rake  # demo-data passwords, aborts in production
+api/lib/tasks/e2e_disk.rake  # e2e seed password, e2e databases only
+
+# Request specs: made-up passwords, OAuth token stand-ins and push keys.
+api/spec/requests/api/v1/accounts_spec.rb  # spec passwords
+api/spec/requests/api/v1/app_oauth_spec.rb  # fake Google token stand-ins
+api/spec/requests/api/v1/auth_spec.rb  # spec passwords
+api/spec/requests/api/v1/disk/links_spec.rb  # spec link password
+api/spec/requests/api/v1/e2ee_keys_spec.rb  # spec passwords
+api/spec/requests/api/v1/invite_flow_e2e_spec.rb  # spec passwords
+api/spec/requests/api/v1/member_invite_mx_spec.rb  # spec passwords
+api/spec/requests/api/v1/members_spec.rb  # spec passwords
+api/spec/requests/api/v1/push_subscriptions_spec.rb  # fake Web Push keys
+api/spec/requests/api/v1/visibility_e2e_spec.rb  # spec password
+api/spec/requests/api/v1/webauthn_spec.rb  # spec passwords
+
+# Outside the Pushleft upload.
+ui/android/app/google-services.json  # Firebase client config, the API key is public by design (ships in the APK)
+ui/desktop/core/src/sync/adapters/imap_adapter.rs  # fake OAuth token literal in #[cfg(test)]
+ui/desktop/core/src/sync/vault.rs  # fake OAuth token literals in #[cfg(test)]
+ui/web/src/lib/themes.js  # generic-api-key false positive on a non-secret string
+ui/web/src/components/MessageShortcuts/MessageShortcuts.stories.jsx  # generic-api-key false positive, Storybook fixture
+ui/web/src/components/RoutingPanel/RoutingPanel.stories.jsx  # generic-api-key false positive, Storybook fixture

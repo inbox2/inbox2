@@ -1,0 +1,86 @@
+name: iOS TestFlight
+
+# A push to main that touches the iOS app or the shared Rust core archives the
+# app and uploads it to App Store Connect, where it lands in TestFlight
+# (docs/iOS-TestFlight.md). Same steps as `bin/ios-release --xcframework --upload`
+# on a Mac; App Store Connect sets the build number (ExportOptions.plist,
+# manageAppVersionAndBuildNumber).
+#
+# Secrets:
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (base64) — App Store Connect API key:
+#     provisioning (-allowProvisioningUpdates) and the upload
+#   IOS_SIGNING_P12 (base64), IOS_SIGNING_P12_PASSWORD — Apple Development +
+#     Apple Distribution identities for automatic signing
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ui/ios/**"
+      - "ui/desktop/core/**"
+      - "packages/email-body/**"
+      - "bin/ios-release"
+      - ".github/workflows/ios.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: true
+
+jobs:
+  testflight:
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ui/desktop
+          key: ios-core
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Tools + vendored frameworks
+        run: |
+          brew install xcodegen
+          bin/fetch-sherpa-onnx
+
+      - name: email-body bundle (generated, gitignored)
+        run: |
+          corepack enable
+          yarn --cwd ui/web install --frozen-lockfile --ignore-scripts
+          (cd packages/email-body && ../../ui/web/node_modules/.bin/esbuild src/index.js \
+            --bundle --format=iife --global-name=Inbox2EmailBody --outfile=../../ui/ios/Resources/email-body.js)
+
+      - name: Signing identities
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.IOS_SIGNING_P12 }}
+          p12-password: ${{ secrets.IOS_SIGNING_P12_PASSWORD }}
+
+      - name: App Store Connect key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$ASC_KEY_P8" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+
+      - name: Archive, export, upload
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: bin/ios-release --xcframework --upload

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Inbox2 dev workspace. The layout lives in ~/Development/tmux/bin/herdr-inbox2;
+# each pane runs `bin/run <process>`. This is the in-repo entry point.
+exec herdr-inbox2 "$@"

@@ -1,0 +1,23 @@
+<!-- A responsive newsletter whose reflow lives in <style> media queries. processBody
+     returns only body.innerHTML, so the native WebViews re-inject these <style> blocks;
+     without them a fixed-width multi-column table renders squished. @import / remote
+     url() in CSS are stripped for privacy. Remote images are blocked on open. -->
+<html>
+<head>
+<style type="text/css">
+  @media only screen and (max-width:600px) {
+    .col { display:block !important; width:100% !important; }
+    .hide-mobile { display:none !important; }
+  }
+  .col { display:inline-block; width:280px; vertical-align:top; }
+  body { background:#f4f4f4; }
+</style>
+</head>
+<body>
+  <table width="600" align="center"><tr>
+    <td class="col"><img src="https://t.schaap.example/watch1.jpg" width="280" height="200" style="width:100%;height:auto" alt="Watch 1"><p>Patek Philippe</p></td>
+    <td class="col"><img src="https://t.schaap.example/watch2.jpg" width="280" height="200" style="width:100%;height:auto" alt="Watch 2"><p>Rolex Daytona</p></td>
+  </tr></table>
+  <p class="hide-mobile">Visit our boutique in Amsterdam.</p>
+</body>
+</html>

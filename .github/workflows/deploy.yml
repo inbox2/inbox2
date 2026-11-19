@@ -1,0 +1,117 @@
+name: Deploy
+
+# Every push to main goes to production (trunk-based; docs/Deployment.md):
+#
+#   pushleft  → Pushleft production: builds deploy/pushleft/Dockerfile from the
+#               checkout, scans it and rolls out every role in .pl.yaml
+#               (api.inbox2.com, workers, mail). The release role runs
+#               `rails db:prepare` first, so migrations apply themselves.
+#   web       → Cloudflare Pages project `inbox2` (mail.inbox2.com)
+#   website   → Cloudflare Pages project `inbox2-marketing` (inbox2.com), only
+#               when website/ changed
+#
+# Secrets: PUSHLEFT_TOKEN (a member service token of the production
+# organization), CLOUDFLARE_API_TOKEN (Pages:Edit), CLOUDFLARE_ACCOUNT_ID.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pushleft:
+    runs-on: ubuntu-24.04
+    # One production rollout at a time; a newer push waits, it does not cancel.
+    concurrency:
+      group: pushleft-production
+      cancel-in-progress: false
+    env:
+      PL_VERSION: 0.1.0-a6ff5f3
+      PL_SHA256: 62aba640cdee25bd2129098758166123ea3db037f94088b8ee605a7e3ba39d7d
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pl
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/pl" "https://releases.pushleft.dev/cli/$PL_VERSION/pl-linux-amd64"
+          echo "$PL_SHA256  $RUNNER_TEMP/pl" | sha256sum -c -
+          sudo install -m 0755 "$RUNNER_TEMP/pl" /usr/local/bin/pl
+      - name: pl up --production
+        env:
+          PUSHLEFT_TOKEN: ${{ secrets.PUSHLEFT_TOKEN }}
+        run: pl up --production
+
+  web:
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: pages-web
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: corepack enable
+      - name: Build (prod API origin baked in via --mode pages)
+        working-directory: ui/web
+        run: |
+          yarn install --frozen-lockfile --ignore-scripts
+          yarn build:pages
+      - name: Deploy to Cloudflare Pages
+        working-directory: ui/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@3 pages deploy dist --project-name=inbox2 --branch=main --commit-dirty=true
+
+  # The change check runs outside the concurrency group: only a push that did
+  # change website/ queues a deploy, so a later unrelated push can never take
+  # the place of a pending one (GitHub replaces pending jobs in a group).
+  website-changed:
+    runs-on: ubuntu-24.04
+    outputs:
+      yes: ${{ steps.changed.outputs.yes }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Did website/ change in this push?
+        id: changed
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # The whole push, not only its last commit. A first push (no usable
+          # before SHA) or a manual run deploys.
+          if [ "${{ github.event_name }}" = workflow_dispatch ] \
+             || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null \
+             || ! git diff --quiet "$BEFORE" HEAD -- website/; then
+            echo "yes=1" >> "$GITHUB_OUTPUT"
+          fi
+
+  website:
+    needs: website-changed
+    if: needs.website-changed.outputs.yes
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: pages-website
+      cancel-in-progress: false
+    steps:
+      # Always the newest main, not this push's commit: deploys can finish out
+      # of order, and each one then publishes the latest site anyway.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Build + deploy
+        working-directory: website
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
+          yarn deploy

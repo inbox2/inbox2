@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Android 16 Live Updates: the ongoing newest-unread card as a status-bar chip
+         (notify/NotificationHelper.refreshOngoing). Normal permission; ignored below 16. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <!-- Re-arms zone alarms after a reboot (notify/ZoneAlerts.kt). -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Zone start/end alarms fire on time when the user allows exact alarms; without it
+         ZoneAlerts falls back to setAndAllowWhileIdle. Not USE_EXACT_ALARM: that's for
+         alarm-clock/calendar apps and Play restricts it. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <application
+        android:name=".Inbox2App"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:icon="@mipmap/ic_launcher_classic"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Inbox2">
+
+        <!-- Android Auto (projected): declares this app as a templated Auto app and the
+             minimum Car App API level it targets (docs/Android-App.md). -->
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+        <meta-data
+            android:name="androidx.car.app.minCarApiLevel"
+            android:value="1" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.Inbox2">
+            <!-- Share target: "Send to inbox2" from any app composes a new mail with the
+                 shared text/files pre-loaded as attachments (MainActivity.consumeShare →
+                 ShareTarget flow → RootTabs opens compose). `*/*` also matches text/plain
+                 shares (a URL/selection lands in the body). singleTop so a share while the
+                 app is open routes through onNewIntent rather than spawning a new task. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <!-- OAuth uses a 127.0.0.1 loopback ServerSocket (see OAuthService), not a
+                 custom scheme, so no VIEW/BROWSABLE intent filter is needed. -->
+        </activity>
+
+        <!-- App icon picker (Settings > Theme > App icon), the Android counterpart of
+             iOS's CFBundleAlternateIcons: the launcher entry is an <activity-alias>
+             per icon and AppIconOption enables exactly one of them. MAIN/LAUNCHER
+             therefore lives here, not on MainActivity. `sun` is the default and is the
+             only alias enabled at install; the names are load-bearing (AppIconOption
+             builds the component name from them) and so is the artwork wiring in
+             brand/make-alt-icons.py. -->
+        <activity-alias android:name=".IconSun" android:targetActivity=".MainActivity"
+            android:enabled="false" android:exported="true"
+            android:icon="@mipmap/ic_launcher_sun" android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".IconVennlight" android:targetActivity=".MainActivity"
+            android:enabled="false" android:exported="true"
+            android:icon="@mipmap/ic_launcher_vennlight" android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".IconGraffiti" android:targetActivity=".MainActivity"
+            android:enabled="false" android:exported="true"
+            android:icon="@mipmap/ic_launcher_graffiti" android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".IconGroovebox" android:targetActivity=".MainActivity"
+            android:enabled="false" android:exported="true"
+            android:icon="@mipmap/ic_launcher_groovebox" android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".IconClassic" android:targetActivity=".MainActivity"
+            android:enabled="true" android:exported="true"
+            android:icon="@mipmap/ic_launcher_classic" android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- FCM push: silent channel-sync nudges + visible MX-mail alerts from the
+             API (docs/Cloud-Push.md "Mobile push"). -->
+        <service
+            android:name=".fcm.FcmService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Android Auto car app: the Bridge briefs surface on the head unit. The
+             MESSAGING category is the driving-safe templated category for an assistant
+             that reads inbox briefs aloud. -->
+        <service
+            android:name=".car.BridgeCarAppService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.car.app.CarAppService" />
+                <category android:name="androidx.car.app.category.MESSAGING" />
+            </intent-filter>
+        </service>
+
+        <!-- Zone alerts: the AlarmManager alarms at a zone's start/end + the notification's
+             Done action (notify/ZoneAlerts.kt), and a re-arm from the cached zones after
+             a reboot or app update. Not exported: the system still delivers its own
+             protected broadcasts to it. -->
+        <receiver
+            android:name=".notify.ZoneAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Mark as read / Archive / Trash on a new-mail notification or the ongoing card
+             (notify/NotificationActions.kt): queued here, applied by an expedited worker
+             without opening the app. -->
+        <receiver
+            android:name=".notify.NotificationActionReceiver"
+            android:exported="false" />
+
+        <!-- Sign-in card "Open & delete" (notify/NotificationActions.kt OtpLinkActivity):
+             no UI — opens the link, queues the trash, finishes. An activity, not the
+             receiver, because Android 12+ bans notification trampolines. -->
+        <activity
+            android:name=".notify.OtpLinkActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.NoDisplay" />
+
+        <!-- Meeting alarms: the pre-scheduled AlarmManager alarm before each meeting →
+             its notification (notify/MeetingAlarms.kt), and a re-arm after a reboot or
+             app update (alarms don't survive either). -->
+        <receiver
+            android:name=".notify.MeetingAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Share downloaded attachments to the system viewer. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+</manifest>

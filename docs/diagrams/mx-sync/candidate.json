@@ -1,0 +1,425 @@
+{
+ "schema_version": 2,
+ "diagram_type": "workflow",
+ "meta": {
+  "title": "MX mirror pass: mx_sync()",
+  "output": "docs/diagrams/mx-sync/mx-sync.html",
+  "quality_profile": "showcase",
+  "legend": {
+   "entries": {
+    "messagebus": {
+     "label": "Trigger"
+    },
+    "backend": {
+     "label": "Engine stage"
+    },
+    "cloud": {
+     "label": "Rails endpoint"
+    },
+    "database": {
+     "label": "SQLite mx_* table"
+    },
+    "security": {
+     "label": "Sealed mail"
+    }
+   }
+  }
+ },
+ "lanes": [
+  {
+   "id": "trigger",
+   "label": "Trigger"
+  },
+  {
+   "id": "rails",
+   "label": "Rails API"
+  },
+  {
+   "id": "engine",
+   "label": "Engine (mx_sync.rs)"
+  },
+  {
+   "id": "sqlite",
+   "label": "SQLite mx_* tables"
+  }
+ ],
+ "phases": [
+  {
+   "id": "p_read",
+   "label": "Read: bounded, resumable pass",
+   "fromCol": 1,
+   "toCol": 5,
+   "variant": "emphasis"
+  }
+ ],
+ "mainPath": [
+  "hint",
+  "head",
+  "delta",
+  "backfill",
+  "reconcile",
+  "hydrate"
+ ],
+ "nodes": [
+  {
+   "id": "hint",
+   "lane": "trigger",
+   "col": 0,
+   "yOffset": -50,
+   "type": "messagebus",
+   "label": "Cable hint / timer",
+   "sublabel": "mxMirror.js \u2192 invoke(mx_sync)"
+  },
+  {
+   "id": "tick",
+   "lane": "trigger",
+   "col": 0,
+   "yOffset": 50,
+   "type": "messagebus",
+   "label": "60 s mx_tick",
+   "sublabel": "failsafe pass + mx_push_busy"
+  },
+  {
+   "id": "head",
+   "lane": "engine",
+   "col": 1,
+   "yOffset": -50,
+   "type": "backend",
+   "label": "head + directory",
+   "sublabel": "horizon now; re-list directory"
+  },
+  {
+   "id": "delta",
+   "lane": "engine",
+   "col": 2,
+   "yOffset": -50,
+   "type": "backend",
+   "label": "delta",
+   "sublabel": "cursor saved per page"
+  },
+  {
+   "id": "backfill",
+   "lane": "engine",
+   "col": 3,
+   "yOffset": -50,
+   "type": "backend",
+   "label": "backfill",
+   "sublabel": "5 pages per pass"
+  },
+  {
+   "id": "reconcile",
+   "lane": "engine",
+   "col": 4,
+   "yOffset": -50,
+   "type": "backend",
+   "label": "reconcile",
+   "sublabel": "key-set diff"
+  },
+  {
+   "id": "hydrate",
+   "lane": "engine",
+   "col": 5,
+   "yOffset": -50,
+   "type": "backend",
+   "label": "hydrate",
+   "sublabel": "whole thread replaces"
+  },
+  {
+   "id": "mx_action",
+   "lane": "engine",
+   "col": 2,
+   "yOffset": 50,
+   "type": "backend",
+   "label": "mx_action",
+   "sublabel": "optimistic local update"
+  },
+  {
+   "id": "mx_drain",
+   "lane": "engine",
+   "col": 0,
+   "yOffset": 50,
+   "type": "backend",
+   "label": "mx_drain",
+   "sublabel": "5 s tick, POSTs bulk"
+  },
+  {
+   "id": "mx_send",
+   "lane": "engine",
+   "col": 3,
+   "yOffset": 50,
+   "type": "backend",
+   "label": "mx_send",
+   "sublabel": "durable send"
+  },
+  {
+   "id": "api_head",
+   "lane": "rails",
+   "col": 1,
+   "yOffset": -50,
+   "type": "cloud",
+   "label": "sync/head"
+  },
+  {
+   "id": "api_pull",
+   "lane": "rails",
+   "col": 2,
+   "yOffset": -50,
+   "type": "cloud",
+   "label": "sync/pull?since="
+  },
+  {
+   "id": "api_backfill",
+   "lane": "rails",
+   "col": 3,
+   "yOffset": -50,
+   "type": "cloud",
+   "label": "sync/backfill"
+  },
+  {
+   "id": "api_keys",
+   "lane": "rails",
+   "col": 4,
+   "yOffset": -50,
+   "type": "cloud",
+   "label": "sync/keys"
+  },
+  {
+   "id": "api_threads",
+   "lane": "rails",
+   "col": 5,
+   "yOffset": -50,
+   "type": "cloud",
+   "label": "sync/threads"
+  },
+  {
+   "id": "api_bulk",
+   "lane": "rails",
+   "col": 0,
+   "yOffset": 50,
+   "type": "cloud",
+   "label": "conversations/bulk",
+   "sublabel": "orgs/{org}/\u2026"
+  },
+  {
+   "id": "state",
+   "lane": "sqlite",
+   "col": 1,
+   "yOffset": -50,
+   "type": "database",
+   "label": "mx_sync_state",
+   "sublabel": "cursor, backfill token"
+  },
+  {
+   "id": "mirror",
+   "lane": "sqlite",
+   "col": 4,
+   "yOffset": -50,
+   "type": "database",
+   "label": "mx_conversations + mx_messages",
+   "sublabel": "version guard on change_seq"
+  },
+  {
+   "id": "seal",
+   "lane": "sqlite",
+   "col": 5,
+   "yOffset": -50,
+   "type": "security",
+   "label": "seal.rs",
+   "sublabel": "stores decrypted"
+  },
+  {
+   "id": "queue",
+   "lane": "sqlite",
+   "col": 2,
+   "yOffset": 50,
+   "type": "database",
+   "label": "mx_writeback_actions"
+  },
+  {
+   "id": "views",
+   "lane": "sqlite",
+   "col": 5,
+   "yOffset": 50,
+   "type": "security",
+   "label": "agent_* views",
+   "sublabel": "exclude sealed threads"
+  },
+  {
+   "id": "outbox",
+   "lane": "sqlite",
+   "col": 3,
+   "yOffset": 50,
+   "type": "database",
+   "label": "mx_outbox",
+   "sublabel": "drained on the 5 s tick"
+  }
+ ],
+ "edges": [
+  {
+   "id": "e1",
+   "from": "hint",
+   "to": "head",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e2",
+   "from": "tick",
+   "to": "head",
+   "label": "failsafe",
+   "variant": "dashed",
+   "role": "branch"
+  },
+  {
+   "id": "e3",
+   "from": "head",
+   "to": "api_head",
+   "label": "GET"
+  },
+  {
+   "id": "e4",
+   "from": "head",
+   "to": "state",
+   "label": "cursor = head",
+   "role": "branch"
+  },
+  {
+   "id": "e5",
+   "from": "head",
+   "to": "delta",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e6",
+   "from": "delta",
+   "to": "api_pull",
+   "label": "GET, per page"
+  },
+  {
+   "id": "e7",
+   "from": "delta",
+   "to": "backfill",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e8",
+   "from": "backfill",
+   "to": "api_backfill",
+   "label": "GET"
+  },
+  {
+   "id": "e9",
+   "from": "backfill",
+   "to": "reconcile",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e10",
+   "from": "reconcile",
+   "to": "api_keys",
+   "label": "GET"
+  },
+  {
+   "id": "e11",
+   "from": "reconcile",
+   "to": "mirror",
+   "label": "delete unlisted, flag drift",
+   "role": "branch"
+  },
+  {
+   "id": "e12",
+   "from": "reconcile",
+   "to": "hydrate",
+   "variant": "emphasis"
+  },
+  {
+   "id": "e13",
+   "from": "hydrate",
+   "to": "api_threads",
+   "label": "GET"
+  },
+  {
+   "id": "e14",
+   "from": "hydrate",
+   "to": "seal",
+   "label": "sealed payload",
+   "variant": "security",
+   "role": "branch"
+  },
+  {
+   "id": "e15",
+   "from": "seal",
+   "to": "mirror",
+   "label": "plain",
+   "variant": "security",
+   "role": "return"
+  },
+  {
+   "id": "e16",
+   "from": "mirror",
+   "to": "views",
+   "label": "UNION ALL, minus sealed",
+   "variant": "security",
+   "role": "branch"
+  },
+  {
+   "id": "e17",
+   "from": "mx_action",
+   "to": "queue",
+   "label": "enqueue",
+   "role": "async"
+  },
+  {
+   "id": "e18",
+   "from": "queue",
+   "to": "mx_drain",
+   "label": "claim",
+   "role": "return"
+  },
+  {
+   "id": "e19",
+   "from": "mx_drain",
+   "to": "api_bulk",
+   "label": "POST"
+  },
+  {
+   "id": "e20",
+   "from": "mx_send",
+   "to": "outbox",
+   "label": "enqueue",
+   "role": "async"
+  }
+ ],
+ "cards": [
+  {
+   "dot": "cyan",
+   "title": "Read pass order",
+   "items": [
+    "head: horizon now; cursor recorded; directory re-listed (start, hourly, scope: directory hint)",
+    "delta: sync/pull?since=, cursor saved after every page",
+    "backfill: sync/backfill, 5 pages per pass, resumable token",
+    "reconcile: sync/keys; delete locals not listed, re-hydrate version drift",
+    "hydrate: sync/threads replaces each thread's message + note set"
+   ]
+  },
+  {
+   "dot": "amber",
+   "title": "Writes",
+   "items": [
+    "mx_action updates the local row first, then queues mx_writeback_actions",
+    "mx_drain (5 s tick) posts to orgs/{org}/conversations/bulk",
+    "mx_send \u2192 mx_outbox, drained on the 5 s tick; never dropped on mirror reset",
+    "mx_tick (60 s): failsafe pass per org + mx_push_busy \u2192 PUT orgs/{org}/external-busy"
+   ]
+  },
+  {
+   "dot": "rose",
+   "title": "Sealed mail",
+   "items": [
+    "seal.rs opens sealed payloads; plaintext kept locally while the bundle is byte-identical",
+    "sealed rows never go to a cloud AI lane",
+    "agent_conversations / agent_messages exclude any thread holding a sealed message",
+    "mirror reset when engine_settings.mx_schema_version \u2260 2"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,114 @@
+[
+  {
+    "in": "Meeting notes",
+    "out": "Meeting notes"
+  },
+  {
+    "in": "Re: Meeting notes",
+    "out": "Meeting notes"
+  },
+  {
+    "in": "RE: FWD: Meeting notes",
+    "out": "Meeting notes"
+  },
+  {
+    "in": "Re[4]: Meeting notes",
+    "out": "Meeting notes"
+  },
+  {
+    "in": "  Re:   spaced   out  ",
+    "out": "spaced out"
+  },
+  {
+    "in": "[dev] Meeting notes",
+    "out": "Meeting notes"
+  },
+  {
+    "in": "[PATCH v2 3/5] fix the thing",
+    "out": "fix the thing"
+  },
+  {
+    "in": "Re: [list] Fwd: nested prefixes",
+    "out": "nested prefixes"
+  },
+  {
+    "in": "AW: German reply",
+    "out": "German reply"
+  },
+  {
+    "in": "SV: Swedish reply",
+    "out": "Swedish reply"
+  },
+  {
+    "in": "回复: chinese reply",
+    "out": "chinese reply"
+  },
+  {
+    "in": "転送: japanese forward",
+    "out": "japanese forward"
+  },
+  {
+    "in": "ОТВ: russian reply",
+    "out": "russian reply"
+  },
+  {
+    "in": "Vs: finnish",
+    "out": "finnish"
+  },
+  {
+    "in": "res: portuguese",
+    "out": "portuguese"
+  },
+  {
+    "in": "no prefix [not-a-tag-in-middle] here",
+    "out": "no prefix [not-a-tag-in-middle] here"
+  },
+  {
+    "in": "",
+    "out": ""
+  },
+  {
+    "in": "Re:",
+    "out": ""
+  },
+  {
+    "in": "RE: re: fwd: FW: quadruple",
+    "out": "quadruple"
+  },
+  {
+    "in": "[a-very-long-list-tag-that-is-way-over-forty-characters-long] keeps tag",
+    "out": "[a-very-long-list-tag-that-is-way-over-forty-characters-long] keeps tag"
+  },
+  {
+    "in": "Ref: italian",
+    "out": "italian"
+  },
+  {
+    "in": "REF: shouting",
+    "out": "shouting"
+  },
+  {
+    "in": "Odp: polish",
+    "out": "polish"
+  },
+  {
+    "in": "回复:no space chinese",
+    "out": "no space chinese"
+  },
+  {
+    "in": "Antw: dutch",
+    "out": "dutch"
+  },
+  {
+    "in": "  leading and trailing  ",
+    "out": "leading and trailing"
+  },
+  {
+    "in": "Tabs\tand\nnewlines here",
+    "out": "Tabs and newlines here"
+  },
+  {
+    "in": "Ynt: turkish reply",
+    "out": "turkish reply"
+  }
+]

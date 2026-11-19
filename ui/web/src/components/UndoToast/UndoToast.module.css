@@ -1,0 +1,195 @@
+.container {
+  position: fixed;
+  bottom: calc(var(--space-5) + var(--touch-strip-offset, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  z-index: var(--z-toast);
+  pointer-events: none;
+}
+
+/* Rounded rectangle with a gradient border + glow halo, mirroring the mobile
+   floating nav: a 1.5px ring-gradient stroke (padding-box/border-box trick) with
+   a blurred copy of the same gradient bleeding behind it. */
+.toast {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
+  min-width: 320px;
+  max-width: 480px;
+  border-radius: var(--radius-xl);
+  border: 1.5px solid transparent;
+  background:
+    var(--toast-surface) padding-box,
+    var(--gradient-ring) border-box;
+  box-shadow: var(--shadow-xl);
+  pointer-events: auto;
+  /* Swipe-right-to-dismiss is a horizontal pointer drag — keep it from turning
+     into a text selection and let vertical gestures still scroll the page. */
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: pan-y;
+  animation: slideUp var(--duration-normal) var(--ease-out);
+}
+
+/* Gradient glow halo — blurred ring gradient sitting behind the pill. */
+.toast::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--gradient-ring);
+  filter: blur(14px);
+  opacity: 0.45;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Exit — fade + sink as the toast is cleared (any removal path). Inline styles
+   from an in-progress swipe still win, so a flung toast keeps sliding off. */
+.leaving {
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+  pointer-events: none;
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out);
+}
+
+/* Circular icon badge — neutral default-button surface, action-specific glyph. */
+.iconBadge {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--btn-bg);
+  border: var(--btn-border);
+  box-shadow: var(--btn-highlight);
+  color: var(--text-primary);
+}
+
+.message {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Undo — pill button on the neutral default-button surface. */
+.undoButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1h);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--btn-bg);
+  border: var(--btn-border);
+  box-shadow: var(--btn-highlight);
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-lg);
+  transition: background var(--duration-micro) var(--ease-out);
+  flex-shrink: 0;
+}
+
+.undoButton:hover {
+  background: var(--btn-bg-hover);
+}
+
+.dismissButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--text-tertiary);
+  background: var(--btn-bg);
+  border: var(--btn-border);
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.dismissButton:hover {
+  background: var(--btn-bg-hover);
+  color: var(--text-secondary);
+}
+
+/* Progress bar — counts down right-to-left, inset so it stays inside the radius. */
+.progressBar {
+  position: absolute;
+  bottom: 4px;
+  left: 14px;
+  height: 2px;
+  background: var(--accent-primary);
+  border-radius: 1px;
+  animation: countdown 7s linear forwards;
+}
+
+@keyframes countdown {
+  from {
+    width: calc(100% - 28px);
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.kbd {
+  font-family: var(--font-mono);
+  font-size: var(--text-4xs);
+  padding: var(--space-px) var(--space-1);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-raised);
+  color: var(--text-muted);
+}
+
+/* Variant accents — subtle signal on the progress bar; the ring border/glow stays
+   constant so every toast reads as the same floating-nav family. */
+.toastTriage .progressBar {
+  background: rgba(210, 170, 90, 0.55);
+}
+
+.toastDanger .progressBar {
+  background: rgba(200, 80, 80, 0.6);
+}
+
+/* Phones (the phone shell, src/mobile/): full width less a gutter, lifted clear
+   of the floating nav / the thread's action bar. Portaled to <body>, so it can't
+   inherit an offset from the shell — the clearance lives here. */
+/* Keyed on the touch layout, not width: a narrow desktop-app window keeps
+   the desktop UI (PhoneSwitch), so it must keep these styles too. */
+:global(html[data-layout='phone']) .container {
+    left: var(--space-3);
+    right: var(--space-3);
+    transform: none;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+:global(html[data-layout='phone']) .toast { min-width: 0; max-width: none; }
+@media (hover: none) and (pointer: coarse) {
+  .kbd { display: none; }
+}

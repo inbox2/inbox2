@@ -1,0 +1,31 @@
+# Garage S3-compatible object store — single-node local dev (spec 16.5.2).
+#
+# Garage will not start without this file at /etc/garage.toml. A fresh node also
+# serves nothing until a cluster layout is applied and a key + bucket exist —
+# `bin/garage-init` does that (idempotently) and the herdr "garage" pane runs it.
+#
+# The secrets below are LOCAL-DEV ONLY and deliberately committed so the stack
+# comes up with no setup. Production Garage lives in Kubernetes with real ones.
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+db_engine = "sqlite"
+
+replication_factor = 1
+
+rpc_bind_addr = "[::]:3901"
+rpc_public_addr = "127.0.0.1:3901"
+rpc_secret = "3a8f1c0d6b47e29a5f13d8c47b02e6a91d5c7f3b8e46a20d9c7154e83b6f2a17"
+
+[s3_api]
+s3_region = "garage"
+api_bind_addr = "[::]:3900"
+root_domain = ".s3.garage.localhost"
+
+[s3_web]
+bind_addr = "[::]:3902"
+root_domain = ".web.garage.localhost"
+index = "index.html"
+
+[admin]
+api_bind_addr = "[::]:3903"
+admin_token = "9d21b4e7c30f8a5b6e94d17c2f83a06b5e7d49c1a2b83f06d5e17c94a2b8f306"

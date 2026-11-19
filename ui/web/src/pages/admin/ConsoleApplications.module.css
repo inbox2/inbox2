@@ -1,0 +1,28 @@
+/* Applications (console) — only what console.module.css / adminShared.module.css
+ * don't already cover. */
+
+.empty { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-8) var(--space-4); color: var(--m-ink-soft); text-align: center; }
+.emptyTitle { margin: 0; font-size: var(--text-base); font-weight: 600; color: var(--m-ink); }
+.emptySub { margin: 0; font-size: var(--text-sm); }
+
+/* Same reason as .howto: the bare `.card` gives this no inset of its own. */
+.error { padding: 0 var(--space-4h) var(--space-3h); }
+
+.uriList { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-0h); }
+.uriList li { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--m-ink-soft); overflow-wrap: anywhere; }
+
+/* console.module.css `.card` carries no padding — its other users supply it via
+ * .cardHead / .tbl. This card holds loose prose, so it brings its own. */
+.howto { margin-top: var(--space-4); padding: var(--space-4h); }
+.howtoSub { margin: var(--space-2) 0 var(--space-3h); font-size: var(--text-sm); color: var(--m-ink-soft); max-width: 68ch; }
+.code { margin: 0; padding: var(--space-3h); border-radius: var(--m-r-md); background: rgba(24, 34, 66, 0.04); border: 1px solid rgba(24, 34, 66, 0.1); font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.6; color: var(--m-ink); overflow-x: auto; white-space: pre; }
+
+/* Icon picker (register/edit modal). */
+.iconRow { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.iconPreview { width: 44px; height: 44px; border-radius: var(--m-r-md); object-fit: cover; border: 1px solid rgba(24, 34, 66, 0.14); background: #fff; }
+.iconPick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.iconPick span { display: inline-flex; align-items: center; gap: var(--space-1h); padding: var(--space-2) var(--space-3); border: 1px solid rgba(24, 34, 66, 0.22); border-radius: var(--m-r-md); background: #fff; font-size: var(--text-sm); cursor: pointer; }
+.iconPick:focus-within span { border-color: var(--m-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--m-accent) 22%, transparent); }
+.iconHint { font-size: var(--text-xs); color: var(--m-ink-soft); }
+
+.uriBox { font-family: var(--font-mono); font-size: var(--text-xs); resize: vertical; min-height: 96px; }

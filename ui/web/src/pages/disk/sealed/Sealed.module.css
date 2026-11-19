@@ -1,0 +1,32 @@
+.title { display: flex; align-items: center; gap: var(--space-2h); margin: 0 0 var(--space-3); font: 600 22px var(--m-display); color: var(--m-ink); }
+.titleIcon { flex: none; color: var(--m-ink-soft); }
+.muted { margin: 0 0 var(--space-3); color: var(--m-ink-soft); font-size: var(--text-2xs); }
+.small { display: block; margin: 4px 0; color: var(--m-ink-faint); font-size: var(--text-4xs); }
+.error { margin: var(--space-2h) 0 0; color: var(--m-pink); font-size: var(--text-2xs); }
+.actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-4h); flex-wrap: wrap; }
+.row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin: var(--space-2) 0; }
+.row > :first-child { flex: 1 1 180px; }
+.list { margin: var(--space-2) 0; padding: 0; list-style: none; border-top: 1px solid var(--m-line-soft); }
+.list li { display: flex; align-items: center; gap: var(--space-2h); padding: var(--space-2) 0; border-bottom: 1px solid var(--m-line-soft); font-size: var(--text-xs); }
+.list li > span { flex: 1; min-width: 0; }
+.list small { display: block; color: var(--m-ink-faint); font-size: var(--text-4xs); }
+.ack { display: flex; gap: var(--space-2); align-items: flex-start; margin: var(--space-3) 0; font-size: var(--text-2xs); color: var(--m-ink); }
+.banner { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-3h); padding: var(--space-2h) var(--space-3h); border-radius: var(--m-r-md); background: color-mix(in srgb, var(--m-accent) 8%, #fff); font-size: var(--text-2xs); color: var(--m-ink); }
+.warn { background: color-mix(in srgb, var(--m-amber) 18%, #fff); }
+.account { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); opacity: 0; pointer-events: none; }
+.unlock { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); flex-basis: 100%; }
+.created { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin: var(--space-2h) 0; padding: var(--space-2h) var(--space-3); border-radius: var(--m-r-md); background: color-mix(in srgb, var(--m-green) 10%, #fff); }
+.linkField { flex: 1 1 260px; height: 34px; padding: 0 var(--space-2h); border: 1px solid var(--m-line); border-radius: var(--m-r-sm); background: #fff; font: 13px var(--m-mono); color: var(--m-ink); }
+.limits { font-size: var(--text-2xs); color: var(--m-ink); }
+.limits { margin: 0 0 var(--space-3); }
+.limits summary { cursor: pointer; color: var(--m-ink-soft); font-weight: 600; }
+.limits ul { margin: var(--space-2) 0 0; padding-left: var(--space-4h); }
+.limits li { margin: 0 0 var(--space-2); }
+.progress { margin: var(--space-2) 0; font-size: var(--text-2xs); color: var(--m-ink-soft); }
+.link { flex-basis: 100%; padding: 0; border: 0; background: none; color: var(--m-ink-soft); font: inherit; font-size: var(--text-4xs); text-align: left; text-decoration: underline; cursor: pointer; }
+.step { margin: 0 0 var(--space-3); color: var(--m-ink); font-size: var(--text-2xs); }
+.diagram { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-3h); color: var(--m-ink-faint); }
+.stage { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: var(--space-3) var(--space-2); border: 1px solid var(--m-line-soft); border-radius: var(--m-r-md); text-align: center; color: var(--m-ink); font-size: var(--text-4xs); }
+.stage span { color: var(--m-ink-soft); }
+.stageKey { background: color-mix(in srgb, var(--m-accent) 8%, #fff); border-color: color-mix(in srgb, var(--m-accent) 30%, #fff); }
+@media (max-width: 480px) { .diagram { flex-direction: column; } .diagram > svg { transform: rotate(90deg); } }

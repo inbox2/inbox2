@@ -1,0 +1,281 @@
+/* Sidebar Zones block. --zone is a tokens.css --zone-* var, so each theme gets
+   its own shade of the category colour. */
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* The running zone — a full-width rail row in the "Coming up" idiom (cf.
+   EventListItem .upcomingSoon): a zone-tinted wash fading off to the right,
+   a solid inset rail on the left, and a recessed groove for the progress. */
+.now {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: var(--space-2) var(--space-3) var(--space-2h, var(--space-2h)) var(--space-5);
+  border: none;
+  border-bottom: 1px solid var(--border-groove);
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--zone) 14%, transparent) 0%,
+    color-mix(in srgb, var(--zone) 5%, transparent) 45%,
+    transparent 90%
+  );
+  box-shadow:
+    inset 3px 0 0 color-mix(in srgb, var(--zone) 80%, transparent),
+    inset 0 1px 0 var(--overlay-4);
+  font-family: var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-fast);
+}
+
+.now:hover {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--zone) 20%, transparent) 0%,
+    color-mix(in srgb, var(--zone) 8%, transparent) 45%,
+    transparent 90%
+  );
+}
+
+.now:focus-visible,
+.upcoming:focus-visible {
+  outline: none;
+  box-shadow: var(--glow-focus);
+}
+
+.nowLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--zone) 75%, var(--text-secondary));
+  text-shadow: var(--chrome-text-shadow);
+}
+
+/* Lit indicator — the zone colour with a soft halo, gently breathing. */
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--zone);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--zone) 70%, transparent);
+  animation: zoneBreathe 3s ease-in-out infinite;
+}
+
+@keyframes zoneBreathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot { animation: none; }
+}
+
+.nowName {
+  overflow: hidden;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nowClock {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.nowLeft {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.nowUntil {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Recessed groove, beveled lip underneath — same build as the panels. */
+.track {
+  height: 5px;
+  margin-top: 3px;
+  border-radius: 3px;
+  background: var(--surface-sunken);
+  box-shadow: var(--panel-deep-inset), 0 1px 0 var(--overlay-4);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  width: var(--zone-progress, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--zone) 70%, var(--bevel)) 0%,
+    var(--zone) 50%,
+    color-mix(in srgb, var(--zone) 80%, black) 100%
+  );
+  box-shadow: 0 0 6px color-mix(in srgb, var(--zone) 50%, transparent);
+}
+
+.upcoming {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1h) var(--space-3) var(--space-1h) var(--space-4);
+  border: none;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.upcoming:hover {
+  background: var(--overlay-4);
+  color: var(--text-primary);
+}
+
+.upcomingName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upcomingWhen {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Striped like the zones on the grid — soft, not a solid event. */
+.swatch {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  background: repeating-linear-gradient(135deg, var(--zone) 0 2px, transparent 2px 4px);
+  box-shadow: inset 0 0 0 1.5px var(--zone);
+}
+
+.count {
+  margin-left: auto;
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.titleActions {
+  display: flex;
+  gap: var(--space-0h);
+  margin: -3px 0;
+}
+
+/* Quiet glyphs in the metallic header bar — chrome only on hover. */
+.titleActions .headerBtn {
+  border-color: transparent;
+  background: none;
+}
+
+.titleActions .headerBtn:hover {
+  border-color: var(--border-subtle);
+  background: var(--overlay-6);
+}
+
+/* ── Groovebox: the running zone is a synth pad ─────────
+   A raised dark keycap with a hard bottom edge, an LED for the status light,
+   the countdown in a recessed LCD window (the clock's mustard digits), and
+   progress as a 16-step sequencer row. */
+:global([data-theme-variant="groovebox"]) .now {
+  gap: var(--space-1h);
+  width: auto;
+  margin: var(--space-2) var(--space-2) var(--space-3);
+  padding: var(--space-2h, var(--space-2h)) var(--space-3) var(--space-3);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, #24242a 0%, #1b1b1f 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 3px 0 #08080a,
+    0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+:global([data-theme-variant="groovebox"]) .now:hover {
+  background: linear-gradient(180deg, #2a2a31 0%, #1f1f24 100%);
+}
+
+:global([data-theme-variant="groovebox"]) .now:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 0 #08080a;
+}
+
+:global([data-theme-variant="groovebox"]) .nowLabel {
+  color: var(--zone);
+  letter-spacing: 0.1em;
+}
+
+/* LED in a black bezel. */
+:global([data-theme-variant="groovebox"]) .dot {
+  width: 7px;
+  height: 7px;
+  box-shadow:
+    0 0 0 2px var(--gb-bezel),
+    0 0 8px color-mix(in srgb, var(--zone) 80%, transparent);
+}
+
+:global([data-theme-variant="groovebox"]) .nowName {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+}
+
+/* LCD window. */
+:global([data-theme-variant="groovebox"]) .nowClock {
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--gb-bezel);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+:global([data-theme-variant="groovebox"]) .nowLeft {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--clock-digits);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--clock-digits) 35%, transparent);
+}
+
+:global([data-theme-variant="groovebox"]) .nowUntil {
+  color: var(--clock-label);
+}
+
+/* 16 steps: the mask cuts both the unlit row and the lit fill into pads. */
+:global([data-theme-variant="groovebox"]) .track {
+  height: 9px;
+  margin-top: var(--space-1);
+  border-radius: 0;
+  background: #2c2c33;
+  box-shadow: none;
+  mask: repeating-linear-gradient(90deg, #000 0 calc(6.25% - 3px), transparent calc(6.25% - 3px) 6.25%);
+}
+
+:global([data-theme-variant="groovebox"]) .fill {
+  border-radius: 0;
+  background: var(--zone);
+  box-shadow: none;
+}

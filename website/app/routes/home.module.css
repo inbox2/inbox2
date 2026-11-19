@@ -1,0 +1,689 @@
+.hero {
+  background: var(--ink);
+  padding: 120px 0 80px;
+  overflow: clip;
+  position: relative;
+}
+
+.glow,
+.glowB {
+  position: absolute;
+  pointer-events: none;
+  filter: blur(70px);
+}
+
+.glow {
+  left: 50%;
+  top: 30%;
+  width: 1200px;
+  height: 700px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, var(--glow-a), transparent 62%);
+  /* the ribbons blur themselves: a blur on this parent would re-rasterise every frame */
+  filter: none;
+}
+
+/* Aurora: two soft colour ribbons that drift, tilt and breathe across the glow.
+   Only transform/opacity animate, so each blurred ribbon is painted once. */
+/* Ribbons are narrower than the glow and travel far (translate % = their own
+   width), so the drift reads as motion rather than a static wash. */
+.glow::before,
+.glow::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(45px);
+}
+
+.glow::before {
+  left: 5%;
+  top: 30%;
+  width: 55%;
+  height: 28%;
+  background: linear-gradient(90deg, transparent, hsl(234 100% 76% / 0.3) 35%, hsl(305 100% 66% / 0.2) 70%, transparent);
+  animation: auroraA 12s ease-in-out infinite alternate;
+}
+
+.glow::after {
+  left: 40%;
+  top: 45%;
+  width: 50%;
+  height: 22%;
+  background: linear-gradient(90deg, transparent, hsl(175 85% 60% / 0.14) 30%, hsl(234 100% 76% / 0.22) 65%, transparent);
+  animation: auroraB 15s ease-in-out -5s infinite alternate;
+}
+
+@keyframes auroraA {
+  0% { transform: translate(-15%, 12%) rotate(-10deg) scale(0.9, 0.7); opacity: 0.35; }
+  50% { transform: translate(35%, -14%) rotate(6deg) scale(1.1, 1.25); opacity: 1; }
+  100% { transform: translate(65%, 6%) rotate(-4deg) scale(1, 0.8); opacity: 0.45; }
+}
+
+@keyframes auroraB {
+  0% { transform: translate(30%, -8%) rotate(8deg) scale(1, 1.2); opacity: 0.4; }
+  50% { transform: translate(-25%, 14%) rotate(-6deg) scale(1.15, 0.7); opacity: 1; }
+  100% { transform: translate(-70%, 0) rotate(3deg) scale(0.9, 1.1); opacity: 0.35; }
+}
+
+.glowB {
+  left: 60%;
+  top: 40%;
+  width: 1000px;
+  height: 700px;
+  background: radial-gradient(ellipse at center, var(--glow-b), transparent 62%);
+}
+
+.heroInner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  align-items: center;
+  text-align: center;
+}
+
+/* The /mx stat chips, shrunk to a kicker row: gradient-outlined pills on the
+   dark hero, bold word in the brand gradient, muted clause after it. */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tags li {
+  display: grid;
+  grid-template-columns: auto 0fr;
+  align-items: baseline;
+  padding: 8px 16px;
+  transition: grid-template-columns 0.28s ease, background 0.18s ease;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+  color: var(--mute-inv);
+  white-space: nowrap;
+}
+
+/* The clause is folded shut and slides out on hover (0fr → 1fr animates,
+   width: auto doesn't). Touch has no hover, so there it stays open. */
+.tags span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease, padding-left 0.28s ease;
+}
+
+.tags li:hover,
+.tags li:focus-within {
+  grid-template-columns: auto 1fr;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tags li:hover span,
+.tags li:focus-within span {
+  opacity: 1;
+  padding-left: 6px;
+}
+
+@media (hover: none) {
+  .tags li { grid-template-columns: auto 1fr; }
+  .tags span { opacity: 1; padding-left: 6px; }
+}
+
+.tags b {
+  font-family: var(--display);
+  font-variation-settings: "wdth" 118;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition: color 0.2s ease;
+}
+
+.tags li:hover b,
+.tags li:focus-within b {
+  color: transparent;
+}
+
+.h1 {
+  /* Three lines: "One app." / "Unified Inbox on" / the cycling word.
+     The typed line sets its own width, so no max-width here. */
+  font-size: clamp(50px, 6.2vw, 92px);
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+}
+
+/* The word the typewriter cycles: brand gradient, with the caret in accent
+   yellow because gradient text is painted through a transparent colour. */
+.typed {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  --caret: var(--accent);
+}
+
+/* The fixed "your" is set smaller so the surface it cycles reads as the word. */
+.your {
+  font-size: 0.62em;
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+
+.lede {
+  font-size: 21px;
+  max-width: 46ch;
+  color: var(--mute-inv);
+}
+
+.ctas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.platforms {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding-top: 12px;
+}
+
+.platforms a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--faint-inv);
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.platforms a:hover,
+.platforms a:focus-visible {
+  color: #fff;
+}
+
+.heroShot {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-top: 64px;
+  padding: 0 var(--gutter);
+}
+
+.frame {
+  width: min(1124px, 100%);
+}
+
+.envA,
+.envB {
+  position: absolute;
+  filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+}
+
+.env {
+  display: block;
+  width: 100%;
+}
+
+/* Channel badge printed on the flap — same placement as the /mx hero's envelopes. */
+.badge {
+  position: absolute;
+  left: 47%;
+  top: 30%;
+  width: 26%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* Both envelopes fall like leaves from above the hero, swinging side to side
+   past the screenshot (they slip behind its edges). The resting transform is
+   what reduced-motion shows. Easing applies per keyframe segment, so each
+   swing slows at its end like a real pendulum. */
+.envA {
+  left: max(120px, calc(50% - 600px));
+  top: -40px;
+  width: 170px;
+  transform: rotate(-14deg);
+  animation: fallA 18s ease-in-out infinite;
+}
+
+.envB {
+  right: max(120px, calc(50% - 600px));
+  top: 120px;
+  width: 200px;
+  transform: rotate(12deg);
+  animation: fallB 22s ease-in-out -10s infinite;
+}
+
+@keyframes fallA {
+  0% { transform: translate(0, -900px) rotate(-14deg); opacity: 0; }
+  5% { opacity: 1; }
+  16% { transform: translate(-70px, -640px) rotate(12deg); }
+  33% { transform: translate(60px, -330px) rotate(-16deg); }
+  50% { transform: translate(-60px, -20px) rotate(12deg); }
+  67% { transform: translate(70px, 290px) rotate(-14deg); }
+  84% { transform: translate(-50px, 590px) rotate(10deg); }
+  94% { opacity: 1; }
+  100% { transform: translate(20px, 880px) rotate(-6deg); opacity: 0; }
+}
+
+@keyframes fallB {
+  0% { transform: translate(0, -1060px) rotate(12deg); opacity: 0; }
+  5% { opacity: 1; }
+  16% { transform: translate(80px, -780px) rotate(-12deg); }
+  33% { transform: translate(-60px, -460px) rotate(16deg); }
+  50% { transform: translate(70px, -140px) rotate(-10deg); }
+  67% { transform: translate(-70px, 180px) rotate(14deg); }
+  84% { transform: translate(50px, 480px) rotate(-10deg); }
+  94% { opacity: 1; }
+  100% { transform: translate(-20px, 760px) rotate(6deg); opacity: 0; }
+}
+
+/* ---- desktop ---- */
+/* Deep indigo, settling into the ink of the web section below it so the two
+   dark bands meet without a seam. The hero's mist dissolves into the top. */
+.desktop {
+  padding: 90px 0 110px;
+  background: linear-gradient(to bottom, var(--deep) 0 78%, var(--ink) 100%);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 64px;
+  align-items: start;
+}
+
+.sticky {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 40px;
+}
+
+.h2 {
+  font-size: var(--h2);
+  line-height: 0.96;
+  max-width: 12ch;
+}
+
+.points {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 15px;
+}
+
+.points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.points li svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  opacity: 0.55;
+}
+
+.points li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.pointsDark {
+  color: var(--mute-inv);
+}
+
+.pointsDark li,
+.pointsDark li:last-child {
+  border-color: var(--line-inv);
+}
+
+.pointsDark li svg {
+  opacity: 0.75;
+}
+
+.badges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.badges span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--grey);
+}
+
+.desktop .badges span {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line-inv);
+}
+
+.shots {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  /* Starts lower than the text column so the screenshots begin travelling past
+     the sticky text later, rather than the two setting off together. */
+  padding-top: 130px;
+}
+
+/* ---- web ---- */
+/* The section after the hero's tour carries the indigo the desktop section had,
+   settling into ink at its foot. */
+.web {
+  background: linear-gradient(to bottom, var(--deep) 0 78%, var(--ink) 100%);
+  padding: 70px 0 0;
+  overflow: clip;
+  position: relative;
+}
+
+.webHead {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 64px;
+  align-items: end;
+}
+
+.webText {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.webShot {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-top: 64px;
+  padding: 0 var(--gutter);
+}
+
+/* Registered so they can be animated: an unregistered custom property jumps
+   between keyframes instead of interpolating, which would make the boundary
+   snap rather than billow. */
+@property --dip {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 70%;
+}
+
+@property --dome-w {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 58%;
+}
+
+/* The dark section dissolves into the next one as drifting smoke. The band is
+   a flat fill of the next section's colour, textured with slow-panning puffs;
+   its SHAPE is a mask, not the fill. Stacking gradients to carve a silhouette
+   fights itself — every full-width layer you add to seal the bottom also
+   flattens the curve you drew above it. */
+.fade {
+  /* A wing rising from each bottom corner, dipping between them: a half-moon
+     bitten out of the middle, which keeps the hero screenshot's reflection
+     clear. --dome-w is the knob: wider = shallower dip, tighter wings. */
+  --dome-w: 58%;
+  /* Must not exceed 100%: the mask is clipped to the band's box, so a vertical
+     radius taller than the band leaves the wings still part-opaque at the top
+     edge — a hard line straight across, which is the whole thing we're
+     avoiding. At 100% each wing reaches zero exactly at the top. */
+  --dome-h: 100%;
+  /* How far down the middle of the dip sits. The band below it is opaque
+     full-width, so the hero's ink can never show through against the section
+     underneath — that would be a hard seam right in the centre. */
+  --dip: 70%;
+  height: 260px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-color: var(--paper);
+  background-image:
+    /* The puffs below are centred under the band, so they are at their darkest
+       exactly where it meets the next section. This settles the last strip
+       back to clean --paper so the two surfaces match and there's no seam. */
+    linear-gradient(to bottom, transparent 80%, var(--paper) 100%),
+    radial-gradient(58% 130% at 10% 108%, var(--cloud, var(--paper)) 0%, transparent 68%),
+    radial-gradient(42% 165% at 34% 112%, var(--cloud, var(--paper)) 0%, transparent 70%),
+    radial-gradient(52% 110% at 58% 106%, var(--cloud, var(--paper)) 0%, transparent 66%),
+    radial-gradient(64% 150% at 84% 110%, var(--cloud, var(--paper)) 0%, transparent 70%);
+  background-size: 100% 100%, 200% 100%, 220% 100%, 180% 100%, 240% 100%;
+  background-position: 0 0, 0% 100%, 0% 100%, 0% 100%, 0% 100%;
+  -webkit-mask-image:
+    radial-gradient(var(--dome-w) var(--dome-h) at 0% 100%, #000 30%, transparent 100%),
+    radial-gradient(var(--dome-w) var(--dome-h) at 100% 100%, #000 30%, transparent 100%),
+    linear-gradient(to bottom, transparent var(--dip), #000 94%);
+  mask-image:
+    radial-gradient(var(--dome-w) var(--dome-h) at 0% 100%, #000 30%, transparent 100%),
+    radial-gradient(var(--dome-w) var(--dome-h) at 100% 100%, #000 30%, transparent 100%),
+    linear-gradient(to bottom, transparent var(--dip), #000 94%);
+  /* Smoke: the silhouette itself moves, not just the fill behind it. The
+     middle of the boundary rises and falls while the wings breathe wider and
+     narrower, on periods that don't divide into each other — so the two never
+     line up and the edge never looks like it's on a loop. */
+  animation:
+    drift 22s ease-in-out infinite alternate,
+    billow 17s ease-in-out infinite alternate,
+    breathe 29s ease-in-out infinite alternate;
+}
+
+@keyframes billow {
+  from { --dip: 66%; }
+  to { --dip: 77%; }
+}
+
+@keyframes breathe {
+  from { --dome-w: 53%; }
+  to { --dome-w: 64%; }
+}
+
+@keyframes drift {
+  to {
+    background-position: 0 0, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  }
+}
+
+/* The hero closes into the indigo section rather than into paper, so the smoke
+   is the blue swelling up. 290px is the reflection (210px) plus the hero's
+   bottom padding — any taller and the band lies across the screenshot itself. */
+.fadeHero {
+  --paper: var(--deep);
+  --cloud: color-mix(in srgb, var(--paper) 82%, var(--ink));
+  height: 290px;
+}
+
+/* The mist swells upward as the boundary crosses the viewport, so the paper
+   section looks like it's rising through it rather than being scrolled to.
+   ponytail: native CSS scroll-driven animation, no JS and no scroll library;
+   browsers without animation-timeline (Firefox) just get the settled band. */
+@supports (animation-timeline: view()) {
+  .fade {
+    transform-origin: 50% 100%;
+    animation:
+      drift 22s ease-in-out infinite alternate,
+      billow 17s ease-in-out infinite alternate,
+      breathe 29s ease-in-out infinite alternate,
+      rise linear both;
+    animation-timeline: auto, auto, auto, view();
+    animation-range: normal, normal, normal, entry 0% cover 65%;
+  }
+}
+
+@keyframes rise {
+  from { transform: scaleY(0.8); }
+  to { transform: scaleY(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade { animation: none; }
+}
+
+/* ---- feature rows ---- */
+.features {
+  padding: 150px 0;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 64px;
+  align-items: center;
+}
+
+.flip > :first-child {
+  order: 2;
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  justify-content: center;
+}
+
+.h3 {
+  font-size: var(--h3);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  max-width: 14ch;
+}
+
+.rowBody {
+  font-size: 17px;
+  color: var(--mute);
+  max-width: 40ch;
+}
+
+.rowSub {
+  font-size: 15px;
+  max-width: 40ch;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+/* ---- console cta ---- */
+.consoleCta {
+  background: var(--ink2);
+  padding: 110px 0;
+}
+
+/* The console mock is built at full size, so it is zoomed down to sit beside
+   the copy and masked off at the bottom rather than cropped hard. */
+.consoleGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+}
+
+.consoleShot {
+  zoom: 0.5;
+  border-radius: 18px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 74%, transparent);
+  mask-image: linear-gradient(to bottom, #000 74%, transparent);
+}
+
+.consoleInner {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    padding: 56px 0 40px;
+  }
+  /* 110px of reflection + 40px of padding is all there is under the shot. */
+  .fadeHero {
+    height: 150px;
+  }
+  .fade {
+    height: 150px;
+  }
+  /* The typed line never wraps, so the headline has to fit the longest word. */
+  .h1 {
+    font-size: clamp(34px, 8.6vw, 68px);
+  }
+  .lede {
+    font-size: 16px;
+  }
+  .envA,
+  .envB {
+    display: none;
+  }
+  .desktop,
+  .features {
+    padding: 64px 0;
+  }
+  .split,
+  .webHead,
+  .row {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .sticky {
+    position: static;
+  }
+  /* One column here — the offset would just be a gap. */
+  .shots {
+    padding-top: 0;
+  }
+  .h3 {
+    font-size: 30px;
+  }
+  .flip > :first-child {
+    order: 0;
+  }
+  .rows {
+    gap: 56px;
+  }
+  .web {
+    padding-top: 64px;
+  }
+  .consoleCta {
+    padding: 64px 0;
+  }
+  .consoleGrid {
+    grid-template-columns: 1fr;
+  }
+  .consoleShot {
+    display: none;
+  }
+}

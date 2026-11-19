@@ -1,0 +1,165 @@
+/* ═══════════════════════════════════════════════════════ */
+/* PreviewPane — Rendered email preview                    */
+/* Light background to simulate recipient's view           */
+/* ═══════════════════════════════════════════════════════ */
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--overlay-6);
+}
+
+.label {
+  padding: var(--space-1h) var(--space-3);
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  border-bottom: 1px solid var(--overlay-6);
+  background:
+    linear-gradient(180deg,
+      var(--overlay-3) 0%,
+      transparent 100%
+    );
+  flex-shrink: 0;
+}
+
+.stripe {
+  height: 3px;
+  background: var(--gradient-ring);
+  flex-shrink: 0;
+}
+
+/* On white the full-saturation brand ring reads as a hard magenta rule. Keep
+   the brand hues, just thinner and softened so it sits like a rule. */
+:global([data-theme="light"]) .stripe {
+  height: 2px;
+  opacity: 0.5;
+}
+
+/* The recipient's client renders on white — so does the preview, in every
+   theme. Theme tokens here made a dark-mode preview that matched nothing the
+   other end sees. Literal colors are the point. */
+.envelope {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  background: #fff;
+  color: #111;
+}
+
+.body {
+  font-family: var(--font-email);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: #111;
+  word-break: break-word;
+}
+
+.body strong,
+.body b {
+  font-weight: var(--weight-bold);
+}
+
+.body p {
+  margin: 0 0 var(--space-2) 0;
+}
+
+.body h1,
+.body h2,
+.body h3 {
+  font-weight: var(--weight-semibold);
+  margin: var(--space-4) 0 var(--space-2) 0;
+}
+
+.body h1 { font-size: var(--text-lg); }
+.body h2 { font-size: var(--text-md); }
+.body h3 { font-size: var(--text-base); }
+
+.body ul,
+.body ol {
+  padding-left: var(--space-6);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.body li {
+  margin-bottom: var(--space-1);
+}
+
+.body a {
+  color: #1a56b8;
+  text-decoration: underline;
+}
+
+.body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+
+.body blockquote {
+  border-left: 3px solid #ccc;
+  padding-left: var(--space-4);
+  margin: var(--space-2) 0;
+  color: #555;
+}
+
+.body code {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  background: #f0f0f0;
+  padding: var(--space-0h) var(--space-1);
+  border-radius: var(--radius-xs);
+}
+
+.body pre {
+  background: #f6f6f6;
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin: var(--space-2) 0;
+  overflow-x: auto;
+}
+
+.body hr {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: var(--space-4) 0;
+}
+
+/* Quoted reply chain — same face/size as the body: this is the mail the
+   recipient sees, and Gmail/Outlook render the quote at full body size. */
+.quoted {
+  margin-top: var(--space-4);
+  font-family: var(--font-email);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: #555;
+}
+
+.quotedRule {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: var(--space-4) 0 var(--space-3) 0;
+}
+
+.quoted blockquote {
+  border-left: 2px solid #ccc;
+  padding-left: var(--space-4);
+  margin: var(--space-1) 0;
+  color: #555;
+  line-height: var(--leading-normal);
+}
+
+.quoted p {
+  margin: 0 0 var(--space-2) 0;
+}
+
+.quoted strong,
+.quoted b {
+  color: #111;
+  font-weight: var(--weight-bold);
+}

@@ -1,0 +1,14 @@
+inbox2
+Copyright 2026 Sadiq Beheer B.V.
+
+This product includes software developed by Sadiq Beheer B.V. The clients,
+the shared Rust core and everything not listed below are licensed under the
+Apache License, Version 2.0 (LICENSE). api/, mta/ and deploy/ are licensed
+under the Functional Source License, Version 1.1, ALv2 Future License (their
+own LICENSE.md). See README.md#licensing.
+
+Third-party components bundled in this repository, with their licenses, are
+listed in THIRD_PARTY_NOTICES.md.
+
+"inbox2" is a trade name of Sadiq Beheer B.V. The name and logo are not
+licensed under either license.

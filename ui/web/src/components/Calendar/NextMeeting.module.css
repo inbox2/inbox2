@@ -1,0 +1,30 @@
+/* Breathing room between the event row and the sync status bar below it. */
+.body {
+  padding-bottom: var(--space-8);
+}
+
+/* Join — quieter than the popup's primary button: the sidebar footer is ambient
+   furniture, and this only appears in the last half hour before the meeting. */
+.join {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1h);
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-1h) var(--space-2);
+  background: var(--accent-warning-dim);
+  color: var(--text-primary);
+  border: 1px solid color-mix(in srgb, var(--accent-warning) 40%, transparent);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  transition: background var(--duration-fast), border-color var(--duration-fast);
+}
+
+.join:hover {
+  background: color-mix(in srgb, var(--accent-warning) 26%, transparent);
+  border-color: color-mix(in srgb, var(--accent-warning) 60%, transparent);
+}

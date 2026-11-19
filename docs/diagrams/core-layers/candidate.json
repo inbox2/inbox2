@@ -1,0 +1,402 @@
+{
+ "schema_version": 1,
+ "diagram_type": "architecture",
+ "meta": {
+  "title": "inbox2-core layers",
+  "output": "docs/diagrams/core-layers/core-layers.html",
+  "quality_profile": "showcase",
+  "legend": {
+   "entries": {
+    "backend": {
+     "label": "Rust module"
+    },
+    "database": {
+     "label": "SQLite store"
+    },
+    "messagebus": {
+     "label": "Events"
+    },
+    "security": {
+     "label": "Secrets & sealed mail"
+    }
+   }
+  }
+ },
+ "components": [
+  {
+   "id": "ffi",
+   "type": "backend",
+   "label": "ffi.rs",
+   "sublabel": "UniFFI InboxEngine, iOS + Android",
+   "pos": [
+    40,
+    150
+   ],
+   "size": [
+    170,
+    80
+   ]
+  },
+  {
+   "id": "engine",
+   "type": "backend",
+   "label": "SyncEngine runtime",
+   "sublabel": "runtime.rs: 5 s + 60 s ticks",
+   "pos": [
+    280,
+    150
+   ],
+   "size": [
+    170,
+    80
+   ]
+  },
+  {
+   "id": "events",
+   "type": "messagebus",
+   "label": "EventSink",
+   "sublabel": "events.rs \u2192 Tauri, bus, FFI",
+   "pos": [
+    520,
+    40
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "flow",
+   "type": "backend",
+   "label": "sync_flow + queues",
+   "sublabel": "actions.rs, outbox.rs",
+   "pos": [
+    520,
+    150
+   ],
+   "size": [
+    170,
+    80
+   ]
+  },
+  {
+   "id": "provider",
+   "type": "backend",
+   "label": "ProviderAdapter",
+   "sublabel": "gmail, microsoft, imap, meta",
+   "pos": [
+    760,
+    150
+   ],
+   "size": [
+    170,
+    80
+   ]
+  },
+  {
+   "id": "oauth",
+   "type": "security",
+   "label": "oauth.rs",
+   "sublabel": "TokenManager, Rails proxy",
+   "pos": [
+    1000,
+    150
+   ],
+   "size": [
+    170,
+    80
+   ]
+  },
+  {
+   "id": "store",
+   "type": "database",
+   "label": "SyncStore  (sync/store/*)",
+   "sublabel": "accounts, messages, folders, queue, calendar, secrets, vault, tracking, ai_triage, lore, meta, rules, mx",
+   "pos": [
+    40,
+    320
+   ],
+   "size": [
+    1370,
+    70
+   ]
+  },
+  {
+   "id": "mx",
+   "type": "backend",
+   "label": "MX mirror",
+   "sublabel": "mx_sync.rs, mx_mail.rs",
+   "pos": [
+    40,
+    460
+   ],
+   "size": [
+    170,
+    80
+   ]
+  },
+  {
+   "id": "seal",
+   "type": "security",
+   "label": "seal.rs",
+   "sublabel": "opens sealed E2EE mail",
+   "pos": [
+    280,
+    460
+   ],
+   "size": [
+    170,
+    80
+   ]
+  },
+  {
+   "id": "ai",
+   "type": "backend",
+   "label": "AI",
+   "sublabel": "triage, ai_worker, bridge/*",
+   "pos": [
+    520,
+    460
+   ],
+   "size": [
+    170,
+    80
+   ]
+  },
+  {
+   "id": "lore",
+   "type": "backend",
+   "label": "Lore",
+   "sublabel": "ontology.rs miner",
+   "pos": [
+    760,
+    460
+   ],
+   "size": [
+    170,
+    80
+   ]
+  },
+  {
+   "id": "rules",
+   "type": "backend",
+   "label": "Rules",
+   "sublabel": "conditions, gate, actions",
+   "pos": [
+    1000,
+    460
+   ],
+   "size": [
+    170,
+    80
+   ]
+  },
+  {
+   "id": "mcp",
+   "type": "backend",
+   "label": "MCP client",
+   "sublabel": "mcp_client/*: rpc, oauth",
+   "pos": [
+    1240,
+    460
+   ],
+   "size": [
+    170,
+    80
+   ]
+  }
+ ],
+ "boundaries": [
+  {
+   "kind": "region",
+   "label": "FFI",
+   "wraps": [
+    "ffi"
+   ]
+  },
+  {
+   "kind": "region",
+   "label": "Engine",
+   "wraps": [
+    "engine",
+    "events",
+    "flow"
+   ]
+  },
+  {
+   "kind": "region",
+   "label": "Providers",
+   "wraps": [
+    "provider",
+    "oauth"
+   ]
+  },
+  {
+   "kind": "region",
+   "label": "Storage",
+   "wraps": [
+    "store"
+   ]
+  },
+  {
+   "kind": "region",
+   "label": "MX",
+   "wraps": [
+    "mx",
+    "seal"
+   ]
+  },
+  {
+   "kind": "region",
+   "label": "AI",
+   "wraps": [
+    "ai"
+   ]
+  },
+  {
+   "kind": "region",
+   "label": "Lore",
+   "wraps": [
+    "lore"
+   ]
+  },
+  {
+   "kind": "region",
+   "label": "Rules",
+   "wraps": [
+    "rules"
+   ]
+  },
+  {
+   "kind": "region",
+   "label": "MCP client",
+   "wraps": [
+    "mcp"
+   ]
+  }
+ ],
+ "connections": [
+  {
+   "id": "ffi-engine",
+   "from": "ffi",
+   "to": "engine",
+   "label": "wraps",
+   "variant": "emphasis"
+  },
+  {
+   "id": "engine-flow",
+   "from": "engine",
+   "to": "flow",
+   "label": "ticks drive",
+   "variant": "emphasis"
+  },
+  {
+   "id": "engine-events",
+   "from": "engine",
+   "to": "events",
+   "label": "emits"
+  },
+  {
+   "id": "flow-provider",
+   "from": "flow",
+   "to": "provider",
+   "label": "sync, apply_action, send",
+   "variant": "emphasis"
+  },
+  {
+   "id": "provider-oauth",
+   "from": "provider",
+   "to": "oauth",
+   "label": "tokens",
+   "variant": "security"
+  },
+  {
+   "id": "engine-store",
+   "from": "engine",
+   "to": "store",
+   "label": "reads + writes",
+   "variant": "emphasis"
+  },
+  {
+   "id": "flow-store",
+   "from": "flow",
+   "to": "store",
+   "label": "writeback_actions, outbox"
+  },
+  {
+   "id": "oauth-store",
+   "from": "oauth",
+   "to": "store",
+   "label": "encrypted credentials",
+   "variant": "security"
+  },
+  {
+   "id": "mx-store",
+   "from": "mx",
+   "to": "store",
+   "label": "mx_* tables"
+  },
+  {
+   "id": "seal-mx",
+   "from": "seal",
+   "to": "mx",
+   "label": "plaintext",
+   "variant": "security"
+  },
+  {
+   "id": "ai-store",
+   "from": "ai",
+   "to": "store",
+   "label": "ai_triage_queue, settings"
+  },
+  {
+   "id": "lore-store",
+   "from": "lore",
+   "to": "store",
+   "label": "lore_* tables"
+  },
+  {
+   "id": "rules-store",
+   "from": "rules",
+   "to": "store",
+   "label": "local_rules"
+  },
+  {
+   "id": "mcp-store",
+   "from": "mcp",
+   "to": "store",
+   "label": "connections, tokens"
+  }
+ ],
+ "cards": [
+  {
+   "dot": "slate",
+   "title": "Dependency direction",
+   "items": [
+    "ffi.rs wraps every layer: ~96 InboxEngine methods, EngineEventListener + OnDeviceLlm callbacks",
+    "Engine uses Providers and Storage; nothing below the store calls up",
+    "MX, AI, Lore, Rules and the MCP client use Storage only",
+    "Providers are the only modules that speak to mail servers"
+   ]
+  },
+  {
+   "dot": "emerald",
+   "title": "Storage (sync/store/*)",
+   "items": [
+    "mod.rs opens SQLite: WAL, foreign keys, busy_timeout 5000, schema + ALTER upgrades",
+    "queue.rs: write-back queue, WRITEBACK_SETTLE_GRACE_SECS = 180",
+    "mx.rs: version guard on change_seq, settle guard, MX_SCHEMA_VERSION = 2",
+    "secrets.rs: encrypted credentials and app_secrets; crypto.rs device-bound key"
+   ]
+  },
+  {
+   "dot": "rose",
+   "title": "Sealed mail",
+   "items": [
+    "seal.rs decrypts only; interop-locked to the Go and libsodium producers",
+    "Opened text stored locally, never sent to a cloud AI lane",
+    "agent_* views exclude sealed threads for MCP clients"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════════════════ */
+/* LogViewerSettings — live log stream with filtering      */
+/* Terminal aesthetic, consistent with SyncConsole          */
+/* ═══════════════════════════════════════════════════════ */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.desc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.hint {
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  margin-top: var(--space-2);
+}
+
+/* ── Toolbar ──────────────────────────────────────────── */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.filterInput {
+  flex: 1;
+  min-width: 180px;
+  background: var(--overlay-3);
+  border: 1px solid var(--overlay-6);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1h) var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+  outline: none;
+  transition: border-color var(--duration-fast);
+}
+
+.filterInput:focus {
+  border-color: var(--border-focus);
+}
+
+.filterInput::placeholder {
+  color: var(--text-muted);
+}
+
+.toolbarActions {
+  display: flex;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: 1px solid var(--overlay-6);
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  font-size: var(--text-3xs);
+  font-family: var(--font-ui);
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.actionBtn:hover {
+  background: var(--overlay-4);
+  color: var(--text-secondary);
+}
+
+/* ── Log window ───────────────────────────────────────── */
+
+.logWindow {
+  background: #070809;
+  border: 1px solid var(--overlay-4);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  line-height: 1.6;
+}
+
+:global([data-theme="light"]) .logWindow {
+  background: #fafafa;
+  border-color: var(--overlay-6);
+}
+
+.logEntry {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.logTime {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  min-width: 70px;
+}
+
+.logLevel {
+  flex-shrink: 0;
+  min-width: 44px;
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+}
+
+.logINFO  { color: var(--status-info-text); }
+.logWARN  { color: var(--status-warn-text); }
+.logERROR { color: var(--status-danger-text); }
+.logDEBUG { color: var(--status-debug-text); }
+
+:global([data-theme="light"]) .logINFO  { color: #2563eb; }
+:global([data-theme="light"]) .logWARN  { color: #ca8a04; }
+:global([data-theme="light"]) .logERROR { color: #dc2626; }
+:global([data-theme="light"]) .logDEBUG { color: #9ca3af; }
+
+.logTag {
+  flex-shrink: 0;
+  color: var(--accent-teal, #78a8a0);
+  min-width: 64px;
+}
+
+:global([data-theme="light"]) .logTag {
+  color: #0d9488;
+}
+
+.logMessage {
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.logEmpty {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: var(--space-3);
+  text-align: center;
+}

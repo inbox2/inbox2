@@ -1,0 +1,119 @@
+/* Minimal reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+  background: var(--bg-base, #090a0e);
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: var(--weight-normal);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background: transparent; /* the Tauri popover/notification windows are transparent */
+  min-height: 100dvh;
+  overscroll-behavior: none;
+}
+
+a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input, textarea, select {
+  font: inherit;
+  color: inherit;
+  border: none;
+  background: none;
+  outline: none;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Tauri desktop — transparent html/body so native vibrancy shows through */
+html[data-tauri] {
+  background: transparent;
+}
+
+html[data-tauri] body {
+  background: transparent;
+}
+
+/* Tauri desktop — chrome text isn't selectable, like a native app. The message
+   body opts back in (MessageCard .body, EmailFrame .wrap); so do pre/code,
+   which hold the things people copy (DNS records, keys, raw source). On body,
+   not .app, so portalled modals/menus and the notification window follow. */
+html[data-tauri] body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html[data-tauri] pre,
+html[data-tauri] code {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Focus visible — F4.2 — subtle border brightening, no colored ring */
+:focus-visible {
+  outline: none;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* Storybook decorator utility */
+.storybook-fullscreen {
+  min-height: 100vh;
+}
+
+/* Theme-aware IMAP/SMTP glyph: the source SVG is a white "@" (correct on dark
+   themes). On light themes invert it to a dark glyph everywhere it appears. */
+[data-theme="light"] img[src*="channels/imap"] {
+  filter: invert(1);
+}

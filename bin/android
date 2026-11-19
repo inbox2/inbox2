@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+# inbox2 Android dev driver — the Android analog of the iOS XcodeBuildMCP/simulator
+# tooling. One entrypoint to build the Rust core, build/install the Compose app, drive
+# the emulator, and inspect/automate the UI. Designed to be called both by humans and
+# by the thin MCP wrapper in ui/android/tools/android-mcp/.
+#
+#   bin/android core            # rebuild inbox2-core .so + Kotlin bindings (cargo-ndk)
+#   bin/android bundle          # regenerate assets/email-body.js from @inbox2/email-body
+#   bin/android build [debug|release]
+#   bin/android boot [avd]      # start the emulator (default: first AVD) + wait
+#   bin/android install [debug|release]
+#   bin/android run             # boot + build + install + launch
+#   bin/android launch
+#   bin/android stop            # force-stop the app
+#   bin/android seed            # copy the desktop inbox2.db + creds into the app sandbox
+#   bin/android screenshot [out.png]
+#   bin/android ui              # dump the view hierarchy (uiautomator XML)
+#   bin/android tap <x> <y>
+#   bin/android swipe <x1> <y1> <x2> <y2> [ms]
+#   bin/android text "<string>"
+#   bin/android key <keycode>   # e.g. BACK, ENTER, 4 (back)
+#   bin/android logcat [seconds]
+#   bin/android devices
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+ANDROID_DIR="$REPO/ui/android"
+APP_ID="com.inbox2.app"
+ACTIVITY="$APP_ID/.MainActivity"
+
+# ── Toolchain locations (override via env) ───────────────────────────────────
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+NDK_DIR="$(ls -d "$ANDROID_HOME"/ndk/* 2>/dev/null | sort -V | tail -1 || true)"
+export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-$NDK_DIR}"
+# Prefer a JDK 17 for Gradle/AGP (AGP is unreliable on JDK 23).
+for j in /opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home \
+         /Library/Java/JavaVirtualMachines/*/Contents/Home; do
+  [ -d "$j" ] && export JAVA_HOME="${JAVA_HOME:-$j}" && break
+done
+export PATH="$HOME/.cargo/bin:${JAVA_HOME:+$JAVA_HOME/bin:}$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+
+ADB="$ANDROID_HOME/platform-tools/adb"
+EMU="$ANDROID_HOME/emulator/emulator"
+GRADLEW="$ANDROID_DIR/gradlew"
+
+log() { printf '\033[36m▸ %s\033[0m\n' "$*" >&2; }
+
+# Bundle the shared @inbox2/email-body package into the app asset the WebView
+# reader loads (assets/email-body.js). The Android analog of iOS bootstrap.sh's
+# esbuild step — the bundle is a generated artifact of the one shared package
+# (gitignored), never a hand-maintained copy. Run from the package dir so the
+# esbuild output byte-matches the package's own `yarn build` (dist/).
+bundle_email_body() {
+  local esbuild="$REPO/ui/web/node_modules/.bin/esbuild"
+  local out="$ANDROID_DIR/app/src/main/assets/email-body.js"
+  [ -x "$esbuild" ] || { echo "esbuild missing — run 'yarn install' in ui/web first" >&2; exit 1; }
+  log "bundling @inbox2/email-body → assets/email-body.js"
+  ( cd "$REPO/packages/email-body" && "$esbuild" src/index.js \
+      --bundle --format=iife --global-name=Inbox2EmailBody --outfile="$out" )
+}
+
+cmd="${1:-help}"; shift || true
+
+case "$cmd" in
+  core)
+    log "building inbox2-core for Android (cargo-ndk + bindings)"
+    bash "$REPO/ui/desktop/core/build-android-jni.sh"
+    ;;
+
+  bundle)
+    bundle_email_body
+    ;;
+
+  build)
+    variant="${1:-debug}"
+    bundle_email_body
+    task=":app:assemble$(tr '[:lower:]' '[:upper:]' <<<"${variant:0:1}")${variant:1}"
+    log "gradle $task"
+    ( cd "$ANDROID_DIR" && "$GRADLEW" "$task" )
+    ;;
+
+  boot)
+    avd="${1:-$("$EMU" -list-avds | head -1)}"
+    if "$ADB" devices | grep -q emulator; then log "emulator already running"; exit 0; fi
+    [ -z "$avd" ] && { echo "no AVD found; create one in Android Studio or avdmanager" >&2; exit 1; }
+    log "booting emulator: $avd"
+    nohup "$EMU" -avd "$avd" -netdelay none -netspeed full >/tmp/inbox2-emulator.log 2>&1 &
+    log "waiting for device…"
+    "$ADB" wait-for-device
+    until [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do sleep 2; done
+    log "emulator booted"
+    ;;
+
+  install)
+    variant="${1:-debug}"
+    apk="$ANDROID_DIR/app/build/outputs/apk/$variant/app-$variant.apk"
+    [ -f "$apk" ] || { log "apk missing, building"; "$0" build "$variant"; }
+    log "installing $apk"
+    "$ADB" install -r -g "$apk"
+    ;;
+
+  launch)
+    log "launching $ACTIVITY"
+    "$ADB" shell am start -n "$ACTIVITY" >/dev/null
+    ;;
+
+  stop)  "$ADB" shell am force-stop "$APP_ID" ;;
+
+  run)
+    "$0" boot
+    "$0" core || true
+    "$0" build "${1:-debug}"
+    "$0" install "${1:-debug}"
+    "$0" launch
+    ;;
+
+  seed)
+    # Push the desktop store + credential key so the app shows real mail without OAuth
+    # (mirrors the iOS sim-seeding flow). Desktop data dir override via $DESKTOP_DATA.
+    src="${DESKTOP_DATA:-$HOME/Library/Application Support/com.inbox2.desktop}"
+    base="/data/data/$APP_ID/files/inbox2"
+    log "seeding from $src → $base"
+    "$ADB" shell run-as "$APP_ID" mkdir -p "$base"
+    for f in inbox2.db inbox2.db-wal inbox2.db-shm .credential_key; do
+      if [ -f "$src/$f" ]; then
+        "$ADB" push "$src/$f" "/data/local/tmp/$f" >/dev/null
+        "$ADB" shell run-as "$APP_ID" cp "/data/local/tmp/$f" "$base/$f"
+        log "  seeded $f"
+      fi
+    done
+    ;;
+
+  screenshot)
+    out="${1:-/tmp/inbox2-android.png}"
+    "$ADB" exec-out screencap -p > "$out"
+    log "saved $out"; echo "$out"
+    ;;
+
+  ui)
+    "$ADB" shell uiautomator dump /sdcard/window_dump.xml >/dev/null 2>&1
+    "$ADB" shell cat /sdcard/window_dump.xml
+    ;;
+
+  tap)    "$ADB" shell input tap "$1" "$2" ;;
+  swipe)  "$ADB" shell input swipe "$1" "$2" "$3" "$4" "${5:-300}" ;;
+  text)   "$ADB" shell input text "${1// /%s}" ;;
+  key)    "$ADB" shell input keyevent "$1" ;;
+
+  logcat)
+    secs="${1:-10}"
+    log "logcat for ${secs}s (core tag + app)"
+    "$ADB" logcat -c
+    ( "$ADB" logcat com.inbox2.core:V "$APP_ID":V '*:E' & p=$!; sleep "$secs"; kill $p 2>/dev/null ) || true
+    ;;
+
+  devices) "$ADB" devices ;;
+
+  *)
+    grep -E '^#( |$)' "$0" | sed 's/^# \{0,1\}//'
+    ;;
+esac

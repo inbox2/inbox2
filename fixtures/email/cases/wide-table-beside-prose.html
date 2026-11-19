@@ -1,0 +1,22 @@
+<!-- A business email: short prose followed by ONE ultra-wide data table (a 15-column
+     financial/VAT report, ~1600px). The case that killed whole-body scale-to-fit: fitting
+     the email by scaling ALL of it to the table's width took the prose down to ~0.2 —
+     an unreadable thumbnail. The per-element fit pass must scale only the table, leaving
+     the prose at full size (proseFullSize) while nothing spills past the right edge
+     (noOverflow). -->
+<div>
+  <p style="font:14px Arial;color:#1a1a1a">Dear Rizwan,</p>
+  <p style="font:14px Arial;color:#1a1a1a">Our review of the updated VAT input report shows that several line items are missing component selections. Please see the reconciliation table below.</p>
+  <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font:12px Arial;width:1600px">
+    <thead>
+      <tr>
+        <th>Company</th><th>VAT Code</th><th>Description</th><th>Company No</th><th>VAT Debit Amount</th><th>VAT Credit Amount</th><th>VAT Value</th><th>VAT Value Commercial</th><th>VAT Value Residential</th><th>VAT Value Admin</th><th>Record Type</th><th>Component Location</th><th>Component Number</th><th>Reference Name</th><th>Invoice Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>EMIRATES PROPERTY INVESTMENT L.L.C</td><td>018</td><td>RC Reverse Charge (Purchase)</td><td>17</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>PettyCash</td><td>Abu Dhabi</td><td>0.04-0100</td><td>Al Ain Building</td><td>07/12/2026</td></tr>
+      <tr><td>EMIRATES PROPERTY INVESTMENT L.L.C</td><td>018</td><td>RC Reverse Charge (Purchase)</td><td>18</td><td>8.25</td><td>0.00</td><td>8.25</td><td>0.00</td><td>0.00</td><td>0.00</td><td>PettyCash</td><td>Abu Dhabi</td><td>0.04-4444</td><td>Corniche Residence</td><td>08/12/2026</td></tr>
+      <tr><td>EMIRATES PROPERTY INVESTMENT L.L.C</td><td>018</td><td>RC Reverse Charge (Purchase)</td><td>19</td><td>0.75</td><td>0.00</td><td>0.75</td><td>0.00</td><td>0.00</td><td>0.00</td><td>PettyCash</td><td>Abu Dhabi</td><td>0.04-0110</td><td>3-Dolphin Villas</td><td>09/12/2026</td></tr>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,54 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5h);
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  font-family: var(--m-sans);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  letter-spacing: 0;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.07s ease;
+}
+.btn:not(:disabled):active { transform: scale(0.965); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.block { width: 100%; }
+
+/* Compact size — inline/table actions (Upload, Grant, Invite, …). */
+.sm { padding: var(--space-2) var(--space-3h); font-size: var(--text-xs); gap: var(--space-1h); }
+
+/* Primary CTA — steel-blue pill with an inset top highlight */
+.primary {
+  background: var(--m-accent);
+  color: #fff;
+  border-color: color-mix(in srgb, var(--m-accent-bright) 55%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.primary:not(:disabled):hover { background: var(--m-accent-bright); color: #04121f; }
+
+/* Secondary — white pill, hairline border, fills steel-blue on hover */
+.glass {
+  background: #fff;
+  border-color: rgba(24, 34, 66, 0.22);
+  color: var(--m-ink);
+  box-shadow: 0 1px 2px rgba(24, 34, 66, 0.07);
+}
+.glass:not(:disabled):hover { background: var(--m-accent); color: #fff; border-color: var(--m-accent-bright); }
+
+/* Filled ink (alt primary — navy pill, the lugha ClickyButton) */
+.dark { background: var(--m-char); color: #f5f2e9; border-color: var(--m-char); }
+.dark:not(:disabled):hover { background: #232f57; color: #fff; }
+
+/* Subtle inset secondary */
+.ghost { background: var(--m-surface-2); color: var(--m-ink); border-color: var(--m-line-soft); }
+.ghost:not(:disabled):hover { background: var(--m-char); color: #fff; border-color: var(--m-char); }
+
+/* Destructive */
+.danger { background: transparent; color: var(--m-pink); border-color: color-mix(in srgb, var(--m-pink) 55%, transparent); }
+.danger:not(:disabled):hover { background: var(--m-pink); color: #fff; border-color: var(--m-pink); }

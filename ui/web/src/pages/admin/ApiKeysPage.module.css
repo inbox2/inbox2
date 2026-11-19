@@ -1,0 +1,95 @@
+/* API keys page — same light "management" surface as the console & domain
+   settings. Local aliases so --char/--violet/… resolve from the shared layer. */
+.page {
+  --char: var(--m-char);
+  --violet: var(--m-violet);
+  --yellow: var(--m-yellow);
+  --r-xl: var(--m-r-xl);
+  --display: var(--m-display);
+  --text: var(--m-text);
+
+  position: relative;
+  padding: 0;
+  color: var(--m-ink);
+  font-family: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header — back link + title. */
+.head { display: flex; align-items: center; gap: var(--space-3h); margin: 0 0 var(--space-5h); }
+.back {
+  display: inline-flex; align-items: center; gap: var(--space-1h);
+  padding: var(--space-2) 15px var(--space-2) var(--space-3); border-radius: var(--radius-full);
+  background: #fff; border: 1px solid rgba(24, 34, 66, 0.22); color: var(--m-ink);
+  font-weight: 650; font-size: var(--text-sm); cursor: pointer;
+  box-shadow: 0 1px 2px rgba(24, 34, 66, 0.07);
+  transition: background 0.14s, box-shadow 0.14s;
+}
+.back:hover { border-color: var(--m-ink-faint); }
+.back:focus-visible { outline: 2px solid var(--char); outline-offset: 2px; }
+.headText { display: flex; flex-direction: column; min-width: 0; }
+.headTitle { margin: 0; font-family: var(--m-display); font-weight: 580; font-size: var(--text-4xl); letter-spacing: -0.01em; }
+.headSub { font-size: var(--text-xs); color: var(--m-ink-faint); }
+
+.panel { background: var(--m-surface); border: 1px solid var(--m-line); border-radius: var(--r-xl); padding: var(--space-6h) var(--space-7); display: flex; flex-direction: column; gap: var(--space-6h); }
+
+.section { display: flex; flex-direction: column; gap: var(--space-3h); }
+.sectionTitle { margin: 0; font-family: var(--m-display); font-weight: 580; font-size: var(--text-2xl); }
+.hint { margin: 0; font-size: var(--text-sm); line-height: 1.5; color: #6a6a75; max-width: 60ch; }
+.error { margin: 0; font-size: var(--text-xs); color: #c0392b; font-weight: 600; }
+.loading { display: flex; align-items: center; justify-content: center; padding: var(--space-6); }
+.empty { margin: 0; font-size: var(--text-sm); color: var(--m-ink-faint); }
+
+/* Create form — name + access + button on one row, wraps on narrow widths. */
+.createRow { display: flex; gap: var(--space-3); align-items: flex-end; flex-wrap: wrap; }
+.nameField { flex: 1 1 240px; }
+/* Layout shim for the shared MgmtSelect (labelled); visuals come from it. */
+.scopeField { flex: 0 0 auto; }
+
+/* Reveal banner. */
+.reveal {
+  display: flex; flex-direction: column; gap: var(--space-3);
+  padding: var(--space-4) var(--space-4h); border-radius: var(--r-xl);
+  background: color-mix(in srgb, var(--violet) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--violet) 26%, transparent);
+}
+.revealHead { display: flex; align-items: center; gap: var(--space-2h); font-size: var(--text-sm); font-weight: 650; color: var(--m-ink); }
+.revealRow { display: flex; align-items: center; gap: var(--space-2h); flex-wrap: wrap; }
+.revealToken {
+  flex: 1 1 280px; min-width: 0; overflow-x: auto; white-space: nowrap;
+  padding: var(--space-2h) var(--space-3); border-radius: var(--radius-10);
+  background: var(--char); color: #f2f2f7;
+  font-family: var(--font-mono, ui-monospace, 'SF Mono', Menlo, monospace); font-size: var(--text-xs);
+}
+.revealDismiss {
+  align-self: flex-start; background: none; border: none; cursor: pointer;
+  font-size: var(--text-xs); font-weight: 650; color: var(--violet); padding: var(--space-0h) 0;
+}
+.revealDismiss:hover { text-decoration: underline; }
+.revealDismiss:focus-visible { outline: 2px solid var(--char); outline-offset: 2px; border-radius: var(--radius-10); }
+
+/* Key list. */
+.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2h); }
+.row {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--space-1h) var(--space-3h);
+  padding: var(--space-3h) var(--space-4); border-radius: var(--radius-14); border: 1px solid var(--m-line); background: var(--m-surface-2);
+}
+.rowMain { grid-column: 1; display: flex; align-items: center; gap: var(--space-2h); flex-wrap: wrap; min-width: 0; }
+.keyName { font-weight: 650; font-size: var(--text-base); }
+.keyPrefix { font-family: var(--font-mono, ui-monospace, 'SF Mono', Menlo, monospace); font-size: var(--text-xs); color: var(--m-ink-faint); }
+.scopeBadge {
+  font-size: var(--text-2xs); font-weight: 650; padding: var(--space-1) var(--space-2h); border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--violet) 12%, transparent); color: color-mix(in srgb, var(--violet) 70%, #000);
+}
+.rowMeta { grid-column: 1; display: flex; flex-wrap: wrap; gap: var(--space-1h); font-size: var(--text-xs); color: var(--m-ink-faint); }
+.revokeBtn { grid-column: 2; grid-row: 1 / span 2; }
+
+/* Credential-vault management card (docs/E2EE.md). */
+.sectionHint { margin: 0; font-size: var(--text-xs); color: var(--m-ink-faint); line-height: 1.5; }
+.vaultControls { display: flex; flex-wrap: wrap; gap: var(--space-2h); margin-top: var(--space-1); }
+.vaultPrompt {
+  display: flex; flex-direction: column; gap: var(--space-3);
+  margin-top: var(--space-2); padding: var(--space-4);
+  border: 1px solid var(--m-border, rgba(0, 0, 0, 0.08));
+  border-radius: var(--radius-xl);
+}

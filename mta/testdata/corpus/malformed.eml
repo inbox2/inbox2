@@ -1,0 +1,7 @@
+From: bad-sender
+To: support@acme.com
+Subject: Malformed message
+Message-ID: <malformed-001@example.com>
+
+This message has minimal headers and no Content-Type.
+It should still be parseable as plain text.

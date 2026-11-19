@@ -1,0 +1,18 @@
+{
+  "domain_public_key": "LIckeuRmz5cqMit8rELfj8ZNUq5zGiUQO/BwZxMsMVQ=",
+  "domain_secret_key": "JJF1VtRYg7w5irZQK/MsHOLsqzRtaVTZ6tB4n/NYO8k=",
+  "expect": {
+    "plain": "Body sealed by the Go MX — ünïcode ok",
+    "subject": "Sealed by Go"
+  },
+  "producer": "go mta/internal/seal",
+  "sealed": {
+    "aad": "42|3|\u003cinterop@go.test\u003e",
+    "body_ciphertext": "E7Odc1yeosPsbeY8JtZ/KVPJfOYGK+s5qHB9CytPGQaBdbwupAuo4nL/Jr0dmj7TALT1oqeL9IY9aiUbnVlX79J6U4dPiWsCBE10fZNoSdOswire2KcWHvN6",
+    "body_nonce": "1l2KcqRijZ5YCsICl9AVpYmf/IJMQQfC",
+    "domain_key_version": 3,
+    "header_ciphertext": "puX4on2tX8x4pqbrjdTUk/zRZcy9bqJrQt3rHHP8NgzAnsSqqtpSfQKNRWRyT1mbnY7g1WA9Ed4G76iPJ4iXrI1ObcoxyDQm86T22RWmTiSVpFbnq6tVUxmnpI8oev0=",
+    "header_nonce": "Y+prHd1FpMjdkRiMWzMVuAmpI5AgmJ0Z",
+    "sealed_dek": "nsuYpbJ1bpdqSJ+RWP/JTzrwgoUvUC+q7m3dq3TGLCP4ygjNciiQxZCqxGhT9BGVxzUw12RKFudKXPRpp7z4KBFvXoPRR4WOfPsHp4dKte8="
+  }
+}

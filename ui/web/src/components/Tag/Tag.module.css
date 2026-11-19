@@ -1,0 +1,48 @@
+.tag {
+  --tag-bg: var(--bg-raised);
+  --tag-fg: var(--text-primary);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  padding: var(--space-0h) var(--space-2);
+  border-radius: var(--radius-xs);
+  border: 1px solid color-mix(in srgb, var(--ink) 15%, transparent);
+  box-shadow: inset 0 1px 0 var(--overlay-8);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  line-height: 1.4;
+  background: var(--tag-bg);
+  color: var(--tag-fg);
+}
+
+.square {
+  --tag-bg: var(--bg-raised);
+  --tag-fg: var(--text-primary);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-bold);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-xs);
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  box-shadow: inset 0 1px 0 var(--overlay-10);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  line-height: 1.4;
+  background: var(--tag-bg);
+  color: var(--tag-fg);
+}
+
+/* Light mode: the chip sits on a colored fill, so give it the same dimensional
+   bevel as dark mode — a brighter top highlight + a soft drop so it reads as a
+   raised label rather than a flat swatch — and a light (white) foreground with a
+   soft shadow so the text reads cleanly on the mid-tone fill. */
+:global([data-theme="light"]) .tag,
+:global([data-theme="light"]) .square {
+  color: var(--text-inverse);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+  border-color: color-mix(in srgb, var(--ink) 22%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 color-mix(in srgb, var(--ink) 18%, transparent),
+    0 1px 1.5px rgba(0, 0, 0, 0.14);
+}

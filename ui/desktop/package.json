@@ -1,0 +1,25 @@
+{
+  "name": "inbox2-desktop",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "description": "Inbox2 Desktop Client (Tauri)",
+  "type": "module",
+  "scripts": {
+    "dev": "INBOX2_BUNDLE_ID=com.inbox2.desktop.dev tauri dev -c src-tauri/tauri.dev.conf.json",
+    "dev:prod": "tauri dev",
+    "build": "tauri build",
+    "install:app": "node scripts/install-local.mjs",
+    "install:app:dev": "node scripts/install-local.mjs --dev",
+    "test": "vitest run",
+    "tauri": "tauri",
+    "release": "../../bin/release-desktop"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-sql": "^2.2.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "vitest": "^4.1.10"
+  }
+}

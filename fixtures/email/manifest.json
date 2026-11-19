@@ -1,0 +1,201 @@
+{
+  "$comment": "Single source of truth for email-rendering test cases. One real example email per rendering concern. Consumed by the JS engine harness (packages/email-body/__tests__/fixtures.test.js), the web wrapper tests (ui/web), and the native iOS/Android WebView harnesses — all platforms run the SAME @inbox2/email-body bundle, so these expectations hold everywhere. Expectations are asserted against processBody(html) output. See README.md.",
+  "cases": [
+    {
+      "name": "gmail-quote",
+      "file": "cases/gmail-quote.html",
+      "title": "Gmail reply — div.gmail_quote",
+      "source": "Gmail web compose",
+      "expect": { "hasQuote": true, "hasSignature": false, "blocksRemote": false }
+    },
+    {
+      "name": "outlook-quote",
+      "file": "cases/outlook-quote.html",
+      "title": "Outlook reply — div#divRplyFwdMsg",
+      "source": "Outlook desktop",
+      "expect": { "hasQuote": true, "hasSignature": false, "blocksRemote": false }
+    },
+    {
+      "name": "apple-blockquote",
+      "file": "cases/apple-blockquote.html",
+      "title": "Apple Mail reply — blockquote[type=cite]",
+      "source": "Apple Mail",
+      "expect": { "hasQuote": true, "hasSignature": false, "blocksRemote": false }
+    },
+    {
+      "name": "thunderbird-cite",
+      "file": "cases/thunderbird-cite.html",
+      "title": "Thunderbird reply — span.moz-cite-prefix + blockquote",
+      "source": "Thunderbird",
+      "expect": { "hasQuote": true, "hasSignature": false, "blocksRemote": false }
+    },
+    {
+      "name": "line-on-wrote",
+      "file": "cases/line-on-wrote.html",
+      "title": "Plain-text reply — \"On <date> <name> wrote:\"",
+      "source": "Plain-text email converted to HTML",
+      "expect": { "hasQuote": true, "hasSignature": false, "blocksRemote": false }
+    },
+    {
+      "name": "original-message",
+      "file": "cases/original-message.html",
+      "title": "Exchange forward — -----Original Message-----",
+      "source": "Outlook / Exchange plain text",
+      "expect": { "hasQuote": true, "hasSignature": false, "blocksRemote": false }
+    },
+    {
+      "name": "line-quote-localized-nl",
+      "file": "cases/line-quote-localized-nl.html",
+      "title": "Localized reply attribution — Dutch \"Op <date> schreef <name>:\"",
+      "source": "Gmail NL locale",
+      "expect": { "hasQuote": true, "hasSignature": false, "blocksRemote": false }
+    },
+    {
+      "name": "gmail-signature",
+      "file": "cases/gmail-signature.html",
+      "title": "Gmail signature — div.gmail_signature with -- prefix",
+      "source": "Gmail web compose",
+      "expect": { "hasQuote": false, "hasSignature": true, "blocksRemote": false }
+    },
+    {
+      "name": "outlook-signature",
+      "file": "cases/outlook-signature.html",
+      "title": "Outlook signature — div#Signature",
+      "source": "Outlook desktop",
+      "expect": { "hasQuote": false, "hasSignature": true, "blocksRemote": false }
+    },
+    {
+      "name": "rfc3676-signature",
+      "file": "cases/rfc3676-signature.html",
+      "title": "RFC 3676 delimiter signature — \"-- \" line",
+      "source": "Plain-text email converted to HTML",
+      "expect": { "hasQuote": false, "hasSignature": true, "blocksRemote": false }
+    },
+    {
+      "name": "contact-block-signature",
+      "file": "cases/contact-block-signature.html",
+      "title": "Heuristic contact-block signature (no delimiter)",
+      "source": "Enron corpus style",
+      "expect": { "hasQuote": false, "hasSignature": true, "blocksRemote": false }
+    },
+    {
+      "name": "tracking-pixel",
+      "file": "cases/tracking-pixel.html",
+      "title": "Open-tracking pixel — remote 1x1 img blocked",
+      "source": "Marketing open-tracker",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": true, "contains": ["data-blocked-src=\"https://track.example/o.gif\""] }
+    },
+    {
+      "name": "background-image-tracker",
+      "file": "cases/background-image-tracker.html",
+      "title": "CSS background-image tracker — stashed, not destroyed",
+      "source": "Marketing hero banner",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": true, "contains": ["data-blocked-bg"] }
+    },
+    {
+      "name": "svg-remote-ref",
+      "file": "cases/svg-remote-ref.html",
+      "title": "Inline SVG <image> remote href — stripped (emailprivacytester)",
+      "source": "SVG tracking vector",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": false, "notContains": ["t.example/svg-pixel.png"] }
+    },
+    {
+      "name": "srcset-tracker",
+      "file": "cases/srcset-tracker.html",
+      "title": "Responsive srcset tracker — stripped so it can't bypass the block",
+      "source": "Marketing responsive image",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": true, "contains": ["data-blocked-srcset"], "notContains": [" srcset="] }
+    },
+    {
+      "name": "sized-divider",
+      "file": "cases/sized-divider.html",
+      "title": "Sized remote divider — aspect-ratio-preserving SVG placeholder (no balloon)",
+      "source": "Bank/marketing template under img{height:auto}",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": true, "contains": ["data:image/svg+xml", "width=\"600\"", "height=\"40\""] }
+    },
+    {
+      "name": "adcb-pre-wrapped",
+      "file": "cases/adcb-pre-wrapped.html",
+      "title": "Whole HTML email wrapped in <pre> — unwrapped (ADCB)",
+      "source": "ADCB bank statement",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": false, "unwrapsPre": true, "notContains": ["<pre"] }
+    },
+    {
+      "name": "forward-only",
+      "file": "cases/forward-only.html",
+      "title": "Forward with no added note — body is only the forwarded headers + quote",
+      "source": "Apple Mail forward",
+      "expect": { "hasQuote": true, "hasSignature": false, "blocksRemote": false }
+    },
+    {
+      "name": "plain-no-quote",
+      "file": "cases/plain-no-quote.html",
+      "title": "Plain message — no quote, no signature, no remote content",
+      "source": "Baseline",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": false }
+    },
+    {
+      "name": "dark-text-colors",
+      "file": "cases/dark-text-colors.html",
+      "title": "Inline color text — exercises QuotedText dark/light luma rewrite (wrapper)",
+      "source": "Synthetic — dark, light, and accent inline colors",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": false }
+    },
+    {
+      "name": "vestiaire-colored-blocks",
+      "file": "cases/vestiaire-colored-blocks.html",
+      "title": "Colored blocks on a white email — keep white canvas (Vestiaire); remote imgs blocked",
+      "source": "Vestiaire Collective marketing",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": true }
+    },
+    {
+      "name": "tiktok-float",
+      "file": "cases/tiktok-float.html",
+      "title": "html,body{height:100%} + float-left body — needs FRAME_FIT_CSS (TikTok)",
+      "source": "TikTok notification",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": true }
+    },
+    {
+      "name": "schaap-citroen-responsive",
+      "file": "cases/schaap-citroen-responsive.html",
+      "title": "Responsive email with <style> media queries — styles must be preserved",
+      "source": "Schaap & Citroen newsletter",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": true }
+    },
+    {
+      "name": "temu-fixed-width-overflow",
+      "file": "cases/temu-fixed-width-overflow.html",
+      "title": "Fixed/min-width 600px desktop email — must reflow to a phone viewport, not clip",
+      "source": "Temu order-shipped email",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": true, "noOverflow": true }
+    },
+    {
+      "name": "wide-table-beside-prose",
+      "file": "cases/wide-table-beside-prose.html",
+      "title": "Prose + one ultra-wide 1600px table — the table scales, the prose stays full size",
+      "source": "Al Fahim VAT reconciliation email",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": false, "noOverflow": true, "proseFullSize": true }
+    },
+    {
+      "name": "plain-text-prose-wrap",
+      "file": "cases/plain-text-prose-wrap.html",
+      "title": "Plain-text body (pre-wrap) with long prose — must render full width, not scaled down",
+      "source": "Plain-text email converted to HTML (bodyForReader)",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": false, "noOverflow": true, "noShrink": true }
+    },
+    {
+      "name": "paypal-receipt-collapse",
+      "file": "cases/paypal-receipt-collapse.html",
+      "title": "PayPal receipt (responsive table email) — must render full height, not collapse to a sliver",
+      "source": "PayPal 'Ontvangstbewijs' payment receipt (PII scrubbed)",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": true, "noOverflow": true, "noShrink": true }
+    },
+    {
+      "name": "white-bg-no-padding",
+      "file": "cases/white-bg-no-padding.html",
+      "title": "Prose email painting its own white background but no padding — reader must keep reading padding, not run text flush to the edges",
+      "source": "Zaytuna book-club newsletter (background:white on every <p>, no padding)",
+      "expect": { "hasQuote": false, "hasSignature": false, "blocksRemote": false, "noOverflow": true, "noShrink": true }
+    }
+  ]
+}

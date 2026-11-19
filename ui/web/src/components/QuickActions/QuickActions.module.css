@@ -1,0 +1,77 @@
+/* ═══════════════════════════════════════════════════════ */
+/* QuickActions — hover action cluster for conversation rows */
+/* Positioning + hover reveal live in the parent module;     */
+/* this file owns the bar scrim and button visuals.          */
+/* ═══════════════════════════════════════════════════════ */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-0h);
+  border-radius: var(--radius-md);
+  background: var(--surface-float);
+  box-shadow: var(--shadow-sm), var(--acrylic-highlight);
+}
+
+/* When a right-click / hover preview popup is open (flag set on <body> by
+   useHoverPreview), suppress the row's hover quick-actions so they don't sit on
+   top of the popup's own triage toolbar. !important overrides the parent row's
+   `.item:hover .quickActions { opacity: 1 }` reveal. */
+:global(body[data-preview-open]) .bar {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--overlay-6);
+  border-radius: var(--radius-sm);
+  background: var(--overlay-2);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast),
+    border-color var(--duration-fast),
+    color var(--duration-fast),
+    box-shadow var(--duration-fast);
+}
+
+.btn:hover {
+  background: var(--overlay-5);
+  border-color: var(--overlay-8);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-xs);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--glow-focus);
+  border-color: var(--accent-primary);
+}
+
+:global([data-theme="light"]) .btn {
+  border-color: var(--overlay-4);
+  background: rgba(0, 0, 0, 0.02);
+  color: var(--text-muted);
+}
+
+:global([data-theme="light"]) .btn:hover {
+  border-color: var(--overlay-6);
+  color: var(--text-secondary);
+}
+
+/* ── Per-action icon tints on hover — mirrors the detail-view toolbar ── */
+.colorTeal:hover svg { color: #7cc0b8; }
+.colorBlue:hover svg { color: #8cb4e0; }
+.colorRose:hover svg { color: #d09ab0; }
+.colorRed:hover svg { color: #e08a8a; }
+
+:global([data-theme="light"]) .colorTeal:hover svg { color: #4a9a90; }
+:global([data-theme="light"]) .colorBlue:hover svg { color: #5a8cc0; }
+:global([data-theme="light"]) .colorRose:hover svg { color: #b07488; }
+:global([data-theme="light"]) .colorRed:hover svg { color: #c0453f; }

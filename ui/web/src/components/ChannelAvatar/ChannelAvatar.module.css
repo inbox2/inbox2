@@ -1,0 +1,36 @@
+/* ═══════════════════════════════════════════════════════ */
+/* ChannelAvatar — avatar + brand-ringed channel glyph badge */
+/* Shared by SocialListRow + EmailPreviewPopup.              */
+/* ═══════════════════════════════════════════════════════ */
+
+/* Shrink-wrap the Avatar (which renders larger than its `size` prop thanks to
+   its gradient ring) so consumers reserve the avatar's true width. */
+.wrap {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+.badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: var(--badge-size, 20px);
+  height: var(--badge-size, 20px);
+  border-radius: var(--radius-full);
+  background: var(--bg-elevated);
+  /* Brand-tinted ring around the channel glyph (--brand-accent set inline). */
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-accent, var(--accent-primary)) 70%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* The Avatar's image carries z-index:1; sit above it so the glyph is in front. */
+  z-index: 2;
+}
+
+.icon {
+  display: block;
+  width: var(--badge-icon, 16px);
+  height: var(--badge-icon, 16px);
+  border-radius: var(--radius-full);
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "inbox2-android": {
+      "command": "node",
+      "args": ["ui/android/tools/android-mcp/server.js"]
+    }
+  }
+}

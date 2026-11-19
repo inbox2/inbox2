@@ -1,0 +1,34 @@
+<%#
+  Confirms a new contact address. Same console look as the invite mail.
+  Locals: user (User), confirm_url (String).
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Confirm your email for inbox2</title>
+</head>
+<body style="margin:0;padding:0;background:#000000;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#000000;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:560px;max-width:100%;background:#0c0d11;border:1px solid #ffffff;">
+          <tr>
+            <td style="padding:24px 28px;border-bottom:1px solid rgba(255,255,255,0.16);font:700 22px/1 Arial,sans-serif;color:#ffffff;">inbox2</td>
+          </tr>
+          <tr>
+            <td style="padding:32px 28px;font:400 15px/1.55 Arial,sans-serif;color:#d6d8df;">
+              <div style="font:700 24px/1.2 Arial,sans-serif;color:#ffffff;padding-bottom:14px;">Confirm your email</div>
+              <p style="margin:0 0 22px;"><%= user.display_name.presence || user.username %>, we send password resets and account notices to this address. Confirm that it's yours.</p>
+              <a href="<%= confirm_url %>" style="display:inline-block;background:#2f7ad6;color:#ffffff;font:600 15px/1 Arial,sans-serif;padding:13px 22px;text-decoration:none;">Confirm email</a>
+              <p style="margin:22px 0 0;font-size:13px;color:#8d919c;">The link works for 24 hours. If you didn't ask for this, ignore this mail.</p>
+              <p style="margin:12px 0 0;font-size:12px;color:#8d919c;word-break:break-all;"><%= confirm_url %></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

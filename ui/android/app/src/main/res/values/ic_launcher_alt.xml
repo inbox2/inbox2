@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Background colours for the selectable launcher icons (Settings › Theme › App
+     icon). Each is the middle stop of that icon's gradient rim, so the sliver a
+     circular launcher mask cuts off the tile's corners blends instead of flashing a
+     stray colour. Artwork: brand/make-alt-icons.py. -->
+<resources>
+    <color name="ic_launcher_bg_sun">#FF754E</color>
+    <color name="ic_launcher_bg_vennlight">#FF0080</color>
+    <color name="ic_launcher_bg_graffiti">#E8722E</color>
+    <color name="ic_launcher_bg_classic">#5E4AE3</color>
+    <!-- Groovebox: the guidebook ground, not a rim stop. -->
+    <color name="ic_launcher_bg_groovebox">#2A2A2E</color>
+</resources>

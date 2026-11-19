@@ -1,0 +1,38 @@
+.field { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+
+.label {
+  font-family: var(--m-text);
+  font-size: var(--text-sm);
+  color: var(--m-ink);
+}
+
+.control {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--m-line-soft);
+  border-radius: var(--m-r-sm);
+  background: var(--m-surface-2);
+  overflow: hidden;
+}
+
+.btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--m-ink);
+  font-size: var(--text-lg);
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.btn:hover:not(:disabled) { background: color-mix(in srgb, var(--m-accent) 22%, transparent); }
+.btn:disabled { color: var(--m-ink-faint); cursor: default; }
+
+.value {
+  min-width: 36px;
+  text-align: center;
+  font-family: var(--m-mono);
+  font-size: var(--text-base);
+  color: var(--m-ink);
+}

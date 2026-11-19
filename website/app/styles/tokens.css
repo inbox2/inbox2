@@ -1,0 +1,56 @@
+/* inbox2 marketing — design tokens (Wise model, iteration 4).
+   Black base, off-white body, yellow accent + periwinkle offset. The gradient
+   is the same ramp the design canvas computed from those two chips. */
+:root {
+  --ink: #111111;
+  --ink2: #1c1c1c;
+  --paper: #fafaf7;
+  --grey: #ecece8;
+  --text: #111111;
+  --mute: #4f4f4f;
+  --line: rgba(17, 17, 17, 0.15);
+  --line-inv: rgba(255, 255, 255, 0.14);
+
+  /* Text on an ink surface. Three steps only: body, secondary, faint label.
+     Sections used to pick their own grey each time and drifted over six. */
+  --mute-inv: #dcdcdc;
+  --faint-inv: #bdbdbd;
+  --dim-inv: #8a8a8a;
+
+  /* Deep indigo: the periwinkle offset taken down to a night sky, so the
+     section under the hero reads as atmosphere rather than a white slab. */
+  --deep: hsl(234.5 62% 24%);
+
+  --accent: #ffd600;
+  --offset: #8691ff;
+  --tint: hsl(234.5 100% 92%);
+  --grad: linear-gradient(95deg, hsl(234.5 90% 85%) 0%, hsl(234.5 100% 76.3%) 30%, hsl(304.9 100% 65.8%) 55%, hsl(6.4 100% 56.6%) 78%, hsl(50.4 100% 50%) 100%);
+  --glow-a: rgba(134, 145, 255, 0.5);
+  --glow-b: rgba(255, 214, 0, 0.22);
+
+  --display: "Archivo", "Arial Black", sans-serif;
+  --body: "Inter", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* The three heading steps every section reached for. Each already clamped
+     itself down on mobile, so the floor is the old 900px override. */
+  --h2: clamp(38px, 3.9vw, 56px);
+  --h2s: clamp(32px, 3.4vw, 48px);
+  --h3: clamp(28px, 2.8vw, 40px);
+
+  --r: 24px;
+  --wrap: 1180px;
+  --gutter: 28px;
+
+  /* console screenshot keeps the product's own tokens */
+  --c-ink: #182242;
+  --c-soft: #5b6178;
+  --c-faint: #8d92a5;
+  --c-surface: #fcfaf4;
+  --c-canvas: #f7f3ea;
+  --c-line: rgba(24, 34, 66, 0.13);
+  --c-line-soft: rgba(24, 34, 66, 0.09);
+  --c-accent: #17509f;
+  --c-green: #2e8f5b;
+  --c-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+}

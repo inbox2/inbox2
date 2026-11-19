@@ -1,0 +1,78 @@
+/* ═══════════════════════════════════════════════════════ */
+/* ShortcutsHelp — keyboard shortcut reference overlay      */
+/* ═══════════════════════════════════════════════════════ */
+
+.panel {
+  width: min(640px, calc(100vw - var(--space-8)));
+  max-height: calc(100vh - var(--space-8));
+  padding: var(--space-6);
+  overflow-y: auto;
+}
+
+.title {
+  margin: 0 0 var(--space-5);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.groups {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-5) var(--space-6);
+}
+
+.group {
+  min-width: 0;
+}
+
+.groupTitle {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-1h) 0;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.rowIcon {
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.key {
+  flex-shrink: 0;
+  min-width: 24px;
+  padding: var(--space-0h) var(--space-2);
+  background: var(--overlay-6);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  text-align: center;
+  line-height: 1.4;
+}

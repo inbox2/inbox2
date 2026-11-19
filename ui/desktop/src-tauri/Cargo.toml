@@ -1,0 +1,135 @@
+[package]
+name = "inbox2-desktop"
+version = "0.1.0"
+description = "Inbox2 Desktop Client"
+authors = ["Inbox2"]
+edition = "2021"
+license = "Apache-2.0"
+rust-version = "1.77.2"
+# Multiple binaries exist (the app, the MCP server, the sync-check harness);
+# `tauri dev` runs `cargo run` with no --bin, so name the default explicitly.
+default-run = "inbox2-desktop"
+
+[lints.rust]
+# objc 0.2's `class!`/`msg_send!`/`sel!` macros expand to `#[cfg(feature =
+# "cargo-clippy")]`, which rustc's check-cfg flags as an unexpected value on
+# every AppKit call (notification panel swizzle, dev Dock icon). Declare the
+# value as expected so those benign warnings don't drown the build output.
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(feature, values("cargo-clippy"))'] }
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dev-dependencies]
+tempfile = "3"
+wiremock = "0.6"
+# Enable core's in-memory store helpers for the desktop test suite (local_agents
+# tests build a SyncStore::new_in_memory). Dev-only — not in production builds.
+inbox2-core = { path = "../core", features = ["test-support", "os-keychain"] }
+# Integration tests APPEND a raw message to GreenMail, then exercise the
+# interactive provider against it.
+imap = "2.4"
+native-tls = "0.2"
+
+[build-dependencies]
+tauri-build = { version = "2.6.2", features = [] }
+
+[dependencies]
+# The provider-agnostic sync engine (shared with the future iOS/Android apps).
+# os-keychain: store the credential master key in the OS keystore (desktop only).
+inbox2-core = { path = "../core", features = ["os-keychain"] }
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+# `unstable` enables multi-webview-per-window (Window::add_child), used by the
+# in-app browser tab to embed a child webview under the chrome bar. `image-png` is
+# what gives `Image::from_bytes` a PNG decoder — the Windows/Linux arm of
+# app_icon.rs needs it, and only a cross-build catches its absence (the macOS path
+# goes through NSImage instead).
+tauri = { version = "2.11.2", features = ["macos-private-api", "unstable", "image-png", "tray-icon"] }
+tauri-plugin-log = "2"
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+tauri-plugin-opener = "2"
+tauri-plugin-clipboard-manager = "2"
+# Drag a WhatsApp attachment out of the window into Finder / other apps (whatsapp.rs).
+tauri-plugin-drag = "2.1.1"
+# Native HTTP client for CORS-bound third-party APIs (e.g. Apollo enrichment).
+# The request is made from Rust, so it isn't subject to the webview's CORS.
+tauri-plugin-http = "2"
+
+# External mailbox sync engine
+tokio = { version = "1", features = ["sync", "time", "macros", "rt"] }
+async-trait = "0.1"
+imap = "2.4"
+native-tls = "0.2"
+# SMTP submission for IMAP-account sends. Blocking transport (run in
+# spawn_blocking); native-tls matches the IMAP/reqwest TLS stack already linked.
+lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "native-tls", "builder", "hostname"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+# NFC for search queries, matching the normalization the store writes.
+unicode-normalization = "0.1"
+aes-gcm = "0.10"
+rand = "0.8"
+nanoid = "0.5"
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.10"
+# Machine hostname for the default device-link label (already in the dep tree).
+hostname = "0.4"
+mailparse = "0.16"
+thiserror = "2"
+parking_lot = "0.12"
+base64 = "0.22"
+reqwest = { version = "0.12", features = ["rustls-tls", "blocking", "json"], default-features = false }
+tauri-plugin-deep-link = "2"
+tauri-plugin-window-state = "2"
+tauri-plugin-notification = "2"
+# Self-hosted auto-update. >=2.10 is required for multi-installer updates
+# (deb/rpm/AppImage + NSIS), which rely on the __TAURI_BUNDLE_TYPE symbol the
+# CLI embeds — do NOT strip it (see profile.release `strip` setting).
+tauri-plugin-updater = "2.10"
+tauri-plugin-process = "2"
+url = "2"
+# Native message dialog for the fatal "can't open database" path (never silently
+# fall back to a throwaway DB — surface a blocking error with a Restart button).
+rfd = "0.17"
+
+# Vector search + MCP agent interface
+ammonia = "4"
+sha2 = "0.10"
+# MCP HTTP transport — small blocking server on its own thread (the MCP
+# request path is synchronous rusqlite/write-back, so no async needed).
+tiny_http = { version = "0.12", default-features = false }
+
+# On-device AI (Tier A classification via ONNX Runtime)
+# `download-binary` fetches a prebuilt ONNX Runtime at build time (cross-platform).
+ort = { version = "2.0.0-rc.12", default-features = false, features = ["std", "download-binaries", "tls-rustls", "copy-dylibs", "api-24"] }
+tokenizers = { version = "0.23", default-features = false, features = ["onig"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# Converts the always-on-top new-mail popup into a non-activating NSPanel so its
+# action buttons don't activate the app / raise the main window (see lib.rs).
+tauri-nspanel = { git = "https://github.com/ahkohd/tauri-nspanel", branch = "v2" }
+# Low-level Objective-C runtime access to make webviews inside the notification
+# NSPanel accept the *first* mouse click. A non-activating panel is not key, so
+# AppKit normally swallows the first click just to make it key; the second click
+# is the one that reaches the button. We scope an `acceptsFirstMouse:` override to
+# views inside the panel so a single click acts immediately (see commands.rs).
+objc = "0.2"
+# Replying in WhatsApp Desktop through Accessibility (whatsapp_ax.rs): AX calls,
+# keys posted to WhatsApp's process alone (`post_to_pid` is behind `elcapitan`).
+core-foundation = "0.10"
+core-graphics = { version = "0.25", features = ["elcapitan"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+# Shell file-type icons (SHGetFileInfo). Windows only: on Linux the crate's GTK
+# path hardcodes `*const i8` and does not compile on aarch64 (c_char is u8), and
+# the UI has its own fallback icon anyway. macOS renders through NSWorkspace.
+systemicons = "0.9"
+
+[target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
+# On Windows/Linux a second app launch (or an `inbox2://` deep link) spawns a new
+# process; the single-instance plugin forwards it into the running instance. The
+# `deep-link` feature hands the URL to the deep-link plugin's on_open_url. macOS
+# routes URL events natively, so this is not needed there. (see lib.rs)
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }

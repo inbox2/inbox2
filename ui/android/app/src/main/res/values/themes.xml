@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose owns all theming; this is just the launch/window backdrop. The dark
+         navy matches the design-token bgBase (#090a0e) so there's no white flash. -->
+    <style name="Theme.Inbox2" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/bg_base</item>
+        <item name="android:statusBarColor">@color/bg_base</item>
+        <item name="android:navigationBarColor">@color/bg_base</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

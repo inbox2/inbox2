@@ -1,0 +1,5 @@
+.card { margin-top: var(--space-5); }
+.body { display: flex; flex-direction: column; gap: var(--space-2h); padding: var(--space-3h) var(--space-4h) var(--space-4h); }
+.text { margin: 0; color: var(--m-ink-soft); font-size: var(--text-sm); }
+.error { margin: 0; color: #c0392b; font-size: var(--text-sm); font-weight: 600; }
+.actions { display: flex; gap: var(--space-2h); }

@@ -1,0 +1,54 @@
+<%#
+  Sent to the visitor right after they request a slot on a meet link. Explicit
+  that nothing is booked yet. Locals: request (MeetingRequest), invitee_name
+  (String), when_lines (Array<String> — invitee tz first, visitor tz if different).
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Meeting request sent</title>
+</head>
+<body style="margin:0;padding:0;background:#f2ede2;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2ede2;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:560px;max-width:100%;background:#fcfaf4;border:1px solid rgba(24,34,66,0.13);border-radius:14px;">
+          <tr>
+            <td style="padding:24px 28px;border-bottom:1px solid rgba(24,34,66,0.09);">
+              <span style="font:700 20px/1 Georgia,'Iowan Old Style',serif;color:#182242;">inbox2</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 28px 8px;">
+              <div style="font:600 11px/1 ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#17509f;padding-bottom:12px;">Request sent</div>
+              <div style="font:700 24px/1.25 Georgia,serif;color:#182242;">Your meeting request is with <%= invitee_name %>.</div>
+              <div style="font:400 15px/1.6 Arial,sans-serif;color:#5b6178;padding-top:14px;">
+                You asked for:
+              </div>
+              <div style="margin-top:12px;padding:14px 16px;background:#f4efe4;border:1px solid rgba(24,34,66,0.09);border-radius:10px;">
+                <% when_lines.each do |line| %>
+                  <div style="font:500 14px/1.7 ui-monospace,monospace;color:#182242;"><%= line %></div>
+                <% end %>
+              </div>
+              <div style="font:400 14px/1.6 Arial,sans-serif;color:#5b6178;padding-top:16px;">
+                <strong style="color:#182242;">The time isn't booked yet.</strong>
+                <%= invitee_name %> confirms every request — if it's accepted you'll receive a calendar
+                invitation at <span style="color:#182242;"><%= request.email %></span>, and we'll let you know either way.
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 28px 32px;">
+              <div style="font:400 12px/1.6 Arial,sans-serif;color:#8d92a5;">
+                Sent by inbox2 on behalf of <%= invitee_name %>. You received this because you requested a meeting at their scheduling page.
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

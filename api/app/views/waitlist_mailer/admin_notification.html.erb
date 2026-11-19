@@ -1,0 +1,89 @@
+<%#
+  Admin notification — sent to WAITLIST_NOTIFY_EMAIL on every new waitlist signup.
+  On-brand with the inbox2 landing page: black canvas, white hairlines, steel-blue
+  accent, Chakra Petch / Inter / JetBrains Mono with web-safe fallbacks. Email-safe
+  table layout + inline styles. Locals: signup (WaitlistSignup).
+%><%
+  svc = signup.email_services || {}
+  soc = signup.social_accounts || {}
+  email_rows = []
+  email_rows << "Gmail × #{svc["gmail_count"].to_i}" if svc["gmail_count"].to_i.positive?
+  email_rows << "Office 365 × #{svc["office365_count"].to_i}" if svc["office365_count"].to_i.positive?
+  Array(svc["others"]).reject(&:blank?).each { |o| email_rows << o }
+  social_rows = []
+  social_rows << "WhatsApp × #{soc["whatsapp_count"].to_i}" if soc["whatsapp_count"].to_i.positive?
+  social_rows << "Meta / Instagram × #{soc["meta_count"].to_i}" if soc["meta_count"].to_i.positive?
+  social_rows << "Facebook Messenger × #{soc["messenger_count"].to_i}" if soc["messenger_count"].to_i.positive?
+  Array(soc["others"]).reject(&:blank?).each { |o| social_rows << o }
+
+  label = "font:600 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:#8a8f96;padding:14px 0 4px;"
+  value = "font:400 15px/1.4 'Inter',Arial,Helvetica,sans-serif;color:#ffffff;padding-bottom:6px;"
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>New waitlist signup</title>
+  <style>@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');</style>
+</head>
+<body style="margin:0;padding:0;background:#000000;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#000000;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:560px;max-width:100%;background:#0c0d11;border:1px solid #ffffff;">
+          <tr>
+            <td style="padding:24px 28px;border-bottom:1px solid rgba(255,255,255,0.16);">
+              <span style="font:700 22px/1 'Chakra Petch',Arial,sans-serif;color:#ffffff;letter-spacing:-.01em;">inbox2</span>
+              <span style="font:600 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:#2f7ad6;padding-left:10px;">Waitlist</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 28px 8px;">
+              <div style="font:700 19px/1.3 'Chakra Petch',Arial,sans-serif;color:#ffffff;">New waitlist signup</div>
+              <div style="font:400 14px/1.5 'Inter',Arial,sans-serif;color:#aab2c0;padding-top:6px;">Someone just asked to join inbox2. Here's what they told us.</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px 24px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr><td style="<%= label %>">Name</td></tr>
+                <tr><td style="<%= value %>"><%= signup.name %></td></tr>
+
+                <% if signup.company.present? %>
+                  <tr><td style="<%= label %>">Company</td></tr>
+                  <tr><td style="<%= value %>"><%= signup.company %></td></tr>
+                <% end %>
+
+                <tr><td style="<%= label %>">Email</td></tr>
+                <tr><td style="<%= value %>"><a href="mailto:<%= signup.email %>" style="color:#47bfff;text-decoration:none;"><%= signup.email %></a></td></tr>
+
+                <% if signup.industry.present? %>
+                  <tr><td style="<%= label %>">Industry</td></tr>
+                  <tr><td style="<%= value %>"><%= signup.industry_label %></td></tr>
+                <% end %>
+
+                <% if signup.industry_note.present? %>
+                  <tr><td style="<%= label %>">What they're after</td></tr>
+                  <tr><td style="<%= value %>"><%= signup.industry_note %></td></tr>
+                <% end %>
+
+                <tr><td style="<%= label %>">Email services</td></tr>
+                <tr><td style="<%= value %>"><%= email_rows.any? ? email_rows.join(" · ") : "—" %></td></tr>
+
+                <tr><td style="<%= label %>">Social business accounts</td></tr>
+                <tr><td style="<%= value %>"><%= social_rows.any? ? social_rows.join(" · ") : "—" %></td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px;border-top:1px solid rgba(255,255,255,0.16);font:500 11px/1.5 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">
+              Invite them from the admin-cli (Waitlist → i) · ref <%= signup.key %>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

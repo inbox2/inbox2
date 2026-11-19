@@ -1,0 +1,156 @@
+.rule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1h) 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-4xs);
+  font-weight: 600;
+  padding: var(--space-0h) var(--space-2);
+  border-radius: var(--radius-6);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pending,
+.awaiting,
+.matched,
+.disabled {
+  background: var(--overlay-8);
+  color: var(--text-secondary);
+}
+
+.disabled {
+  color: var(--text-tertiary);
+}
+
+.running {
+  background: color-mix(in srgb, var(--accent-info) 18%, transparent);
+  color: var(--accent-info);
+}
+
+.ok {
+  background: color-mix(in srgb, var(--run-success-deep) 18%, transparent);
+  color: var(--run-success);
+}
+
+.fail {
+  background: color-mix(in srgb, var(--run-danger-deep) 18%, transparent);
+  color: var(--run-danger);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+  /* Reset: this is a button (opens the run detail) styled like the old div. */
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  text-align: left;
+}
+
+.body:not(:disabled) {
+  cursor: pointer;
+}
+
+.name {
+  font-size: var(--text-2xs);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.body:not(:disabled):hover .name {
+  color: var(--accent-info);
+}
+
+.action {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1h);
+}
+
+.actionLogo {
+  flex-shrink: 0;
+}
+
+.time {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+/* Manual "run on this conversation" for a matched, not-yet-run rule. */
+.runBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: var(--space-0h);
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.runBtn:hover {
+  color: var(--text-primary);
+}
+
+.runBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Inline first-run approve / reject (mirrors AgentRunsPanel). */
+.approveRow {
+  display: inline-flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.approve,
+.reject {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-1h);
+  cursor: pointer;
+  display: inline-flex;
+}
+
+.approve {
+  background: color-mix(in srgb, var(--run-success-deep) 20%, transparent);
+  color: var(--run-success);
+}
+
+.reject {
+  background: color-mix(in srgb, var(--run-danger-deep) 20%, transparent);
+  color: var(--run-danger);
+}
+
+.approve:hover {
+  background: color-mix(in srgb, var(--run-success-deep) 35%, transparent);
+}
+
+.reject:hover {
+  background: color-mix(in srgb, var(--run-danger-deep) 35%, transparent);
+}

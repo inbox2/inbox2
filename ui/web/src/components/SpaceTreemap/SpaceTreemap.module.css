@@ -1,0 +1,199 @@
+/* Clash Display + General Sans load globally via styles/management.css. */
+/* ═══ SPACE TREEMAP — vivid cells + bottom-right conversation panel ═══ */
+
+.canvas { position: relative; width: 100%; height: 100%; overflow: hidden; }
+
+.cell {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: var(--h);
+  padding: var(--space-3h);
+  border-radius: var(--radius-14);
+  /* The card lays itself out: number+name beside the list, or stacked above it
+     when the card is narrow (see the container query below). */
+  /* The card is the query container; .inner is what the query flips, because a
+     container can never match its own query. */
+  container-type: inline-size;
+  /* Glassmorphic: a translucent tint of the space hue lifted by a faint white
+   * veil, frosting the charcoal panel behind it. The colour still reads, but
+   * the cell is see-through glass rather than a solid fill. */
+  background:
+    linear-gradient(
+      140deg,
+      color-mix(in srgb, var(--q-a) 14%, transparent) 0%,
+      color-mix(in srgb, var(--q-b) 7%, transparent) 100%
+    ),
+    rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(29px) saturate(1.6);
+  -webkit-backdrop-filter: blur(29px) saturate(1.6);
+  color: var(--q-fg, #fff);
+  border: 1px solid color-mix(in srgb, var(--q-a) 38%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent),
+    0 8px 28px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.cell:hover {
+  transform: translateY(-2px);
+  background:
+    linear-gradient(
+      140deg,
+      color-mix(in srgb, var(--q-a) 44%, transparent) 0%,
+      color-mix(in srgb, var(--q-b) 28%, transparent) 100%
+    ),
+    rgba(255, 255, 255, 0.06);
+  border-color: color-mix(in srgb, var(--q-a) 70%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 22%, transparent),
+    0 14px 34px var(--q-glow);
+}
+
+.cell:focus-visible { outline: none; box-shadow: 0 0 0 2px #1a1a1f, 0 0 0 4px color-mix(in srgb, var(--q-a) 75%, transparent); }
+
+/* Card body: number + name beside the list, or stacked (see the query below). */
+.inner { display: flex; align-items: stretch; gap: var(--space-3); height: 100%; min-height: 0; }
+/* The label ("Only you" / "Holding pen") and member faces sit at the bottom of
+   the card in both layouts — a small glass pill, out of the list's way. */
+.foot { position: absolute; left: var(--space-3h); bottom: var(--space-3h); display: flex; align-items: center; gap: var(--space-2h); }
+
+/* Left column (icon/name/number/participants) — width leaves room for the panel */
+.left { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; flex: 0 1 165px; position: relative; z-index: 1; }
+/* The footer (members / "Only you") pins to the bottom only in the wide layout. */
+/* No list (empty space): the left column owns the card. */
+.inner:not(:has(.msgPanel)) .left { flex: 1 1 auto; }
+
+/* Header + big number (original card content) */
+.head { display: flex; align-items: center; gap: var(--space-2); }
+.name { font-family: 'Clash Display', sans-serif; font-weight: 600; font-size: var(--text-md); letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.openIcon { opacity: 0.9; flex-shrink: 0; }
+
+.big { font-family: 'Clash Display', sans-serif; font-weight: 600; font-size: var(--metric-size, 34px); line-height: 1; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); white-space: nowrap; max-width: 100%; }
+.unit { font-size: var(--text-2xs); font-weight: 500; opacity: 0.7; }
+
+.holding, .unassigned {
+  padding: var(--space-0h) var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--q-fg, #fff) 22%, transparent);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--q-fg, #fff) 10%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: var(--text-3xs);
+  line-height: 1.5;
+  opacity: 0.9;
+}
+.stack { display: flex; align-items: center; }
+.stackItem { margin-left: -8px; border: 2px solid rgba(255, 255, 255, 0.85); border-radius: 50%; line-height: 0; }
+.stackItem:first-child { margin-left: 0; }
+.more { margin-left: var(--space-1h); font-size: var(--text-2xs); font-weight: 600; opacity: 0.9; }
+.unassigned { display: inline-flex; align-items: center; gap: var(--space-1h); font-size: var(--text-2xs); font-weight: 600; padding: var(--space-1) var(--space-2h); border-radius: var(--radius-full); background: rgba(0, 0, 0, 0.2); }
+
+/* Placement of the embedded ConversationStrip (its rows style themselves). It
+ * lists every thread in the space and scrolls inside the cell; clicks on its
+ * empty area still bubble to the cell (the rows stop their own). `.cell` in the
+ * selector outranks the strip's own `overflow: hidden`. */
+.cell .msgPanel {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--q-fg, #fff) 30%, transparent) transparent;
+}
+
+/* Empty-state for a space with no recent mail — centered animated glyph + hint,
+ * echoing the Eisenhower grid's empty quadrants. Sits behind the left column
+ * (z-index 1) so the metric stays readable; clicks pass through to the cell. */
+.empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2h);
+  padding: var(--space-6);
+  text-align: center;
+  pointer-events: none;
+}
+.emptyIcon { display: inline-flex; color: #fff; opacity: 0.4; }
+.emptyLabel { font-family: 'Clash Display', sans-serif; font-weight: 600; font-size: var(--text-2xs); text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.85; }
+.emptyHint { font-size: var(--text-2xs); line-height: 1.35; opacity: 0.55; max-width: 220px; }
+
+/* ── Narrow card ──────────────────────────────────────────────────────────
+   A side list under ~350px is a few characters wide, so both children take a
+   full row and the wrapping flex container stacks them: name and count on top
+   ("10 open" on one line), list full width underneath.
+
+   Two gotchas this file learned the hard way: a container can never match its
+   own query (the rules must sit on the CHILDREN of .cell), and a container
+   query adds no specificity — so these selectors match the base rules' and sit
+   last in the file to win. */
+@container (max-width: 520px) {
+  .inner { flex-direction: column; gap: var(--space-2); }
+  /* Header goes horizontal: "Reading   1 open" on one line, so the list starts
+     higher up and gets the height instead. */
+  .left { flex: 0 0 auto; flex-direction: row; align-items: baseline; gap: var(--space-3); }
+  .big { flex-direction: row; align-items: baseline; gap: var(--space-2); font-size: var(--text-xl); }
+  .cell .msgPanel { flex: 1 1 auto; width: 100%; }
+  /* The list runs to the card's bottom edge, so the pill floats over its end. */
+  .foot { bottom: var(--space-2); }
+}
+
+/* ═══ GROOVEBOX — solid black tiles outlined in the space's pastel, like the
+   guidebook's line art. The space hue arrives inline as --q-a (JS), which a
+   stylesheet can't override, so the theme maps data-hue → its own --gq. ═══ */
+:global([data-theme-variant="groovebox"]) .cell {
+  --gq: var(--q-a);
+  /* Pattern lines in the space's hue, faint; ground a lifted, hue-tinted charcoal. */
+  --gq-line: color-mix(in srgb, var(--gq) 5%, transparent);
+  --gq-pattern:
+    repeating-linear-gradient(30deg, transparent 0 30px, var(--gq-line) 30px 31.5px),
+    repeating-linear-gradient(-30deg, transparent 0 30px, var(--gq-line) 30px 31.5px);
+  background: var(--gq-pattern), color-mix(in srgb, var(--gq) 11%, #1c1c21);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1.5px solid var(--gq);
+  border-radius: 20px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+}
+:global([data-theme-variant="groovebox"]) .cell[data-hue="violet"] { --gq: var(--accent-purple); }
+:global([data-theme-variant="groovebox"]) .cell[data-hue="yellow"] { --gq: var(--accent-amber); }
+:global([data-theme-variant="groovebox"]) .cell[data-hue="pink"] { --gq: #f0a3bd; }
+:global([data-theme-variant="groovebox"]) .cell[data-hue="green"] { --gq: #5fd68a; }
+:global([data-theme-variant="groovebox"]) .cell[data-hue="cyan"] { --gq: var(--accent-teal); }
+:global([data-theme-variant="groovebox"]) .cell[data-hue="orange"] { --gq: var(--accent-danger); }
+:global([data-theme-variant="groovebox"]) .cell[data-hue="indigo"] { --gq: #8f9cf0; }
+:global([data-theme-variant="groovebox"]) .cell[data-hue="teal"] { --gq: #6fd6c9; }
+:global([data-theme-variant="groovebox"]) .cell:hover {
+  background: var(--gq-pattern), color-mix(in srgb, var(--gq) 16%, #202026);
+  border-color: var(--gq);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45), 0 0 0 3px color-mix(in srgb, var(--gq) 25%, transparent);
+}
+:global([data-theme-variant="groovebox"]) .big,
+:global([data-theme-variant="groovebox"]) .openIcon,
+:global([data-theme-variant="groovebox"]) .emptyIcon { color: var(--gq); }
+:global([data-theme-variant="groovebox"]) .emptyIcon { opacity: 0.85; }
+:global([data-theme-variant="groovebox"]) .holding,
+:global([data-theme-variant="groovebox"]) .unassigned {
+  background: linear-gradient(180deg, #34343a 0%, #26262b 100%);
+  border: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 2px 0 #08080a;
+}
+
+/* One guidebook motif per hue so neighbouring tiles don't repeat: iso grid
+   (default), dots, square grid, diagonal lines. */
+:global([data-theme-variant="groovebox"]) .cell[data-hue="yellow"] { --gq-pattern: radial-gradient(circle, var(--gq-line) 1.6px, transparent 2px) 0 0 / 16px 16px; }
+:global([data-theme-variant="groovebox"]) .cell[data-hue="pink"] { --gq-pattern: linear-gradient(var(--gq-line) 1.5px, transparent 1.5px) 0 0 / 28px 28px, linear-gradient(90deg, var(--gq-line) 1.5px, transparent 1.5px) 0 0 / 28px 28px; }
+:global([data-theme-variant="groovebox"]) .cell[data-hue="green"] { --gq-pattern: repeating-linear-gradient(45deg, transparent 0 14px, var(--gq-line) 14px 15.5px); }
+:global([data-theme-variant="groovebox"]) .cell[data-hue="orange"] { --gq-pattern: radial-gradient(circle, var(--gq-line) 1.6px, transparent 2px) 0 0 / 16px 16px; }
+:global([data-theme-variant="groovebox"]) .cell[data-hue="indigo"] { --gq-pattern: linear-gradient(var(--gq-line) 1.5px, transparent 1.5px) 0 0 / 28px 28px, linear-gradient(90deg, var(--gq-line) 1.5px, transparent 1.5px) 0 0 / 28px 28px; }
+:global([data-theme-variant="groovebox"]) .cell[data-hue="teal"] { --gq-pattern: repeating-linear-gradient(45deg, transparent 0 14px, var(--gq-line) 14px 15.5px); }

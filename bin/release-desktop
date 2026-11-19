@@ -1,0 +1,190 @@
+#!/usr/bin/env bash
+# Build the desktop app for macOS, Windows and Linux, sign it for the updater,
+# and put it where https://api.inbox2.com/downloads/desktop serves it — which is
+# also where every running copy's Update tag looks.
+#
+#   bin/release-desktop              # build all three, publish to Pushleft prod
+#   bin/release-desktop --no-publish # build all three into dist/desktop/<version>
+#   SKIP_LINUX=1 bin/release-desktop # build macOS + Windows only, never published
+#
+# Either way, if /Applications/Inbox2.app exists the fresh build is swapped in
+# directly (a running copy is quit and relaunched) — this Mac never waits on
+# the update poll.
+#
+# Run this from a terminal on Waseem's Mac after pushing to main — the release
+# is local-only now (the `desktop` CI job is gone: its launchd runner kept going
+# stale and silently timed the job out, so releases quietly stopped shipping).
+# Windows is cross-compiled here with cargo-xwin + NSIS (brew install nsis llvm;
+# cargo install cargo-xwin; rustup target add x86_64-pc-windows-msvc); the Mac
+# build is Developer ID-signed and notarized so a first install from the .dmg
+# opens without a Gatekeeper fight. Updates themselves never see Gatekeeper.
+#
+# Secrets stay on this disk: the updater key in ~/.inbox2-updater-key (a copy of
+# ~/Desktop/inbox2-updater-key — losing this key strands every installed copy)
+# and the App Store Connect key in ~/.appstoreconnect. Publishing uploads to the
+# Pushleft bucket with `pl storage`, which needs `pl login` as an Admin.
+#
+# Linux cannot be cross-compiled by Tauri (webkit2gtk, linuxdeploy), so it is
+# built here too, inside ui/desktop/Dockerfile.linux-build as linux/amd64 under
+# Docker Desktop's emulation — slow cold (~30 min), a few minutes after that
+# thanks to the target-dir volume. The web client built above is what it
+# bundles; only the Rust side compiles in the container. A .deb and no
+# AppImage: linuxdeploy's appimage plugin is a static-pie binary, which Rosetta
+# cannot execute, and the updater handles .deb installs (with a sudo prompt).
+#
+# ponytail: no Intel Mac (ort ships no x86_64-apple-darwin binary anyway), no
+# Windows Authenticode (Azure Trusted Signing was never set up — SmartScreen
+# warns on first run). Add either when there is someone to hand the build to.
+set -euo pipefail
+
+ROOT="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+# The mise shims are what provide `yarn` — a launchd-started CI runner has no
+# login shell and would otherwise not find it.
+export PATH="$HOME/.cargo/bin:/opt/homebrew/opt/llvm/bin:/opt/homebrew/bin:/usr/local/bin:$HOME/.local/share/mise/shims:$PATH"
+# launchd starts the CI runner with no locale, and makensis on macOS dies with
+# std::bad_alloc under a C locale. Any UTF-8 locale fixes it.
+export LANG="${LANG:-en_US.UTF-8}"
+
+V="$(bin/version)"
+API="${INBOX2_API_ORIGIN:-https://api.inbox2.com}"
+BASE_URL="${API%/}/downloads/desktop"
+OUT="$ROOT/dist/desktop/$V"
+TARGET="${CARGO_TARGET_DIR:-$ROOT/ui/desktop/target}"
+export CARGO_TARGET_DIR="$TARGET"
+
+KEYDIR="${INBOX2_UPDATER_KEY_DIR:-$HOME/.inbox2-updater-key}"
+[ -r "$KEYDIR/inbox2.key" ] || { echo "no updater key at $KEYDIR (cp -R ~/Desktop/inbox2-updater-key $KEYDIR)" >&2; exit 1; }
+export TAURI_SIGNING_PRIVATE_KEY="$(cat "$KEYDIR/inbox2.key")"
+export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$(cat "$KEYDIR/password.txt")"
+
+export APPLE_SIGNING_IDENTITY="${APPLE_SIGNING_IDENTITY:-Developer ID Application: Waseem Sadiq (KF53B4S5HD)}"
+export APPLE_API_KEY="${APPLE_API_KEY:-H9PLG58DB9}"
+export APPLE_API_ISSUER="${APPLE_API_ISSUER:-d5f5385b-5e34-4d70-925d-0debd3a3e090}"
+export APPLE_API_KEY_PATH="${APPLE_API_KEY_PATH:-$HOME/.appstoreconnect/private_keys/AuthKey_$APPLE_API_KEY.p8}"
+
+echo "== inbox2 desktop $(bin/version --long) → $BASE_URL/$V"
+
+# A build the runner can reproduce from a clean clone: dependencies first, and
+# the web client once, shared by all three OS builds (tauri.release.conf.json
+# blanks beforeBuildCommand). --ignore-scripts: sharp's postinstall aborts here.
+yarn --cwd ui/web install --frozen-lockfile --ignore-scripts --non-interactive
+yarn --cwd ui/desktop install --frozen-lockfile --non-interactive
+(cd ui/web && VITE_API_ORIGIN="$API" yarn build)
+
+# Old bundles linger in the target dir and the collection globs below would
+# sweep a previous version's installer into this release.
+rm -rf "$TARGET"/release/bundle "$TARGET"/x86_64-pc-windows-msvc/release/bundle
+
+TAURI="$ROOT/ui/desktop/node_modules/.bin/tauri"
+CONF=(-c src-tauri/tauri.release.conf.json --config "{\"version\":\"$V\"}")
+
+echo "== macOS (aarch64)"
+(cd ui/desktop && "$TAURI" build "${CONF[@]}" --bundles app,dmg)
+
+echo "== Windows (x86_64)"
+(cd ui/desktop && "$TAURI" build "${CONF[@]}" --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis)
+
+# Collect what the updater needs (.app.tar.gz + .sig, -setup.exe + .sig) and
+# what a first install needs (.dmg, the same .exe).
+rm -rf "$OUT" && mkdir -p "$OUT"
+cp "$TARGET"/release/bundle/macos/*.app.tar.gz{,.sig} "$TARGET"/release/bundle/dmg/*.dmg "$OUT"/
+cp "$TARGET"/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe{,.sig} "$OUT"/
+
+# SKIP_LINUX=1 builds macOS + Windows only (e.g. Docker short on memory: the
+# emulated rustc for the app crate needs more than ~8 GB) — and does not publish.
+if [ -n "${SKIP_LINUX:-}" ]; then
+  echo "== Linux skipped (SKIP_LINUX)"
+else
+echo "== Linux (x86_64, docker)"
+LINUX="$ROOT/dist/linux"
+rm -rf "$LINUX" && mkdir -p "$LINUX"
+# The image is keyed by its Dockerfile, and only built when that key is new:
+# `docker build` resolves the base image against Docker Hub, and under the CI
+# runner (launchd, no login keychain) Docker's credential helper hangs on that
+# until BuildKit gives up. A cached image asks nobody. After editing the
+# Dockerfile, run this once from a terminal so the new image gets built.
+IMG="inbox2-linux-builder:$(md5 -q ui/desktop/Dockerfile.linux-build)"
+docker image inspect "$IMG" >/dev/null 2>&1 \
+  || docker build -q --platform linux/amd64 -t "$IMG" -f ui/desktop/Dockerfile.linux-build ui/desktop >/dev/null
+# Three cargo jobs, not one per core: under emulation an rustc for gtk/webkit
+# peaks past a gigabyte each and a full fan-out gets SIGKILLed by the VM's
+# memory cap. The repo is mounted read-write because tauri-build writes
+# src-tauri/gen/; the
+# updater artifacts are off — no key in the container, the bundle is signed
+# below, on this side.
+docker run --rm --platform linux/amd64 \
+  -v "$ROOT:/src" -v inbox2-linux-target:/target -v inbox2-linux-cargo:/usr/local/cargo/registry \
+  -v inbox2-linux-cache:/home/builder/.cache -v "$LINUX:/out" \
+  -e CARGO_BUILD_JOBS="${LINUX_BUILD_JOBS:-3}" \
+  "$IMG" sh -c "
+    rm -rf /target/release/bundle &&
+    tauri build -c src-tauri/tauri.release.conf.json \
+      --config '{\"version\":\"$V\",\"bundle\":{\"createUpdaterArtifacts\":false}}' \
+      --bundles deb &&
+    cp /target/release/bundle/deb/*.deb /out/"
+for f in "$LINUX"/*.deb; do
+  echo "== signing $(basename "$f")"
+  (cd ui/desktop && "$TAURI" signer sign "$f" >/dev/null)
+  cp "$f" "$f.sig" "$OUT"/
+done
+fi
+node ui/desktop/scripts/gen-manifest.mjs --artifacts "$OUT" --out "$OUT" --version "$V" --base-url "$BASE_URL/$V" --mac-arch aarch64
+ls -la "$OUT"
+
+# ── this Mac updates straight from the build ─────────────────────────────────
+# The poll → download cycle only exists for OTHER machines; the finished app is
+# already on this disk, so swap it into /Applications now. A running copy is
+# quit first (polite AppleScript quit, so it saves state; SIGTERM fallback) and
+# relaunched on the new version — same restart the in-app updater would do.
+if [ -d /Applications/Inbox2.app ]; then
+  RELAUNCH=""
+  if pgrep -f "/Applications/Inbox2.app/Contents/MacOS/" >/dev/null; then
+    echo "== quitting running Inbox2 for the update"
+    osascript -e 'tell application id "com.inbox2.desktop" to quit' 2>/dev/null || true
+    for _ in $(seq 1 20); do
+      pgrep -f "/Applications/Inbox2.app/Contents/MacOS/" >/dev/null || break
+      sleep 0.5
+    done
+    pkill -f "/Applications/Inbox2.app/Contents/MacOS/" 2>/dev/null || true
+    RELAUNCH=1
+  fi
+  echo "== installing $V into /Applications"
+  rm -rf /Applications/Inbox2.app
+  tar -xzf "$OUT"/*.app.tar.gz -C /Applications
+  # tar restores build-time mtimes, so Dock/Finder keep serving the cached
+  # icon of the replaced bundle; a touch makes the swap visible to them.
+  touch /Applications/Inbox2.app
+  # `|| open` not `&& open`: under set -e a false && would kill the script.
+  [ -z "$RELAUNCH" ] || open -a /Applications/Inbox2.app
+fi
+
+[ "${1:-}" = "--no-publish" ] && { echo "built, not published: $OUT"; exit 0; }
+# A release without Linux is never published: the server serves the NEWEST
+# version's manifest and download card, so it would drop Linux from both (and the
+# cleanup below could delete the last .deb). Add the Linux build, then publish.
+[ -n "${SKIP_LINUX:-}" ] && { echo "built without Linux, not published: $OUT"; exit 0; }
+
+# Into the Pushleft bucket (docs/Desktop-Release.md). Rails lists it for the
+# manifest and the console card, and redirects each download to a presigned GET.
+# A version only counts once its latest.json is there, so that goes up last: a
+# client polling mid-upload keeps getting the previous release.
+# `pl storage` (pl login as an Admin) uploads in retried 16 MiB parts with a
+# one-hour key scoped to this bucket; a rerun simply replaces what is there.
+BUCKET="${INBOX2_DESKTOP_BUCKET:-pl-205eb939-desktop-downloads-34b0b1f9}"
+for f in "$OUT"/*; do
+  [ "$(basename "$f")" = latest.json ] && continue
+  pl storage cp "$f" "$BUCKET:$V/" --production
+done
+pl storage cp "$OUT/latest.json" "$BUCKET:$V/latest.json" --content-type application/json --production
+
+# Keep the newest KEEP releases and delete the rest. Nobody needs an old
+# release: a client updates to the NEWEST version's artifact, never to its own.
+# Sorted as real semver, so 0.1.9 ranks below 0.1.1546 rather than above it.
+KEEP="${INBOX2_KEEP_RELEASES:-3}"
+pl storage ls "$BUCKET" --production | awk '$1 == "-" {sub("/$", "", $2); print $2}' | sort -t. -k1,1n -k2,2n -k3,3n | \
+  awk -v k="$KEEP" '{a[NR]=$0} END {for (i = 1; i <= NR - k; i++) print a[i]}' | \
+  while read -r old; do pl storage rm -r "$BUCKET:$old/" --production; done
+
+# The server caches the bucket listing for a minute.
+echo "== published: $(curl -fsS "$BASE_URL/latest.json" | head -c 200)"

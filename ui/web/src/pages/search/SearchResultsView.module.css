@@ -1,0 +1,246 @@
+/* ═══════════════════════════════════════════════════════ */
+/* SearchResultsView — per-channel columns + detail        */
+/* Matches UnifiedInboxView list layout                    */
+/* ═══════════════════════════════════════════════════════ */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  background: var(--bg-base);
+}
+
+/* ── Search header bar ── */
+.searchHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--overlay-3);
+}
+
+.searchHeaderIcon {
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.searchHeaderLabel {
+  font-size: var(--text-5xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.searchHeaderQuery {
+  color: var(--text-tertiary);
+  opacity: 1;
+}
+
+.searchHeaderCount {
+  font-size: var(--text-5xs);
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* Folder scope: a quiet statement of what was searched, then the way out of it. */
+.searchHeaderScope {
+  font-size: var(--text-5xs);
+  color: var(--text-muted);
+  opacity: 0.55;
+  flex-shrink: 0;
+  margin-left: var(--space-2);
+}
+
+.searchHeaderScopeLink {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--text-5xs);
+  color: var(--accent-primary);
+  text-decoration: underline;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.searchHeaderScopeLink:hover {
+  color: var(--text-primary);
+}
+
+.searchHeaderDivider {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--overlay-4) 0%, transparent 100%);
+}
+
+.searchHeaderFilters {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-1) var(--space-1h);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--overlay-4);
+  background: var(--overlay-2);
+  color: var(--text-tertiary);
+  font-family: inherit;
+  font-size: var(--text-5xs);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.searchHeaderFilters:hover {
+  border-color: color-mix(in srgb, var(--glow-blue) 35%, transparent);
+  color: var(--text-primary);
+}
+
+.searchHeaderFiltersOn,
+.searchHeaderFiltersOn:hover {
+  background: color-mix(in srgb, var(--glow-blue) 18%, transparent);
+  border-color: color-mix(in srgb, var(--glow-blue) 40%, transparent);
+  color: var(--text-primary);
+}
+
+.searchHeaderClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  transition: background var(--duration-micro), color var(--duration-micro);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.searchHeaderClose:hover {
+  background: var(--overlay-6);
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+/* ═══ LIST VIEW — per-account columns + detail ═══ */
+
+.listViewLayout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.listViewDetail {
+  flex: 1;
+  min-width: 400px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-workspace);
+  overflow: hidden;
+  position: relative;
+  border-left: 1px solid var(--border-groove);
+}
+
+:global([data-theme="light"]) .listViewDetail {
+  border-left-color: var(--border-subtle);
+}
+
+.listViewDetailEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  position: relative;
+  z-index: 1;
+}
+
+.listViewDetailIcon {
+  opacity: 0.4;
+}
+
+/* Dark themes sit over a background photo — keep the foreground legible. */
+:global([data-theme="dark"]) .listViewDetailEmpty {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow:
+    0 1px 2px color-mix(in srgb, var(--ink) 90%, transparent),
+    0 0 4px color-mix(in srgb, var(--ink) 70%, transparent),
+    0 0 16px color-mix(in srgb, var(--ink) 50%, transparent);
+}
+:global([data-theme="dark"]) .listViewDetailIcon {
+  opacity: 0.9;
+  filter: drop-shadow(0 1px 3px color-mix(in srgb, var(--ink) 90%, transparent)) drop-shadow(0 0 10px color-mix(in srgb, var(--ink) 55%, transparent));
+}
+
+/* ── States ── */
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: var(--space-3);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+/* "Did you mean X?" under the empty state */
+.suggestionLink {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--text-xs);
+  font-family: inherit;
+  color: var(--accent-primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.suggestionLink strong {
+  font-weight: var(--weight-medium);
+}
+
+.suggestionLink:hover {
+  color: var(--text-primary);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: var(--space-3);
+  color: var(--text-tertiary);
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.emptyIcon {
+  opacity: 0.25;
+}
+
+.emptyTitle {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+.emptyMessage {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  max-width: 280px;
+  line-height: 1.5;
+}

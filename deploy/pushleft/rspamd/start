@@ -1,0 +1,25 @@
+#!/bin/sh
+# The rspamd role: unbound (its only DNS server, rspamd/unbound.conf) and
+# rspamd side by side. rspamd starts once unbound answers, and either one
+# exiting ends the role so Pushleft restarts both: rspamd without its resolver
+# would still pass /ping while every DNS check quietly failed.
+set -e
+printf 'servers = "%s:6379";\nusername = "%s";\npassword = "%s";\n' \
+  "$PUSHLEFT_VALKEY_RSPAMD_HOST" "$PUSHLEFT_VALKEY_RSPAMD_USER" "$PUSHLEFT_VALKEY_RSPAMD_PASSWORD" \
+  > /run/rspamd/valkey.conf
+
+unbound -c /etc/rspamd/unbound.conf &
+dns=$!
+ruby -rresolv -e '
+  dns = Resolv::DNS.new(nameserver_port: [["127.0.0.1", 5353]])
+  dns.timeouts = 1
+  20.times { exit 0 if dns.getresources(".", Resolv::DNS::Resource::IN::NS).any?; sleep 0.5 }
+  abort "unbound did not answer on 127.0.0.1:5353"'
+
+rspamd -f &
+spam=$!
+trap 'kill $dns $spam 2>/dev/null; exit 0' TERM INT
+while kill -0 $dns 2>/dev/null && kill -0 $spam 2>/dev/null; do sleep 5; done
+echo "rspamd role: $(kill -0 $dns 2>/dev/null && echo rspamd || echo unbound) exited" >&2
+kill $dns $spam 2>/dev/null || true
+exit 1

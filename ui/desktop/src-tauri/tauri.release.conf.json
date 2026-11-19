@@ -1,0 +1,20 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "build": {
+    "beforeBuildCommand": ""
+  },
+  "bundle": {
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERERTVBOUY3RkQwQ0FGQUIKUldTcnJ3ejk5Nm5sM2JSazNkRzEwL2NvQjJyZWJSOTlWazRWd216aExXMHNnSm9OM2N1RmNxZGYK",
+      "endpoints": [
+        "https://api.inbox2.com/downloads/desktop/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+export const TAG_PRESETS = {
+  finance:  { bg: '#8090a8', fg: '#0e1218' },
+  dev:      { bg: '#9890b0', fg: '#141020' },
+  support:  { bg: '#b8a0b8', fg: '#1a1020' },
+  billing:  { bg: '#c8a898', fg: '#201410' },
+  system:   { bg: '#606068', fg: '#d8d8e0' },
+  open:     { bg: '#8090a8', fg: '#0e1218' },
+  pending:  { bg: '#c8a87a', fg: '#201808' },
+  urgent:   { bg: '#e06060', fg: '#1a0808' },
+  snoozed:  { bg: '#a898c0', fg: '#141020' },
+  hr:       { bg: '#a8c098', fg: '#0e1808' },
+  vip:      { bg: '#d4a843', fg: '#1a1408' },
+  legal:    { bg: '#c0a0a0', fg: '#181010' },
+  ops:      { bg: '#90a8c0', fg: '#0a1018' },
+  important:{ bg: '#d4a843', fg: '#1a1408' },
+}

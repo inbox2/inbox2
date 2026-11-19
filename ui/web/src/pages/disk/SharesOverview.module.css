@@ -1,0 +1,114 @@
+/* D:\ share tiles (mockup: .tiles, .tile, .tile.new). */
+.head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); margin: var(--space-1h) 0 var(--space-4h); }
+.title { margin: 0; font: 580 30px var(--m-display); color: var(--m-ink); }
+.sub { margin: 4px 0 0; color: var(--m-ink-soft); }
+.empty { color: var(--m-ink-soft); }
+.error { color: var(--m-pink); }
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: var(--space-3h);
+  margin-bottom: var(--space-4h);
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1h);
+  min-height: 150px;
+  padding: var(--space-4h) var(--space-4) var(--space-3h);
+  border: 1.5px solid var(--m-line);
+  border-radius: var(--m-r-xl);
+  background: var(--m-surface);
+  text-align: left;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.tile > svg { margin-bottom: var(--space-1h); }
+.tile:focus-visible, .name:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 2px; }
+.picked { border-color: var(--m-accent); background: color-mix(in srgb, var(--m-accent) 9%, var(--m-surface)); }
+.name { padding: 0; border: 0; background: none; font: 600 17px var(--m-display); color: var(--m-ink); text-align: left; cursor: pointer; }
+/* The lighter accent on hover is the owner's choice (2026-10-04), not --m-accent-ink. */
+.name:hover { color: var(--m-accent); }
+.meta { color: var(--m-ink-soft); font-size: var(--text-3xs); }
+.tag { margin-left: var(--space-1h); padding: 0 var(--space-1h); border: 1px solid currentColor; border-radius: var(--radius-full); font-size: 11px; font-weight: 650; }
+.newTile {
+  display: grid;
+  place-items: center;
+  border-style: dashed;
+  font: 600 var(--text-xs) var(--m-text);
+  color: var(--m-ink-soft);
+  cursor: pointer;
+}
+.newTile:hover { border-color: var(--m-ink); color: var(--m-ink); }
+
+/* First run: a centred welcome card, the team shares as tiles to switch on. */
+.templates {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4h);
+  padding: 36px 24px 30px;
+  border: 1.5px solid var(--m-line);
+  border-radius: var(--m-r-xl);
+  background: var(--m-surface);
+  text-align: center;
+}
+.templates .sub { max-width: 560px; }
+.templatesTitle { margin: var(--space-1h) 0 0; font: 600 24px var(--m-display); color: var(--m-ink); }
+.templateGrid { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2h); margin: var(--space-4h) 0; }
+.template {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 118px;
+  padding: var(--space-4) var(--space-2) var(--space-3);
+  border: 1.5px solid var(--m-line);
+  border-radius: var(--m-r-lg);
+  background: #fff;
+  font: 600 var(--text-xs) var(--m-text);
+  color: var(--m-ink);
+  cursor: pointer;
+}
+.template:hover { border-color: var(--m-ink-soft); }
+.template:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 2px; }
+.template[aria-pressed='true'] { border-color: var(--m-accent); background: color-mix(in srgb, var(--m-accent) 9%, #fff); }
+.tick {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: var(--m-accent);
+  color: #fff;
+}
+.template[aria-pressed='true'] .tick { display: grid; }
+.templateActions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2h); }
+
+/* New share, with the other kinds under the arrow. */
+.split { display: inline-flex; flex-shrink: 0; }
+.split .splitMain { border-radius: var(--radius-full) 0 0 var(--radius-full); }
+.split .splitMore { padding-inline: var(--space-2); border-radius: 0 var(--radius-full) var(--radius-full) 0; border-left-color: rgba(255, 255, 255, 0.28); }
+
+.trash { margin-top: 28px; }
+.trashToggle { padding: 0; border: 0; background: none; font: 600 var(--text-3xs) var(--m-text); color: var(--m-accent-ink); cursor: pointer; }
+.trashToggle:hover { text-decoration: underline; }
+.trashList { margin: var(--space-2h) 0 0; padding: 0; list-style: none; }
+.trashRow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2h); padding: var(--space-2) 0; border-bottom: 1px solid var(--m-line-soft); }
+.trashName { flex: 1; min-width: 0; font-weight: 550; }
+.trashName small { display: block; font-weight: 400; color: var(--m-ink-faint); }
+
+@media (max-width: 760px) {
+  .head { flex-direction: column; align-items: stretch; }
+  .title { font-size: 25px; }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.lock { margin-left: var(--space-1h); padding: 0 var(--space-1h); border: 1px solid currentColor; border-radius: var(--radius-full); font-size: 11px; font-weight: 500; color: var(--m-ink-soft); vertical-align: middle; }

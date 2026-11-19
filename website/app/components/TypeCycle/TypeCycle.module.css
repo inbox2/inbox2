@@ -1,0 +1,20 @@
+.type {
+  white-space: nowrap;
+}
+
+/* Sits on the text baseline and blinks like a terminal cursor. */
+.caret {
+  display: inline-block;
+  width: 0.07em;
+  height: 0.78em;
+  margin-left: 0.06em;
+  vertical-align: -0.04em;
+  /* --caret lets a gradient-filled word (color: transparent) still show one. */
+  background: var(--caret, currentColor);
+  animation: blink 1.05s steps(1, end) infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}

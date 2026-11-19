@@ -1,0 +1,54 @@
+/* Shared single-channel empty state — channel icon + title + message. */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-1);
+  color: var(--text-tertiary);
+}
+
+/* Full strength — dimming is dark-theme-only (it sits on a background photo). */
+.icon {
+  width: 44px;
+  height: 44px;
+  margin-bottom: var(--space-2);
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.message {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+/* Dark themes render over a background photo (which can be bright) — brighten
+   the copy and add a tight outline so it stays legible regardless of the
+   image (or ghost skeleton) behind it. */
+:global([data-theme="dark"]) .empty {
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow:
+    0 1px 2px color-mix(in srgb, var(--ink) 90%, transparent),
+    0 0 4px color-mix(in srgb, var(--ink) 70%, transparent),
+    0 0 16px color-mix(in srgb, var(--ink) 50%, transparent);
+}
+:global([data-theme="dark"]) .title {
+  /* Always white over the photo — not --control-checked-fg, which themes with
+     bright toggles (Soirée, Groovebox) set to near-black. */
+  color: var(--bevel);
+}
+:global([data-theme="dark"]) .message {
+  color: rgba(255, 255, 255, 0.82);
+}
+:global([data-theme="dark"]) .icon {
+  opacity: 0.9;
+  filter: drop-shadow(0 1px 3px color-mix(in srgb, var(--ink) 90%, transparent))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--ink) 55%, transparent));
+}

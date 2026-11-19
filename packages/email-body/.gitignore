@@ -1,0 +1,3 @@
+node_modules
+# Built on demand via `npm run build` (esbuild) — not committed.
+dist

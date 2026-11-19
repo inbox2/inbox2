@@ -1,0 +1,185 @@
+/* ═══════════════════════════════════════════════════════ */
+/* NotificationPanel — Persistent activity feed            */
+/* Date-grouped, dense, operational pulse                  */
+/* ═══════════════════════════════════════════════════════ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+}
+
+.panel {
+  --notif-primary:   var(--accent-primary);
+  --notif-waiting:   var(--accent-amber);
+  --notif-assigned:  var(--accent-primary);
+  --notif-completed: var(--accent-success);
+  --notif-urgent:    var(--accent-danger);
+  --notif-mention:   var(--accent-purple);
+  --notif-meeting:   var(--accent-amber);
+
+  position: absolute;
+  top: 48px;
+  right: var(--space-4);
+  width: 300px;
+  max-height: 440px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-1h) var(--space-2h);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.title {
+  font-size: var(--text-5xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-5xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: color var(--duration-micro);
+}
+
+.clearBtn:hover {
+  color: var(--text-secondary);
+}
+
+/* ── Feed ── */
+
+/* Desktop update row (layout.reauthBanner + this): room above it in the feed. */
+.updateRow {
+  margin-top: var(--space-2);
+}
+
+.feed {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.groupLabel {
+  font-size: var(--text-5xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-muted);
+  padding: var(--space-3) var(--space-2h) var(--space-1h);
+}
+
+.feedItem {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: background var(--duration-micro);
+  border-bottom: 1px solid var(--overlay-3);
+}
+
+.feedItem:last-child {
+  border-bottom: none;
+}
+
+.feedItem:hover {
+  background: var(--surface-hover);
+}
+
+.feedRail {
+  width: 2px;
+  align-self: stretch;
+  flex-shrink: 0;
+  background: var(--feed-color, var(--notif-primary));
+}
+
+/* Event-type glyph in a soft tinted chip, colored with the row's rail color. */
+.feedIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full, 50%);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--space-2h);
+  background: color-mix(in srgb, var(--feed-color, var(--notif-primary)) 14%, transparent);
+  color: var(--feed-color, var(--notif-primary));
+}
+
+.feedContent {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-2) var(--space-2h);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0h);
+}
+
+.feedLabel {
+  font-size: var(--text-6xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--feed-color, var(--notif-primary));
+  line-height: 1.4;
+}
+
+.feedSummary {
+  font-size: var(--text-3xs);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.feedTime {
+  font-size: var(--text-5xs);
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  flex-shrink: 0;
+  align-self: flex-start;
+  padding: var(--space-2) var(--space-2h) 0 0;
+}
+
+/* ── Empty ── */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-4);
+  color: var(--text-muted);
+  font-size: var(--text-3xs);
+}
+
+/* A server notification row that opens its url (Disk shares). */
+.feedLink { width: 100%; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.feedLink:hover { background: var(--overlay-4); }
+.feedLink:focus-visible { outline: 2px solid var(--border-focus); outline-offset: -2px; }

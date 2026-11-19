@@ -1,0 +1,36 @@
+{
+  "name": "marketing",
+  "private": true,
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev",
+    "build": "react-router build",
+    "preview": "yarn build && wrangler pages dev build/client",
+    "deploy": "yarn lint && yarn build && wrangler pages deploy build/client --project-name=inbox2-marketing --branch=main",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@google/model-viewer": "^4.3.1",
+    "isbot": "^5.2.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router": "^8.3.0",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@gltf-transform/core": "^4.5.0",
+    "@gltf-transform/extensions": "^4.5.0",
+    "@react-router/dev": "^8.3.0",
+    "draco3dgltf": "^1.5.7",
+    "eslint": "^10.8.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.12.0",
+    "react-grab": "^0.1.50",
+    "vite": "^8.1.5",
+    "wrangler": "^4.114.0"
+  }
+}

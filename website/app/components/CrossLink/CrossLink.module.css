@@ -1,0 +1,74 @@
+.section {
+  background: var(--paper);
+  padding: 40px 0 110px;
+}
+
+/* Gradient rim, same family as the seam chips and the featured plan, but thick
+   and slowly travelling so the band reads as the page's one lit edge. */
+.card {
+  border-radius: 32px;
+  padding: 6px;
+  background: var(--grad);
+  background-size: 300% 100%;
+  animation: rim 12s linear infinite;
+  box-shadow: 0 34px 70px rgba(17, 17, 17, 0.25);
+}
+
+@keyframes rim {
+  to { background-position: 300% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+}
+
+.inner {
+  background: var(--ink);
+  border-radius: 26px;
+  padding: 52px 56px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.62fr);
+  gap: 32px;
+  align-items: center;
+  overflow: hidden;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.h2 {
+  font-size: var(--h3);
+  max-width: 16ch;
+}
+
+.body {
+  font-size: 17px;
+  color: var(--mute-inv);
+  max-width: 48ch;
+  margin-bottom: 6px;
+}
+
+.art {
+  display: block;
+  width: 100%;
+  justify-self: end;
+  filter: drop-shadow(0 26px 40px rgba(0, 0, 0, 0.5));
+}
+
+@media (max-width: 900px) {
+  .section {
+    padding: 20px 0 70px;
+  }
+  .inner {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 36px 28px;
+  }
+  .art {
+    max-width: 320px;
+    justify-self: center;
+  }
+}

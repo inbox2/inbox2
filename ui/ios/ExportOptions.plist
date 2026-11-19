@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  App Store / TestFlight export options for `xcodebuild -exportArchive`, used by
+  bin/ios-release. Automatic signing with team KF53B4S5HD: Xcode resolves (and,
+  with -allowProvisioningUpdates, creates) the App Store distribution profiles
+  for the app + ShareExtension from the "Apple Distribution" cert in the keychain.
+-->
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store-connect</string>
+
+    <key>teamID</key>
+    <string>KF53B4S5HD</string>
+
+    <key>signingStyle</key>
+    <string>automatic</string>
+
+    <!-- Upload the dSYMs so App Store Connect can symbolicate crash reports. -->
+    <key>uploadSymbols</key>
+    <true/>
+
+    <!-- Let Xcode keep the App Store Connect build number unique on upload, so
+         repeated TestFlight builds of the same marketing version don't collide. -->
+    <key>manageAppVersionAndBuildNumber</key>
+    <true/>
+
+    <key>stripSwiftSymbols</key>
+    <true/>
+</dict>
+</plist>

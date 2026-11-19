@@ -1,0 +1,24 @@
+{
+  "name": "@inbox2/email-body",
+  "version": "0.1.0",
+  "description": "Framework-free email body processing: quote/signature collapsing and remote-image privacy. Shared by the web app (desktop iframe) and the native iOS/Android WebViews.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "private": true,
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --format=iife --global-name=Inbox2EmailBody --outfile=dist/email-body.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}

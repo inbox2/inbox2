@@ -1,0 +1,179 @@
+.footer {
+  background: var(--ink);
+  color: #fff;
+  padding: 120px 0;
+  overflow: hidden;
+}
+
+/* Edge to edge, not in the page column: the jumbo wordmark wants the whole
+   viewport and the columns spread with it. */
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 96px;
+  padding: 0 clamp(var(--gutter), 4vw, 72px);
+}
+
+.top {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr));
+  gap: 40px 64px;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.blurb {
+  font-size: 16px;
+  color: var(--faint-inv);
+  max-width: 30ch;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim-inv);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line-inv);
+  transition: background 140ms ease;
+}
+
+.badge:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.col a {
+  color: var(--mute-inv);
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.col a:hover {
+  color: var(--accent);
+}
+
+.jumbo {
+  font-family: var(--display);
+  font-variation-settings: "wdth" 118;
+  font-weight: 900;
+  font-size: clamp(88px, 24vw, 480px);
+  line-height: 0.78;
+  letter-spacing: -0.06em;
+  text-align: center;
+  /* Same light sweep as the seam chips, clipped to the letterforms: a sheen
+     layer rides over the brand gradient, then the loop rests. */
+  background:
+    linear-gradient(
+      105deg,
+      transparent 34%,
+      rgba(255, 255, 255, 0.3) 44%,
+      rgba(255, 255, 255, 0.85) 50%,
+      rgba(255, 255, 255, 0.3) 56%,
+      transparent 66%
+    ) no-repeat,
+    var(--grad);
+  background-size: 55% 100%, auto;
+  background-position: -120% 0, 0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: -40px;
+  user-select: none;
+  animation: jumboSwoosh 6.6s ease-in-out infinite;
+}
+
+@keyframes jumboSwoosh {
+  0% { background-position: -120% 0, 0 0; }
+  22% { background-position: 220% 0, 0 0; }
+  100% { background-position: 220% 0, 0 0; }
+}
+
+.legal {
+  border-top: 1px solid var(--line-inv);
+  padding-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--dim-inv);
+}
+
+.social {
+  display: flex;
+  gap: 20px;
+}
+
+.social a,
+.social .linkButton {
+  color: var(--faint-inv);
+  text-decoration: none;
+}
+
+.social a:hover,
+.social .linkButton:hover {
+  color: #fff;
+}
+
+/* Reopens the consent banner, so it is a button wearing a link's clothes. */
+.linkButton {
+  font: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .footer {
+    padding: 64px 0;
+  }
+  .inner {
+    gap: 48px;
+  }
+  .top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px 20px;
+  }
+  .brand {
+    grid-column: 1 / -1;
+  }
+  .jumbo {
+    margin-bottom: -8px;
+  }
+  .legal {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

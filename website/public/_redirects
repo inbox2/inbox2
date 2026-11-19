@@ -1,0 +1,6 @@
+/product / 301
+
+# Cloudflare Pages skips dot-directories on some builds, so serve the Microsoft
+# publisher-domain proof from a plain path and rewrite (a 200 rewrite, because
+# Microsoft fetches this exact URL).
+/.well-known/microsoft-identity-association.json /microsoft-identity-association.json 200

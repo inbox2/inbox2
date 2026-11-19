@@ -1,0 +1,397 @@
+{
+ "schema_version": 1,
+ "diagram_type": "architecture",
+ "meta": {
+  "title": "Desktop client system map",
+  "output": "docs/diagrams/system-map/system-map.html",
+  "quality_profile": "showcase",
+  "legend": {
+   "entries": {
+    "frontend": {
+     "label": "UI & people"
+    },
+    "backend": {
+     "label": "Rust / native code"
+    },
+    "database": {
+     "label": "SQLite"
+    },
+    "messagebus": {
+     "label": "Engine bus"
+    },
+    "external": {
+     "label": "Third-party"
+    },
+    "cloud": {
+     "label": "inbox2 cloud"
+    }
+   }
+  }
+ },
+ "components": [
+  {
+   "id": "ui",
+   "type": "frontend",
+   "label": "React UI",
+   "sublabel": "ui/web in the Tauri webview",
+   "pos": [
+    640,
+    40
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "shell",
+   "type": "backend",
+   "label": "Tauri shell",
+   "sublabel": "commands, windows, plugins",
+   "pos": [
+    640,
+    170
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "core",
+   "type": "backend",
+   "label": "inbox2-core",
+   "sublabel": "sync, MX, AI, Lore, MCP client",
+   "pos": [
+    640,
+    300
+   ],
+   "size": [
+    170,
+    80
+   ]
+  },
+  {
+   "id": "db",
+   "type": "database",
+   "label": "inbox2.db",
+   "sublabel": "SQLite",
+   "pos": [
+    640,
+    450
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "wa_db",
+   "type": "external",
+   "label": "WhatsApp Desktop DB",
+   "sublabel": "read-only, live",
+   "pos": [
+    340,
+    40
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "mcp_in",
+   "type": "frontend",
+   "label": "MCP clients",
+   "sublabel": "loopback 127.0.0.1:8765",
+   "pos": [
+    340,
+    170
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "bus",
+   "type": "messagebus",
+   "label": "engine.sock",
+   "sublabel": "Unix socket bus",
+   "pos": [
+    340,
+    300
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "local_ai",
+   "type": "backend",
+   "label": "Local AI",
+   "sublabel": "llama-server, FM bridge",
+   "pos": [
+    340,
+    450
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "cli",
+   "type": "frontend",
+   "label": "Python CLI",
+   "sublabel": "Textual; reads inbox2.db",
+   "pos": [
+    40,
+    300
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "daemon",
+   "type": "backend",
+   "label": "engine_daemon",
+   "sublabel": "headless engine host",
+   "pos": [
+    40,
+    450
+   ],
+   "size": [
+    170,
+    68
+   ]
+  },
+  {
+   "id": "rails",
+   "type": "cloud",
+   "label": "Rails API",
+   "sublabel": "api.inbox2.com",
+   "pos": [
+    960,
+    40
+   ],
+   "size": [
+    200,
+    68
+   ]
+  },
+  {
+   "id": "providers",
+   "type": "external",
+   "label": "Mail providers",
+   "sublabel": "Gmail REST, Graph, IMAP/SMTP, Meta",
+   "pos": [
+    960,
+    300
+   ],
+   "size": [
+    200,
+    68
+   ]
+  },
+  {
+   "id": "ai_cloud",
+   "type": "external",
+   "label": "AI services",
+   "sublabel": "TypeSafe Jev, OpenAI",
+   "pos": [
+    960,
+    450
+   ],
+   "size": [
+    200,
+    68
+   ]
+  },
+  {
+   "id": "mcp_out",
+   "type": "external",
+   "label": "Remote MCP servers",
+   "sublabel": "Linear, GitHub, Notion\u2026",
+   "pos": [
+    960,
+    600
+   ],
+   "size": [
+    200,
+    68
+   ]
+  }
+ ],
+ "boundaries": [
+  {
+   "kind": "region",
+   "label": "This Mac",
+   "wraps": [
+    "ui",
+    "shell",
+    "core",
+    "db",
+    "wa_db",
+    "mcp_in",
+    "bus",
+    "local_ai",
+    "cli",
+    "daemon"
+   ]
+  },
+  {
+   "kind": "region",
+   "label": "inbox2 cloud",
+   "wraps": [
+    "rails"
+   ]
+  },
+  {
+   "kind": "region",
+   "label": "Providers & services",
+   "wraps": [
+    "providers",
+    "ai_cloud",
+    "mcp_out"
+   ]
+  }
+ ],
+ "connections": [
+  {
+   "id": "ui-shell",
+   "from": "ui",
+   "to": "shell",
+   "label": "invoke",
+   "variant": "emphasis"
+  },
+  {
+   "id": "shell-core",
+   "from": "shell",
+   "to": "core",
+   "label": "calls",
+   "variant": "emphasis"
+  },
+  {
+   "id": "core-db",
+   "from": "core",
+   "to": "db",
+   "label": "SQL",
+   "variant": "emphasis"
+  },
+  {
+   "id": "wa-shell",
+   "from": "wa_db",
+   "to": "shell",
+   "label": "read"
+  },
+  {
+   "id": "mcp-shell",
+   "from": "mcp_in",
+   "to": "shell",
+   "label": "MCP HTTP"
+  },
+  {
+   "id": "bus-core",
+   "from": "bus",
+   "to": "core",
+   "label": "host runs engine"
+  },
+  {
+   "id": "cli-bus",
+   "from": "cli",
+   "to": "bus",
+   "label": "RPC + events"
+  },
+  {
+   "id": "daemon-bus",
+   "from": "daemon",
+   "to": "bus",
+   "label": "alt host",
+   "fromSide": "right",
+   "toSide": "left"
+  },
+  {
+   "id": "core-lai",
+   "from": "core",
+   "to": "local_ai",
+   "label": "on-device lane"
+  },
+  {
+   "id": "ui-rails",
+   "from": "ui",
+   "to": "rails",
+   "label": "REST + ActionCable"
+  },
+  {
+   "id": "core-rails",
+   "from": "core",
+   "to": "rails",
+   "label": "MX sync, OAuth proxy",
+   "variant": "dashed"
+  },
+  {
+   "id": "core-prov",
+   "from": "core",
+   "to": "providers",
+   "label": "sync + write-back"
+  },
+  {
+   "id": "core-ai",
+   "from": "core",
+   "to": "ai_cloud",
+   "label": "triage, summaries",
+   "variant": "dashed"
+  },
+  {
+   "id": "core-mcp",
+   "from": "core",
+   "to": "mcp_out",
+   "label": "Send to\u2026 (draft only)",
+   "variant": "dashed"
+  }
+ ],
+ "cards": [
+  {
+   "dot": "violet",
+   "title": "Main path",
+   "items": [
+    "React UI \u2192 invoke() \u2192 Tauri command \u2192 inbox2-core \u2192 inbox2.db",
+    "Every client reads the same SQLite file; writes go through the engine"
+   ]
+  },
+  {
+   "dot": "cyan",
+   "title": "inbox2 cloud (api.inbox2.com)",
+   "items": [
+    "MX sync REST: sync/head, pull, backfill, keys, threads",
+    "ActionCable push hints: OrganizationChannel, PushSyncChannel",
+    "OAuth proxy for Gmail/Microsoft token refresh",
+    "Image proxy and open-tracking pixel GET /o/:token.gif"
+   ]
+  },
+  {
+   "dot": "amber",
+   "title": "Engine bus",
+   "items": [
+    "engine.sock: first process to bind is HOST and runs the SyncEngine",
+    "Inbox2 app or engine_daemon can host; the CLI attaches as a client",
+    "CLI reads inbox2.db directly; mutations go over RPC"
+   ]
+  },
+  {
+   "dot": "slate",
+   "title": "AI and MCP",
+   "items": [
+    "TypeSafe Jev: triage labels, priority, Space",
+    "OpenAI lane only when allowed; sealed mail never leaves the device",
+    "Local lane: llama-server (GGUF) or FoundationModelsBridge (Swift)",
+    "Inbound MCP server: 23 tools over loopback, off by default",
+    "Outbound MCP client: Streamable HTTP + OAuth 2.1, drafts only"
+   ]
+  }
+ ]
+}

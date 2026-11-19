@@ -1,0 +1,45 @@
+/* Pane mode picker button — the same quiet chevron treatment the calendar
+   rail's old collapse toggle had. */
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.button:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
+/* The 34px edge strip. Its single button fills it, so the whole strip is the
+   click target, icon parked at the top. */
+.strip {
+  display: flex;
+  flex-direction: column;
+  width: 34px;
+  flex: 0 0 34px;
+}
+
+.strip > * {
+  width: 100%;
+  flex: 1;
+}
+
+.stripButton {
+  width: 100%;
+  height: auto;
+  align-items: flex-start;
+  padding-top: var(--space-2h);
+  border-radius: 0;
+  opacity: 0.8;
+}

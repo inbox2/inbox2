@@ -1,0 +1,12 @@
+{
+  "name": "inbox2-android-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server to build & drive the inbox2 Android app on an emulator — the Android analog of XcodeBuildMCP/ios-simulator.",
+  "bin": { "inbox2-android-mcp": "server.js" },
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4"
+  }
+}

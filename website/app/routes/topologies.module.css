@@ -1,0 +1,102 @@
+.hero {
+  background: var(--ink);
+  padding: 110px 0 120px;
+  overflow: hidden;
+  position: relative;
+}
+
+.glow {
+  position: absolute;
+  left: 30%;
+  top: 20%;
+  width: 1100px;
+  height: 700px;
+  background: radial-gradient(ellipse at center, var(--glow-a), transparent 62%);
+  filter: blur(70px);
+  pointer-events: none;
+}
+
+.inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 48px;
+  align-items: end;
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.h1 {
+  font-size: clamp(56px, 7.2vw, 104px);
+  line-height: 0.9;
+  max-width: 8ch;
+  letter-spacing: -0.045em;
+}
+
+.headRight {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lede {
+  font-size: 19px;
+  max-width: 42ch;
+  color: var(--mute-inv);
+}
+
+.ctas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.modes {
+  padding: 150px 0;
+}
+
+.modesInner {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.modesHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 40px;
+  align-items: end;
+}
+
+.h2 {
+  font-size: var(--h2);
+  line-height: 0.96;
+  max-width: 12ch;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    padding: 56px 0 64px;
+  }
+  .head,
+  .modesHead {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .lede {
+    font-size: 16px;
+  }
+  .modes {
+    padding: 64px 0;
+  }
+}

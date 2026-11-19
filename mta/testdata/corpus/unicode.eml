@@ -1,0 +1,13 @@
+From: =?UTF-8?B?w4ltaWxpZSBEdXBvbnQ=?= <emilie@example.fr>
+To: support@acme.com
+Subject: =?UTF-8?Q?R=C3=A9ponse_=C3=A0_votre_demande?=
+Message-ID: <unicode-001@example.fr>
+Date: Sat, 24 May 2026 10:04:00 +0000
+Content-Type: text/plain; charset="UTF-8"
+
+Bonjour,
+
+Voici ma réponse à votre demande. Les caractères spéciaux: é, è, ê, ë, ü, ö, ß, ñ, 日本語テスト.
+
+Cordialement,
+Émilie

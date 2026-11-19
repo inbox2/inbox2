@@ -1,0 +1,110 @@
+/* Calendar event row — shared by CalendarSidebar ("Coming Up") and the
+   meeting-invite banner. Moved here verbatim from CalendarSidebar.module.css so
+   both surfaces stay identical. */
+
+.upcomingItem {
+  padding: var(--space-1h) var(--space-3) var(--space-1h) var(--space-5);
+  border-bottom: 1px solid var(--overlay-2);
+  cursor: default;
+  transition: background var(--duration-fast);
+}
+
+/* Clickable rows render as <button> — strip the UA chrome, keep the row layout. */
+.upcomingClickable {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--overlay-2);
+  font: inherit;
+  cursor: pointer;
+}
+
+.upcomingItem:last-child {
+  border-bottom: none;
+}
+
+.upcomingItem:hover {
+  background: linear-gradient(90deg,
+    var(--overlay-6) 0%,
+    var(--overlay-3) 40%,
+    transparent 80%
+  );
+}
+
+/* Imminent events / conflicts — warm pulse */
+.upcomingSoon {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--accent-warning) 8%, transparent) 0%,
+    color-mix(in srgb, var(--accent-warning) 3%, transparent) 40%,
+    transparent 80%
+  );
+  box-shadow:
+    inset 3px 0 0 color-mix(in srgb, var(--accent-warning) 70%, transparent);
+  animation: soonPulse 4s ease-in-out infinite;
+}
+
+@keyframes soonPulse {
+  0%, 100% { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent-warning) 70%, transparent); }
+  50% { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent-warning) 40%, transparent), inset 8px 0 12px color-mix(in srgb, var(--accent-warning) 4%, transparent); }
+}
+
+.upcomingSoon:hover {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--accent-warning) 12%, transparent) 0%,
+    color-mix(in srgb, var(--accent-warning) 5%, transparent) 40%,
+    transparent 80%
+  );
+}
+
+.upcomingTime {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.upcomingRelative {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  color: var(--accent-warm-bright);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  min-width: 36px;
+}
+
+.upcomingAbsolute {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.upcomingTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h, var(--space-2));
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
+  min-width: 0;
+  margin-top: var(--space-px);
+}
+
+/* Tooltip wraps its trigger in a bare <span>; keep that wrapper from adding
+   baseline space under the channel icon. */
+.upcomingTitle > span:not(.upcomingTitleText) {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.upcomingTitleText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.upcomingSoon .upcomingTitle {
+  color: var(--text-primary);
+}

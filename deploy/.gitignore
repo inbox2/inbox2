@@ -1,0 +1,18 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.lock.hcl
+
+# Sensitive files — never commit
+terraform.tfvars
+*.auto.tfvars
+
+# Kubeconfig (Rancher cluster credentials)
+kubeconfig.yaml
+
+# Environment
+.envrc
+*.plan
+tf.plan

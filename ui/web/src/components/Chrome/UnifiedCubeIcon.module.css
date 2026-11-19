@@ -1,0 +1,14 @@
+/* Single sprite cell from the 6×5 rotation sheet. The icon is transparent (the
+   glossy dark cube reads on the dark chrome via its highlights + white "2").
+   background-size 600% 500% scales the sheet so one cell fills the box; --bgx /
+   --bgy (set imperatively, 0–100%) select the active frame. */
+.cube {
+  width: 23px;
+  height: 23px;
+  flex-shrink: 0;
+  display: block;
+  background-image: url('/inbox2-rotate-sheet.png');
+  background-repeat: no-repeat;
+  background-size: 600% 500%;
+  background-position: var(--bgx, 0%) var(--bgy, 0%);
+}

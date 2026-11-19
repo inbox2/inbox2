@@ -1,0 +1,48 @@
+/* The wrapper around the hovered element. A flex box (not a bare inline span)
+   so a wrapped button stretches with its toolbar siblings instead of sitting
+   at the top of a taller row. */
+.trigger {
+  display: inline-flex;
+}
+
+.tooltip {
+  position: fixed;
+  left: var(--tip-x, 0);
+  top: var(--tip-y, 0);
+  transform: translateY(-100%);
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-elevated);
+  border: 1px solid var(--overlay-10);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: var(--z-tooltip);
+  box-shadow:
+    var(--shadow-sm),
+    inset 0 1px 0 var(--overlay-4);
+  /* Hidden until JS sets data-placement after measuring */
+  opacity: 0;
+}
+
+.tooltip[data-placement="above"] {
+  transform: translateY(-100%);
+  animation: tooltipIn 120ms var(--ease-out) both;
+}
+
+.tooltip[data-placement="below"] {
+  transform: none;
+  animation: tooltipInBelow 120ms var(--ease-out) both;
+}
+
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateY(-100%) translateY(4px); }
+  to   { opacity: 1; transform: translateY(-100%); }
+}
+
+@keyframes tooltipInBelow {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}

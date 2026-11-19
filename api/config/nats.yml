@@ -1,0 +1,12 @@
+default: &default
+  url: nats://localhost:4222
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+  url: nats://localhost:4223
+
+production:
+  url: <%= ENV.fetch("NATS_URL", "nats://nats:4222") %>

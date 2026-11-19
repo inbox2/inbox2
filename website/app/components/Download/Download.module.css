@@ -1,0 +1,153 @@
+.section {
+  padding: 110px 0 150px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* `.section` pins the light text colour, which the `on-dark` class can't beat
+   from the global sheet — so the dark variant has to set it here, or every tile
+   inherits ink on ink. */
+.dark {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 40px;
+  align-items: end;
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.h2 {
+  font-size: var(--h2);
+  line-height: 0.96;
+  max-width: 12ch;
+  color: inherit;
+}
+
+.headSide {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.version {
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.tile {
+  background: var(--grey);
+  border-radius: var(--r);
+  padding: 28px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 200px;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.dark .tile {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tile:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.os {
+  font-family: var(--display);
+  font-variation-settings: "wdth" 118;
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--mute);
+}
+
+.dark .sub {
+  color: var(--faint-inv);
+}
+
+.dl {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.also {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 14px;
+  color: var(--mute);
+}
+
+.dark .also {
+  color: var(--faint-inv);
+}
+
+.also a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.also a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .section {
+    padding: 64px 0 80px;
+  }
+  .head {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .tile {
+    min-height: 160px;
+    padding: 20px 18px;
+  }
+}

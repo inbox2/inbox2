@@ -1,0 +1,28 @@
+/* inbox2 palette for Archify diagrams, from website/app/styles/tokens.css
+   (ink, paper, yellow accent, periwinkle offset) plus pastel fills per node kind. */
+html[data-theme="light"][data-preset]{
+  --bg:#FAFAF7; --panel:#FFFFFF; --panel-border:#D9D9D4; --grid:#ECECE8; --canvas-dot:#ECECE8;
+  --lane-fill:#FFFFFF; --lane-stroke:#E4E4DF;
+  --text:#111111; --text-muted:#4F4F4F; --text-dim:#6B6B6B; --text-faint:#A3A3A3;
+  --arrow:#9A9A94; --arrow-emphasis:#5E4AE3;
+  --frontend-stroke:#5E4AE3; --frontend-fill:#E9EAFF;   /* UI, windows, people */
+  --backend-stroke:#1C1C1C; --backend-fill:#ECECE8;     /* Rust core, services */
+  --database-stroke:#2E8F5B; --database-fill:#E3F3EA;   /* SQLite, stores */
+  --messagebus-stroke:#A98600; --messagebus-fill:#FFF4C2; /* queues, workers, events */
+  --security-stroke:#C62828; --security-fill:#FDE7E7;   /* secrets, sealed, gates */
+  --external-stroke:#6B6B6B; --external-fill:#F3F3F0;   /* providers, remote services */
+  --cloud-stroke:#17509F; --cloud-fill:#E4EDFA;         /* inbox2 cloud (Rails API) */
+}
+html[data-theme="dark"][data-preset]{
+  --bg:#111111; --panel:#1C1C1C; --panel-border:#2E2E2E; --grid:#1C1C1C; --canvas-dot:#262626;
+  --lane-fill:#1C1C1C; --lane-stroke:#2E2E2E;
+  --text:#F2F2EE; --text-muted:#DCDCDC; --text-dim:#BDBDBD; --text-faint:#8A8A8A;
+  --arrow:#5A5A5A; --arrow-emphasis:#8691FF;
+  --frontend-stroke:#8691FF; --frontend-fill:#262A5A;
+  --backend-stroke:#DCDCDC; --backend-fill:#2A2A2A;
+  --database-stroke:#6CCB92; --database-fill:#13301F;
+  --messagebus-stroke:#FFD600; --messagebus-fill:#332C00;
+  --security-stroke:#FF6B6B; --security-fill:#3A1212;
+  --external-stroke:#BDBDBD; --external-fill:#262626;
+  --cloud-stroke:#6FA3F0; --cloud-fill:#122441;
+}

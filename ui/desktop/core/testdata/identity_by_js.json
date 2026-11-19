@@ -1,0 +1,21 @@
+{
+  "note": "Made by ui/web/src/lib/e2ee.js (generateIdentity, sealGrant). Throwaway keys.",
+  "password": "correct horse ⚡ battery",
+  "public_key": "5/CA6F0c9saf299cji/c4mQjz/eueg/12F8rDjnaYFk=",
+  "encrypted_private_key": "eyJ2IjoxLCJhbGciOiJhcmdvbjJpZDEzIiwib3BzIjozLCJtZW0iOjI2ODQzNTQ1Niwic2FsdCI6InBScGtrK1NxdXdHeDk2NDVrcm5nL1E9PSIsIm5vbmNlIjoiNW1pa3dTWWJUekIyZGtseTV5S2tYaFJvWWdYZW5EcVYiLCJjdCI6IlRPRFZ2b0pFdm5rYXNyaE5EQXBJbm41UW0vZEp3RVNhOUxzS0JjakZ1R2wyOUQ3MjAwWXdDVXJEMktGRWNFSkwifQ==",
+  "sealed_secret_key": "Q6/uFOLcZZD/Sx62TO9EKQ1Dftwf3zIl9vuDU09zujefMIW5vzUrjS9Og7+0iHPz0CC9xXnwIn70HALUnLm8egjrsTsyqk6CMwy8C4Zgykc=",
+  "domain_public_key": "9RVm/GC/sLeOziiYPsKcSgZiUH8lJbaiRxm+/HeciFo=",
+  "sealed": {
+    "aad": "4242|3|1ef37aadd58e302651eff8133a1a93ca7dd56b076046ed1fa745b56db799c7b5",
+    "body_ciphertext": "MPZGtQLM87fP9KdvMBXDlDyHDXSIDzs5WU7LDMadhfL+dFKRKcrc/DLgXwKmyGLOcTlKPnohA6/BDmSKrcEAXcJb40uh93iV7onTjnA5rtksApPaXh772rovydBQPEcwU32guWOpixaGye7ivvgw5oxpZ3Se8PAr4lQlf9aWLtizGO+H1KMjLxRj4youvh8M/f3O5fgyO9HXkj8iLX/9g4rJ4u/UinzJkUHOf7wC4Kqj5r0=",
+    "body_nonce": "+h2N8y1yOuFNrH051toqd0HWx6XO7ajV",
+    "domain_key_version": 3,
+    "header_ciphertext": "FKphfqJ5I7oWQ2OnRTwc8S+maNklpR+/1kKEyG1fIgzgRjPj8RmKHXNvsyWeehLQ0vXrMG3egaxnMT9QpEj14Ig4/kGBKr43zeA4TgTnjT/blflNjeS0jtGADz2F3Cz57y0u+R3+iQ9guYnDQnwePlZnKEIGBuug23IB2Lx/M3RbbaFhWlwD490tsc/t/jBNkmVD1Wks5z9gSKSPRBlc6Y9HtrGX4HVSn8UwBNftgPZVX7ZaTe77KEtLkHQdlbzh3sL96ASblguz3kaOrm3zSG8apGPJr67C5asiVy1jVKKxCAdAZNF41plkhjySULJFwZeEIvorTV6NcxGQhwjtNduHc8Q=",
+    "header_nonce": "BTLQrD3VZAu3UucRhUwjlAGZkfn6GO1I",
+    "scheme": "sealed_box_v2",
+    "sealed_dek": "6nr+8Cgmfl4yieFbMYmNWtlRwwEbqWgeNr/tOJzK50/59oFgsW58v4Jh0NmHZEAwP7pTZ37XEe4Wrha6q9FESr7Uy6encypIqBJA79kBw6E="
+  },
+  "expect": {
+    "subject": "Interop: sealed across languages ✓"
+  }
+}

@@ -1,0 +1,41 @@
+<!doctype html>
+<!-- The inbox2 book template, filled by build.py from a folder of numbered chapters and printed to PDF.
+     $slots are filled with string.Template; relative URLs resolve against docs/manual through <base>. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<base href="$base">
+<title>$title</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="manual.css">
+<style>@page { @bottom-left { content: "$running"; } }</style>
+</head>
+<body>
+
+<section class="bleed cover">
+  <div class="aurora"></div>
+  <div class="lockup"><img src="$logo_light" alt="inbox2"></div>
+  <div class="bottom">
+    <span class="eyebrow">$eyebrow</span>
+    <h1>$title<span>$subtitle</span></h1>
+    <p class="edition">$edition</p>
+  </div>
+</section>
+
+<section class="contents">
+  <span class="eyebrow">Contents</span>
+  <h2>Chapters.</h2>
+  <ol class="toc">$toc</ol>
+</section>
+
+$body
+
+<section class="bleed back">
+  <div class="aurora"></div>
+  <div class="lockup big"><img src="$logo_light" alt="inbox2"></div>
+  <p class="mono">$contact</p>
+</section>
+
+</body>
+</html>

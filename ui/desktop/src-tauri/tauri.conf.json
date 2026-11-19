@@ -1,0 +1,90 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Inbox2",
+  "mainBinaryName": "Inbox2",
+  "version": "0.1.0",
+  "identifier": "com.inbox2.desktop",
+  "build": {
+    "frontendDist": "../../web/dist",
+    "devUrl": "http://localhost:4173",
+    "beforeDevCommand": "lsof -ti:4173 >/dev/null 2>&1 || (cd ../web && yarn dev &)",
+    "beforeBuildCommand": "cd ../web && VITE_API_ORIGIN=https://api.inbox2.com yarn build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "dragDropEnabled": false,
+        "backgroundThrottling": "disabled",
+        "decorations": true,
+        "transparent": true,
+        "backgroundColor": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "titleBarStyle": "Overlay",
+        "trafficLightPosition": {
+          "x": 12,
+          "y": 28
+        },
+        "windowEffects": {
+          "effects": [
+            "hudWindow"
+          ],
+          "state": "active"
+        }
+      }
+    ],
+    "macOSPrivateApi": true,
+    "security": {
+      "csp": null
+    }
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": [
+          "inbox2"
+        ]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": false,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "10.15",
+      "hardenedRuntime": true,
+      "entitlements": "entitlements.plist"
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "both"
+      }
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      },
+      "deb": {
+        "desktopTemplate": "deb/inbox2.desktop"
+      }
+    }
+  }
+}

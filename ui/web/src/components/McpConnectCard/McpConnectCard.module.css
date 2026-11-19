@@ -1,0 +1,132 @@
+/* Renders inside the page's "Connect an AI agent" settings panel, which gives
+   the card chrome; this carries no surface of its own. */
+.intro {
+  margin: 0;
+  font-size: var(--text-2xs);
+  color: var(--text-secondary);
+}
+
+.toggleRow {
+  margin: var(--space-3) 0 var(--space-2);
+}
+
+.note {
+  margin: var(--space-1h) 0 0;
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+}
+
+.warning {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+}
+
+.block {
+  margin-top: var(--space-3);
+}
+
+.blockHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.blockTitle {
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+}
+
+.blockHelper {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+}
+
+.code {
+  position: relative;
+  border-radius: var(--radius-7);
+  background: var(--surface-sunken);
+  padding: var(--space-2) var(--space-6) var(--space-2) var(--space-2h);
+}
+
+.codeText {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  line-height: 1.5;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.copy {
+  position: absolute;
+  top: var(--space-1h);
+  right: var(--space-1h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-6);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.copy:hover {
+  color: var(--text-primary);
+  background: var(--overlay-6);
+}
+
+.copy:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}
+
+.sectionTitle {
+  margin-top: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1h);
+  margin-top: var(--space-2);
+}
+
+.agent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2h);
+  border-radius: var(--radius-7);
+  background: var(--surface-sunken);
+}
+
+.agentInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0h);
+  min-width: 0;
+}
+
+.agentName {
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+}
+
+.agentSeen {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+}

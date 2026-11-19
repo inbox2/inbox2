@@ -1,0 +1,3 @@
+.delta { display: inline-flex; align-items: center; gap: var(--space-1); font-family: var(--m-mono); font-size: var(--text-3xs); }
+.deltaUp { composes: delta; color: var(--m-green); }
+.deltaDown { composes: delta; color: var(--m-pink); }

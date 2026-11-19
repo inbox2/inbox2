@@ -1,0 +1,216 @@
+/* E2EE settings tab — dark console layer (--m-* tokens from the .management scope). */
+.lede {
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--m-ink-soft);
+  max-width: 560px;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3h);
+  margin-top: var(--space-3);
+  border-radius: var(--radius-10);
+  background: color-mix(in srgb, var(--m-accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--m-accent) 30%, transparent);
+  font-size: var(--text-xs);
+}
+
+.step {
+  margin-top: var(--space-3h);
+  padding: var(--space-3h) var(--space-4);
+  border: 1px solid var(--m-line-soft);
+  border-radius: var(--radius-xl);
+  background: var(--m-surface-2);
+}
+
+.step[data-done] {
+  border-color: color-mix(in srgb, var(--m-green) 40%, transparent);
+}
+
+.stepHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2h);
+}
+
+.stepIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  background: var(--overlay-10);
+  color: var(--m-ink);
+}
+
+.step[data-done] .stepIndex {
+  background: var(--m-green);
+  color: #06231a;
+}
+
+.stepTitle {
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+
+.stepBody {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--m-ink-soft);
+}
+
+.stepBody p {
+  margin: 0 0 var(--space-2h);
+}
+
+.ok {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1h);
+  color: #1d8a5b;
+  font-weight: 600;
+  font-size: var(--text-xs);
+}
+
+.pwRow {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  max-width: 420px;
+}
+
+.members {
+  margin-top: var(--space-4h);
+}
+
+.membersTitle {
+  font-size: var(--text-xs);
+  font-weight: 650;
+  margin: 0 0 var(--space-2);
+}
+
+.memberList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--m-line-soft);
+  border-radius: var(--radius-10);
+  overflow: hidden;
+}
+
+.memberRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2h) var(--space-3h);
+  font-size: var(--text-xs);
+  border-top: 1px solid var(--m-line-soft);
+  background: var(--m-surface-2);
+}
+
+.memberRow:first-child {
+  border-top: none;
+}
+
+.memberName {
+  flex: 1;
+  font-weight: 550;
+}
+
+.memberRole {
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--m-ink-faint);
+}
+
+.memberPending {
+  font-size: var(--text-2xs);
+  color: var(--m-ink-faint);
+}
+
+
+/* Save-gate modal */
+.gateBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 22, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.gate {
+  width: min(480px, calc(100vw - 32px));
+  padding: var(--space-5h) var(--space-6);
+  border-radius: var(--radius-14);
+  background: var(--m-char2);
+  border: 1px solid var(--m-line-soft);
+  box-shadow: 0 18px 50px rgba(24, 34, 66, 0.25);
+}
+
+.gateTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2h);
+  font-size: var(--text-md);
+}
+
+.gateText {
+  font-size: var(--text-xs);
+  line-height: 1.55;
+  color: var(--m-ink-soft);
+}
+
+.gatePhrase {
+  margin: var(--space-3h) 0;
+  padding: var(--space-3h);
+  border-radius: var(--radius-10);
+  background: #10141d;
+  color: #8ee59a;
+  font-family: ui-monospace, "JetBrains Mono", monospace;
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+  user-select: all;
+}
+
+.gateConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1h);
+  margin-bottom: var(--space-3h);
+  font-size: var(--text-xs);
+  color: var(--m-ink-soft);
+}
+
+.previewToggle {
+  display: flex;
+  gap: var(--space-2h);
+  align-items: flex-start;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.previewToggle input {
+  margin-top: var(--space-1);
+}
+
+.previewToggle em {
+  display: block;
+  font-style: normal;
+  font-size: var(--text-2xs);
+  color: var(--m-ink-faint);
+  margin-top: var(--space-0h);
+}

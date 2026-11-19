@@ -1,0 +1,11 @@
+# Pushleft upload (.pl.yaml): only what deploy/pushleft/Dockerfile copies.
+/*
+!/.pl.yaml
+!/api/
+!/mta/
+!/deploy/
+/deploy/*
+!/deploy/pushleft/
+# The scan's ignore files: Pushleft reads them from the uploaded root.
+!/.security-scan-ignore
+!/.trivyignore

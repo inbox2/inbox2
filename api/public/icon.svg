@@ -1,0 +1,29 @@
+<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2c313a"/><stop offset=".55" stop-color="#15181e"/><stop offset="1" stop-color="#080a0d"/>
+    </linearGradient>
+    <linearGradient id="dish" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a4049"/><stop offset="1" stop-color="#0c0e12"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".22"/><stop offset=".6" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="two" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#e2e7ee"/><stop offset="1" stop-color="#b6bdc8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- keycap body -->
+  <rect x="14" y="14" width="212" height="212" rx="50" fill="url(#cap)"/>
+  <!-- bevel rim -->
+  <rect x="14.5" y="14.5" width="211" height="211" rx="49.5" fill="none" stroke="#4c5560" stroke-opacity=".55" stroke-width="2"/>
+  <!-- dished top surface (the key face the 2 sits on) — slim border -->
+  <rect x="26" y="24" width="188" height="184" rx="40" fill="url(#dish)"/>
+  <rect x="26" y="24" width="188" height="184" rx="40" fill="url(#sheen)"/>
+  <rect x="26.5" y="24.5" width="187" height="183" rx="39.5" fill="none" stroke="#000" stroke-opacity=".4" stroke-width="1.3"/>
+
+  <!-- big front-facing 2 -->
+  <text x="120" y="112" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700"
+        font-size="150" fill="url(#two)" text-anchor="middle" dominant-baseline="central">2</text>
+</svg>

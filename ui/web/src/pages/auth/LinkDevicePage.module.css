@@ -1,0 +1,61 @@
+/* Device-link approval surface (light "management" layer). */
+
+.device {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3h) var(--space-4);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--m-border, #e6e6ef);
+  border-radius: var(--radius-xl);
+  background: var(--m-surface-2, #f7f7fb);
+}
+
+.deviceIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-10);
+  background: var(--m-violet-soft, #eceaff);
+  color: var(--m-violet, #5b4dff);
+  flex: 0 0 auto;
+}
+
+.deviceText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0h);
+  min-width: 0;
+}
+
+.deviceName {
+  font-weight: 600;
+  color: var(--m-text, #1b1b27);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.devicePlatform {
+  font-size: var(--text-xs);
+  color: var(--m-text-muted, #6b6b82);
+}
+
+.account {
+  font-size: var(--text-sm);
+  color: var(--m-text-muted, #6b6b82);
+  margin: 0 0 var(--space-4h);
+}
+
+.account strong {
+  color: var(--m-text, #1b1b27);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2h);
+}

@@ -1,0 +1,57 @@
+/* Per-member access page — the console's hairline-grid language on a narrow
+   centred column: black canvas, 1px bordered section cards, mono kickers. */
+.page {
+  position: relative;
+  padding: 0;
+  color: var(--m-ink);
+  font-family: var(--m-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3h); height: 70vh; }
+
+
+/* ── Header: back + identity + role/status ── */
+.head { display: flex; align-items: center; gap: var(--space-3h); margin-bottom: var(--space-5h); }
+.back {
+  display: inline-flex; align-items: center; gap: var(--space-1h);
+  padding: var(--space-2) var(--space-3); border: 1px solid var(--m-line);
+  background: #fff; color: var(--m-ink);
+  font-family: var(--m-mono); font-size: var(--text-xs); cursor: pointer;
+  transition: background 0.15s ease;
+}
+.back:hover { background: rgba(24, 34, 66, 0.07); }
+.headText { display: flex; flex-direction: column; min-width: 0; }
+.headTitle { margin: 0; font-family: var(--m-display); font-weight: 600; font-size: var(--text-3xl); letter-spacing: -0.01em; }
+.headSub { font-family: var(--m-mono); font-size: var(--text-xs); color: var(--m-ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.headMeta { margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-2h); }
+.roleTag { font-family: var(--m-mono); font-size: var(--text-2xs); letter-spacing: 0.04em; text-transform: uppercase; color: var(--m-ink-faint); }
+
+/* ── Section cards ── */
+.card { border: 1px solid var(--m-line); margin-bottom: var(--space-4h); }
+.cardHead { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4) var(--space-4h); border-bottom: 1px solid var(--m-line); }
+.cardLabel { font-family: var(--m-mono); font-size: var(--text-3xs); letter-spacing: 0.1em; text-transform: uppercase; color: var(--m-ink-faint); }
+.cardLabel::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: var(--space-2); background: var(--m-accent-bright); }
+.cardTitle { margin: 0; flex: 1; font-family: var(--m-display); font-weight: 600; font-size: var(--text-lg); }
+.cardBody { padding: var(--space-4h); }
+
+.note { display: flex; align-items: flex-start; gap: var(--space-2); margin: var(--space-3) 0 0; font-size: var(--text-xs); color: var(--m-ink-soft); line-height: 1.5; }
+.cardBody > .note:first-child { margin-top: 0; }
+
+/* ── Domain checkboxes ── */
+.domainList { display: flex; flex-direction: column; margin-top: var(--space-4); border: 1px solid var(--m-line-soft); }
+.domainRow { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3h) var(--space-4); border-top: 1px solid var(--m-line-soft); cursor: pointer; font-family: var(--m-mono); font-size: var(--text-sm); transition: background 0.15s ease; }
+.domainRow:first-child { border-top: none; }
+.domainRow:hover { background: rgba(24, 34, 66, 0.04); }
+.domainRow input { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--m-accent); cursor: pointer; }
+.domainName { color: var(--m-ink); }
+.domainRow:has(input:checked) { background: color-mix(in srgb, var(--m-accent) 6%, transparent); }
+
+/* ── Personal-mailbox exclusion toggle ── */
+
+/* ── Extending rules ── */
+.ruleList { display: flex; flex-direction: column; border: 1px solid var(--m-line-soft); }
+.ruleRow { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3h) var(--space-4); border-top: 1px solid var(--m-line-soft); font-family: var(--m-mono); font-size: var(--text-sm); color: var(--m-ink); }
+.ruleRow:first-child { border-top: none; }
+.ruleRow > :global(svg):first-child { color: var(--m-violet); flex-shrink: 0; }
+.ruleText { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

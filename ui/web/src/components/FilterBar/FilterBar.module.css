@@ -1,0 +1,132 @@
+/* Disk toolbar (mockup: .tools, .search, .chip, .seg). Inside a `.management` surface. */
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1 1 240px;
+  max-width: 400px;
+  height: 38px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--m-line);
+  border-radius: var(--radius-full);
+  background: var(--m-surface);
+  color: var(--m-ink-soft);
+}
+.search:focus-within {
+  border-color: var(--m-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--m-accent) 15%, transparent);
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--text-xs);
+  color: var(--m-ink);
+}
+.search kbd {
+  font: 11px var(--m-mono);
+  border: 1px solid var(--m-line);
+  border-radius: 5px;
+  padding: 0 5px;
+  color: var(--m-ink-faint);
+}
+
+.chip {
+  height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--m-line);
+  border-radius: var(--radius-full);
+  background: none;
+  font: 550 var(--text-3xs) var(--m-text);
+  color: var(--m-ink-soft);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.chip:hover { border-color: var(--m-ink); color: var(--m-ink); }
+.typeChip { display: inline-flex; align-items: center; gap: var(--space-1h); }
+/* :global(.management) gives the portal Disk's tokens; doubled up so its canvas background loses. */
+.typeList:global(.management) { min-width: 240px; padding: var(--space-1h); border: 1px solid var(--m-line); border-radius: var(--m-r-md); background: var(--m-surface); box-shadow: 0 12px 32px rgba(24, 34, 66, 0.18); font: 500 var(--text-2xs) var(--m-text); color: var(--m-ink); }
+.typeRow { display: flex; align-items: center; gap: var(--space-3); padding: 7px var(--space-2h); border-radius: var(--m-r-sm); cursor: pointer; }
+.typeRow:hover { background: var(--m-surface-2); }
+.typeRow input { width: 17px; height: 17px; margin: 0; accent-color: var(--m-char); }
+.typeRow input:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 2px; }
+.typeIcon { display: inline-flex; justify-content: center; align-items: center; width: 34px; height: 34px; color: var(--m-ink-soft); }
+.personRow { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-1h) var(--space-2h); border: 0; border-radius: var(--m-r-sm); background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.personRow:hover, .personRow[aria-pressed='true'] { background: var(--m-surface-2); }
+.personRow:focus-visible { outline: 2px solid var(--m-accent); outline-offset: -2px; }
+.tickMark { margin-left: auto; color: var(--m-ink); }
+.typeSep { margin: 4px 0; border: 0; border-top: 1px solid var(--m-line-soft); }
+.chip[aria-pressed='true'] { background: var(--m-char); color: #f5f2e9; border-color: var(--m-char); }
+.chip:focus-visible,
+.dir:focus-visible,
+.seg button:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 2px; }
+
+.clear { border: 0; padding: 0 var(--space-1h); color: var(--m-accent-ink); }
+.clear:hover { text-decoration: underline; }
+
+/* MgmtSelect restyled as a chip; turns ink-filled once it narrows the list. */
+.select select {
+  height: 32px;
+  padding: 0 28px 0 var(--space-3);
+  border: 1px solid var(--m-line);
+  border-radius: var(--radius-full);
+  background: none;
+  font: 550 var(--text-3xs) var(--m-text);
+  color: var(--m-ink-soft);
+}
+.select > span { right: 10px; }
+.set select { background: var(--m-char); color: #f5f2e9; border-color: var(--m-char); }
+.set > span { color: #f5f2e9; }
+
+.size { width: 104px; accent-color: var(--m-accent); }
+
+.end {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.dir {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--m-line);
+  border-radius: 50%;
+  background: none;
+  color: var(--m-ink-soft);
+  cursor: pointer;
+}
+.dir:hover { border-color: var(--m-ink); color: var(--m-ink); }
+
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--m-line);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.seg button {
+  display: grid;
+  padding: 7px 11px;
+  border: 0;
+  background: none;
+  color: var(--m-ink-soft);
+  cursor: pointer;
+}
+.seg button[aria-pressed='true'] { background: var(--m-char); color: #f5f2e9; }
+
+@media (max-width: 760px) {
+  .search { max-width: none; flex-basis: 100%; }
+  .end { margin-left: 0; }
+}

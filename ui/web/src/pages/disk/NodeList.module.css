@@ -1,0 +1,216 @@
+/* Folder listing (mockup: .card table, .tiles). The skeleton twin uses the
+   same table, column widths and row height, so nothing shifts when data lands. */
+.card {
+  background: var(--m-surface);
+  border: 1.5px solid var(--m-line);
+  border-radius: var(--m-r-xl);
+  transition: opacity 0.15s ease;
+}
+.dim { opacity: 0.55; pointer-events: none; }
+
+.table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.colCheck { width: 44px; }
+.colMod { width: 140px; }
+.colBy { width: 130px; }
+.colAccess { width: 120px; }
+.colSize { width: 116px; }
+
+.table th {
+  padding: var(--space-2h) var(--space-4h);
+  text-align: left;
+  font-size: var(--text-3xs);
+  font-weight: 550;
+  color: var(--m-ink-soft);
+  border-bottom: 1px solid var(--m-line);
+  white-space: nowrap;
+}
+.table td {
+  height: 50px;
+  padding: 0 var(--space-4h);
+  border-bottom: 1px solid var(--m-line-soft);
+  font-size: var(--text-xs);
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr { cursor: default; user-select: none; -webkit-user-select: none; }
+.table tbody tr:hover td { background: var(--m-surface-2); }
+.table tbody tr:last-child td:first-child { border-radius: 0 0 0 16px; }
+.table tbody tr:last-child td:last-child { border-radius: 0 0 16px 0; }
+.table tbody tr.picked td { background: color-mix(in srgb, var(--m-accent) 9%, var(--m-surface)); }
+.table td.nameCell,
+.table td.accessCell { overflow: visible; }
+
+.table .c { padding-right: 0; }
+.table .m { color: var(--m-ink-soft); font-size: var(--text-2xs); }
+.table .n { text-align: right; font: var(--text-3xs) var(--m-mono); color: var(--m-ink-soft); }
+.ck { display: block; width: 16px; height: 16px; accent-color: var(--m-char); cursor: pointer; }
+
+.sortBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: -2px -4px;
+  padding: var(--space-0h) 4px;
+  border: 0;
+  border-radius: var(--radius-6);
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.sortBtn:hover { color: var(--m-ink); }
+.arrow { font-size: 10px; opacity: 0; }
+.table th[aria-sort] .sortBtn { color: var(--m-ink); font-weight: 650; }
+.table th[aria-sort] .arrow { opacity: 1; }
+
+.name {
+  display: inline-flex;
+  vertical-align: middle;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 100%;
+  min-width: 0;
+  padding: var(--space-0h);
+  border: 0;
+  border-radius: var(--radius-8);
+  background: none;
+  font: inherit;
+  font-weight: 550;
+  color: var(--m-ink);
+  text-align: left;
+  cursor: pointer;
+}
+/* The lighter accent on hover is the owner's choice (2026-10-04), not --m-accent-ink. */
+.name:hover .nameText { color: var(--m-accent); }
+.name:focus-visible,
+.tileName:focus-visible,
+.tile:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 2px; }
+.nameText { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.loc { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 12px var(--m-mono); color: var(--m-ink-faint); margin-top: 1px; }
+.mark { background: color-mix(in srgb, var(--m-amber) 45%, transparent); color: inherit; border-radius: 3px; }
+.lock {
+  flex: none;
+  padding: 0 var(--space-1h);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--m-green);
+}
+.star { flex: none; color: #c98a1b; font-size: 12px; }
+
+.rename {
+  width: 100%;
+  max-width: 420px;
+  height: 32px;
+  padding: 0 var(--space-2h);
+  border: 1px solid var(--m-accent);
+  border-radius: var(--m-r-sm);
+  background: #fff;
+  font: inherit;
+  color: var(--m-ink);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--m-accent) 15%, transparent);
+}
+
+/* ── grid ── */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--tile, 168px), 1fr));
+  gap: var(--space-3h);
+  transition: opacity 0.15s ease;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2h);
+  min-height: 150px;
+  padding: var(--space-4h) var(--space-4) var(--space-3h);
+  border: 1.5px solid var(--m-line);
+  border-radius: var(--m-r-xl);
+  background: var(--m-surface);
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.tile.picked { border-color: var(--m-accent); background: color-mix(in srgb, var(--m-accent) 9%, var(--m-surface)); }
+.tileName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 var(--text-2xs) var(--m-text);
+  color: var(--m-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.tileName:hover .nameText { color: var(--m-accent); }
+.tileName .nameText { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: anywhere; }
+.tileMeta { color: var(--m-ink-faint); font-size: var(--text-4xs); }
+
+/* Grid thumbnails: a fixed box that grows with the size slider, so a thumbnail landing shifts nothing. */
+.thumbBox { display: grid; place-items: center; width: 100%; height: max(72px, calc((var(--tile, 168px) - 32px) * 0.62)); overflow: hidden; border-radius: var(--radius-8); }
+.thumbImg { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--radius-6); }
+
+/* Folder tiles: a small folder icon with the name beside it, then a 2×2 peek
+   of images, or a fanned stack of type icons, centered in the space below. */
+.peekBox { display: flex; flex-direction: column; gap: var(--space-2h); width: 100%; flex: 1; }
+.peekHead { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.peekBody { /* four stacked cells at half overlap: 2.5 × peek + padding must fit the tile's inner width */
+  --peek: clamp(28px, calc(var(--tile, 168px) * 0.4 - 30px), 80px);
+  display: flex; flex: 1; align-items: center; justify-content: center; overflow: hidden;
+  height: max(72px, calc((var(--tile, 168px) - 32px) * 0.56));
+}
+.peekGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 100%; height: 100%; }
+.peekGrid .peekCell { overflow: hidden; border-radius: var(--radius-6); background: var(--m-line); }
+.peekImg { width: 100%; height: 100%; object-fit: cover; }
+.peekStack { display: flex; align-items: center; justify-content: center; max-width: 100%; padding-left: calc(var(--peek) * 0.5); }
+.peekStack .peekCell { display: flex; margin-left: calc(var(--peek) * -0.5); padding: 5px; border-radius: var(--radius-8); background: var(--m-surface); box-shadow: 0 1px 4px rgb(0 0 0 / 0.18); }
+.peekStack .peekCell:nth-child(2) { transform: rotate(-6deg); }
+.peekStack .peekCell:nth-child(3) { transform: rotate(6deg); }
+.peekStack .peekCell:first-child { margin-left: 0; }
+.peekStack .peekCell > svg { width: auto; height: var(--peek); }
+.peekStack .peekImg { width: var(--peek); height: var(--peek); border-radius: var(--radius-4); }
+
+/* ── skeleton twin ── */
+.skBar,
+.skIcon {
+  display: block;
+  height: 9px;
+  border-radius: var(--radius-full);
+  background: rgba(24, 34, 66, 0.07) linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent) no-repeat;
+  background-size: 40% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+.skIcon { flex: none; width: 28px; height: 30px; border-radius: 5px; }
+.skName { display: flex; align-items: center; gap: var(--space-3); }
+.skName .skBar { width: 50%; }
+.skRow:nth-child(4n + 2) .skName .skBar { width: 34%; }
+.skRow:nth-child(4n + 3) .skName .skBar { width: 66%; }
+.skRow:nth-child(4n + 4) .skName .skBar { width: 42%; }
+.skRow td > .skBar { width: 70%; }
+.skRow td.n > .skBar { width: 60%; margin-left: auto; }
+.skTile .skIcon { width: 52px; height: 46px; border-radius: var(--radius-8); }
+.skTile .skBar { width: 70%; }
+.skTile .skBar:last-child { width: 35%; }
+@keyframes shimmer { from { background-position: -40% 0; } to { background-position: 140% 0; } }
+
+@media (max-width: 760px) {
+  .hideSm { display: none; }
+  .table th, .table td { padding: 0 var(--space-3); }
+  .table th { padding-top: 9px; padding-bottom: 9px; }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .tiles { transition: none; }
+  .skBar, .skIcon { animation: none; background-image: none; }
+}
+.trashed { display: inline-flex; flex: none; opacity: 0.4; filter: grayscale(0.7); }

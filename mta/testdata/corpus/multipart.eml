@@ -1,0 +1,20 @@
+From: Carol Multi <carol@example.com>
+To: support@acme.com
+Subject: Multipart test message
+Message-ID: <multipart-001@example.com>
+In-Reply-To: <plain-001@example.com>
+References: <plain-001@example.com>
+Date: Sat, 24 May 2026 10:02:00 +0000
+Content-Type: multipart/alternative; boundary="boundary-alt-001"
+
+--boundary-alt-001
+Content-Type: text/plain; charset="UTF-8"
+
+This is the plain text version of a multipart message.
+
+--boundary-alt-001
+Content-Type: text/html; charset="UTF-8"
+
+<html><body><p>This is the <em>HTML</em> version of a multipart message.</p></body></html>
+
+--boundary-alt-001--

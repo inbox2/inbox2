@@ -1,0 +1,166 @@
+/* Local WhatsApp: chat list on the left, the thread on the right with its
+   bubbles centred at messenger width (ChatThread `narrow`). */
+.layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+.list {
+  /* Shrinks with the window (900px minimum) so the thread keeps its room. */
+  width: clamp(220px, 34%, 340px);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.filterRow {
+  position: relative;
+  padding: var(--space-2) var(--space-3);
+}
+
+.filterIcon {
+  position: absolute;
+  left: calc(var(--space-3) + var(--space-2h));
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+}
+
+.filter {
+  width: 100%;
+  padding: var(--space-1h) var(--space-2) var(--space-1h) var(--space-6);
+  border: 1px solid var(--overlay-4);
+  border-radius: var(--radius-md);
+  background: var(--overlay-2);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.filter:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.archivedToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  margin: 0 var(--space-3) var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-secondary);
+  font-size: var(--text-2xs);
+  cursor: pointer;
+}
+
+.archivedToggle:hover {
+  background: var(--overlay-3);
+  color: var(--text-primary);
+}
+
+.rows {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.unavailable {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  text-align: center;
+  max-width: 420px;
+  position: relative;
+  z-index: 1;
+}
+
+.unavailable strong {
+  color: var(--text-primary);
+}
+
+.archivedToggle:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}
+
+/* ── Chat columns: the unified inbox's lanes (ListViewColumns.module.css) ── */
+.columns {
+  border-left: 1px solid var(--border-groove);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+
+/* Chat columns share the width equally and shrink down to 420px, so the
+   columns that fit share the strip without it scrolling sideways; only more
+   columns than fit at 420px scroll. */
+.column.column {
+  flex: 1 1 0;
+  min-width: 420px;
+  max-width: 680px;
+}
+
+.noColumns {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
+/* The keyboard cursor in the chat list (Enter toggles that chat's column). */
+.rows:focus-visible .cursor {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-md);
+}
+
+/* A chat open as a column: the unified inbox's selected-card look (MiniCard
+   .miniCardActive), a soft blue band with a faint edge, not the list rail. */
+.open {
+  margin: 1px var(--space-1h);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--glow-blue) 8%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--glow-blue) 15%, transparent);
+}
+
+.open:hover {
+  background: color-mix(in srgb, var(--glow-blue) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--glow-blue) 20%, transparent);
+}
+
+:global([data-theme="light"]) .open,
+:global([data-theme="light"]) .open:hover {
+  background: var(--select-fill);
+  box-shadow: none;
+}
+
+/* A column being dragged (hold its header): lifted above its neighbours. */
+.dragging {
+  z-index: 5;
+  opacity: 0.9;
+  box-shadow: var(--shadow-lg);
+}

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# bin/run <process> — start one dev process, as the herdr-inbox2 runtime panes run them.
+# Short on purpose: up-arrow + Enter in a pane reruns it.
+#   react | rails | tunnel | docker | mx | nats | garage | website | tauri
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+wait_nats() {
+  echo "waiting for NATS :4222 (docker)..."
+  until nc -z localhost 4222 2>/dev/null; do sleep 0.5; done
+  echo "NATS is up"
+}
+
+case "${1:-}" in
+  # Vite's default proxy target is the hosted prod API; here everything is local, so point it at :4000
+  # (otherwise the desktop device-link page authenticates against prod and a local demo login 401s).
+  react)   cd "$ROOT/ui/web"; INBOX2_API_ORIGIN=http://localhost:4000 exec yarn dev ;;
+  # 0.0.0.0, not just loopback, so physical devices on the tailnet reach it at http://<mac>.ts.net:4000
+  rails)   cd "$ROOT/api"; exec bin/rails server -b 0.0.0.0 -p 4000 ;;
+  # push-dev.inbox2.com -> rails :4000, for cloud push webhooks (docs/Cloud-Push.md)
+  tunnel)  exec cloudflared tunnel run --token "$(cloudflared tunnel token inbox2-push-dev)" inbox2-push-dev ;;
+  docker)  cd "$ROOT/docker"; exec docker compose --profile queue --profile storage up ;;
+  mx)      wait_nats; cd "$ROOT/mta"; exec go run ./cmd/mx ;;
+  # NATS subscriber plus the sealed-mail triage worker; the triage worker stops with the pane
+  nats)    wait_nats; cd "$ROOT/api"
+           bundle exec ruby lib/triage_subscriber.rb & trap 'kill $! 2>/dev/null' EXIT
+           bundle exec ruby lib/nats_subscriber.rb ;;
+  garage)  exec "$ROOT/bin/garage-init" ;;
+  website) cd "$ROOT/website"; exec yarn dev ;;
+  tauri)   cd "$ROOT/ui/desktop"; exec yarn tauri dev ;;
+  *) echo "usage: bin/run react|rails|tunnel|docker|mx|nats|garage|website|tauri" >&2; exit 2 ;;
+esac

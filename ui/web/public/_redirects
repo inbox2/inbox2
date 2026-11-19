@@ -1,0 +1,4 @@
+# Cloudflare Pages — SPA history fallback. The app uses BrowserRouter, so deep
+# links (e.g. /conversations/abc) must serve index.html and let the client
+# router resolve the path. Real asset files are matched first and win.
+/*  /index.html  200

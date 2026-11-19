@@ -1,0 +1,359 @@
+/* ═══════════════════════════════════════════════════════ */
+/* ChannelBar — Horizontal channel toggle strip            */
+/* Compact, acrylic border, subtle active glow             */
+/* ═══════════════════════════════════════════════════════ */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3);
+  border-bottom: var(--acrylic-border);
+  background: transparent;
+  overflow: visible;
+}
+
+.channel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-0h);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  min-width: 100px;
+  position: relative;
+}
+
+.channel:hover {
+  background: var(--overlay-6);
+  border-color: var(--overlay-6);
+}
+
+.channel:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}
+
+.channelCheck {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+  background: color-mix(in srgb, var(--scrim) 25%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  z-index: 1;
+}
+
+.channelCheck:hover {
+  border-color: color-mix(in srgb, var(--glow-blue) 50%, transparent);
+  background: color-mix(in srgb, var(--glow-blue) 15%, transparent);
+}
+
+/* Checked = blue control fill (--control-checked is blue in both themes; the
+   primary-button gradient is bronze in dark, so don't use it here). */
+.channelCheckOn {
+  background: var(--control-checked);
+  border-color: var(--control-checked);
+  color: var(--control-checked-fg);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--bevel) 30%, transparent),
+    0 1px 2px color-mix(in srgb, var(--ink) 25%, transparent);
+}
+
+.channelCheckOn:hover {
+  background: var(--control-checked-ring);
+  border-color: var(--control-checked-ring);
+}
+
+:global([data-theme="light"]) .channelCheck {
+  border-color: var(--overlay-12);
+  background: var(--overlay-5);
+}
+
+/* Rainbow-tabs muted check: a solid neutral dark-gray control (not the accent)
+   so the already-colourful chrome doesn't get "too much". One rule for both
+   themes — the bevel/scrim tokens are identical in each, so it stays a dark
+   gray on light cards too. Dark edge (not a white outline) + white check so it
+   reads as an intentional filled control, never a washed-out pale box. */
+.channelCheckOn.channelCheckMuted {
+  background: color-mix(in srgb, var(--bevel) 28%, var(--scrim));
+  border-color: color-mix(in srgb, var(--scrim) 55%, transparent);
+  color: var(--bevel);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+
+.channelCheckOn.channelCheckMuted:hover {
+  background: color-mix(in srgb, var(--bevel) 38%, var(--scrim));
+  border-color: color-mix(in srgb, var(--scrim) 45%, transparent);
+}
+
+/* Enabled channels read as raised button-tiles (bevel + soft shadow),
+   matching the primary control surface. */
+.channelActive {
+  border: var(--btn-border);
+  background: var(--btn-bg);
+  box-shadow: var(--btn-shadow), var(--btn-highlight);
+}
+
+.channelActive:hover {
+  background: var(--btn-bg-hover);
+}
+
+/* ── Light mode: macOS toolbar chips ──────────────────────────────────────
+   Tighter tiles, flat white with a hairline (no bevel/gloss), and the disabled
+   ones simply drop out to transparent instead of getting an inset well. */
+:global([data-theme="light"]) .bar {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+  background: var(--header-surface);
+  box-shadow: var(--header-edge);
+}
+
+:global([data-theme="light"]) .channel {
+  min-width: 84px;
+  padding: var(--space-0h) var(--space-2);
+}
+
+:global([data-theme="light"]) .channelActive {
+  background: #ffffff;
+  border-color: var(--border-default);
+  box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.10);
+}
+
+:global([data-theme="light"]) .channelDisabled {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  opacity: 0.55;
+}
+
+/* Flat unchecked box — the gradient chip read as a second button per tile. */
+:global([data-theme="light"]) .channelCheck {
+  width: 13px;
+  height: 13px;
+  border-color: rgba(0, 0, 0, 0.22);
+  background: #ffffff;
+}
+
+/* Light mode drops the control chrome once checked: no border, just a faint
+   grey pad under a soft grey glyph. Eight filled blue checkboxes read as an
+   alert row; this reads as state. The unchecked box keeps its outline, so the
+   control stays discoverable. */
+:global([data-theme="light"]) .channelCheckOn {
+  background: var(--overlay-5);
+  border-color: transparent;
+  color: var(--text-tertiary);
+  box-shadow: none;
+}
+
+:global([data-theme="light"]) .channelCheckOn:hover {
+  background: var(--overlay-8);
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
+/* Disabled channels sit recessed/flat so the contrast reads at a glance. */
+.channelDisabled {
+  opacity: 1;
+  cursor: default;
+  border-color: var(--overlay-4);
+  background: var(--overlay-2);
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.channelDisabled .channelLabel {
+  color: var(--text-tertiary);
+}
+
+/* Sign-in expired: red outline on the tile + a red dot on the avatar so it's
+   obvious the channel needs reconnecting. */
+.channelReauth {
+  border-color: color-mix(in srgb, var(--status-danger-text) 55%, transparent) !important;
+  background: color-mix(in srgb, var(--status-danger-text) 10%, transparent);
+}
+.channelReauth .channelLabel {
+  color: var(--status-danger-text);
+}
+.channelAvatar {
+  position: relative;
+  display: inline-flex;
+  line-height: 0;
+}
+.channelReauthDot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--status-danger-text);
+  border: 1.5px solid var(--bg-raised);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--status-danger-text) 60%, transparent);
+}
+
+.channelLabel {
+  font-size: var(--text-5xs);
+  color: var(--text-muted);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.channelActive .channelLabel {
+  color: var(--text-secondary);
+}
+
+/* ── Account switcher embedded in bar ── */
+.accountSwitcher {
+  flex-shrink: 0;
+}
+
+.channelDivider {
+  width: 1px;
+  height: 28px;
+  background: var(--overlay-6);
+  flex-shrink: 0;
+}
+
+/* ── Spacer pushes toggle to right ── */
+.barSpacer {
+  flex: 1;
+}
+
+/* ── Unread toggle switch ── */
+.unreadToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: var(--space-0h) var(--space-2);
+  margin-right: var(--space-2);
+  background: none;
+  border: none;
+  color: inherit;
+}
+
+.toggleTrack {
+  width: 24px;
+  height: 12px;
+  border-radius: var(--radius-6);
+  background: var(--overlay-8);
+  border: 1px solid var(--overlay-6);
+  position: relative;
+  transition: background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast);
+  flex-shrink: 0;
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--bevel) 30%, transparent);
+  transition: transform var(--duration-fast) var(--ease-out),
+              background var(--duration-fast);
+}
+
+.unreadToggleActive .toggleTrack {
+  background: color-mix(in srgb, var(--control-checked) 22%, transparent);
+  border-color: color-mix(in srgb, var(--control-checked) 35%, transparent);
+}
+
+.unreadToggleActive .toggleThumb {
+  transform: translateX(12px);
+  background: var(--control-checked);
+  box-shadow: 0 0 4px color-mix(in srgb, var(--control-checked) 35%, transparent);
+}
+
+.unreadToggleLabel {
+  font-size: var(--text-4xs);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.unreadToggleActive .unreadToggleLabel {
+  color: var(--control-checked);
+}
+
+/* ── View mode segmented toggle ── */
+.viewModeGroup {
+  display: flex;
+  gap: var(--space-px);
+  background: var(--overlay-4);
+  border: 1px solid var(--overlay-6);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-right: var(--space-2);
+}
+
+:global([data-theme="light"]) .viewModeGroup {
+  background: var(--overlay-3);
+  border-color: var(--overlay-6);
+}
+
+.viewModeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 22px;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.viewModeBtn:hover {
+  color: var(--text-secondary);
+  background: var(--overlay-6);
+}
+
+:global([data-theme="light"]) .viewModeBtn:hover {
+  background: var(--overlay-4);
+}
+
+/* Blue control fill (--control-checked is blue in every theme; the primary-button
+   gradient is warm/gold in dark, so don't use it here). Matches the checkboxes. */
+.viewModeBtnActive {
+  color: var(--control-checked-fg);
+  background: var(--control-checked);
+  box-shadow: inset 0 1px 0 var(--bevel-25);
+}
+
+.viewModeBtnActive:hover {
+  color: var(--control-checked-fg);
+  background: var(--control-checked-ring);
+}
+
+/* Groovebox: the channel strip floats as its own panel over the grid. */
+:global([data-theme-variant="groovebox"]) .bar {
+  background: var(--bg-panel);
+  border: 0;
+  border-radius: var(--gb-panel-radius);
+  box-shadow: var(--gb-panel-shadow);
+}

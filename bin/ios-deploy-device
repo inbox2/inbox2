@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+# Build, sign, and install the iOS app on a paired iPhone, then launch it.
+#
+# Dev-build OTA: when the iPhone is paired over Wi-Fi (Xcode › Devices ›
+# "Connect via network"), `devicectl device install` runs over the air — no
+# cable. This wraps the build → sign → install → launch loop into one command.
+#
+#   bin/ios-deploy-device                 # build Debug, install to the paired iPhone, launch
+#   bin/ios-deploy-device --release       # Release config instead of Debug
+#   bin/ios-deploy-device --xcframework   # rebuild InboxCore.xcframework first (after core changes)
+#   bin/ios-deploy-device --seed          # also seed inbox2.db + .credential_key from the desktop (skip re-auth)
+#   bin/ios-deploy-device --no-launch     # install only, don't launch
+#   bin/ios-deploy-device --device <UUID> # target a specific coredevice id
+#
+# Device selection: --device, else $INBOX2_IOS_DEVICE, else the first paired
+# iPhone reported by `xcrun devicectl list devices`.
+set -euo pipefail
+
+BID=com.inbox2.ios
+SCHEME=Inbox2
+CONFIG=Debug
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+IOS_DIR="$ROOT/ui/ios"
+DERIVED="$IOS_DIR/build/device"
+
+DEVICE="${INBOX2_IOS_DEVICE:-}"
+DO_XCFRAMEWORK=0
+DO_SEED=0
+DO_LAUNCH=1
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --release)     CONFIG=Release ;;
+    --xcframework) DO_XCFRAMEWORK=1 ;;
+    --seed)        DO_SEED=1 ;;
+    --no-launch)   DO_LAUNCH=0 ;;
+    --device)      DEVICE="$2"; shift ;;
+    -h|--help)     sed -n '2,22p' "$0"; exit 0 ;;
+    *) echo "unknown arg: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+# ── Resolve the target device ───────────────────────────────────────────────
+# `devicectl --device` wants the CoreDevice *identifier* (e.g. 815166A7-…), but
+# `xcodebuild -destination id=` wants the *hardware UDID* (e.g. 00008140-…) it
+# reports via -showdestinations. These are different strings, so we resolve both:
+# DEVICE (CoreDevice id) drives install/launch; BUILD_DEST (hardware UDID) drives
+# the build. Passing the CoreDevice id to xcodebuild yields "Unable to find a
+# destination matching the provided destination specifier".
+xcrun devicectl list devices --json-output /tmp/ios-deploy-devices.json >/dev/null 2>&1 || true
+if [ -z "$DEVICE" ]; then
+  DEVICE=$(python3 - <<'PY' 2>/dev/null || true
+import json
+try:
+    d = json.load(open('/tmp/ios-deploy-devices.json'))
+except Exception:
+    raise SystemExit
+best = None
+for dev in d.get('result', {}).get('devices', []):
+    dp = dev.get('deviceProperties', {})
+    hw = dev.get('hardwareProperties', {})
+    name = dp.get('name', '')
+    state = dev.get('connectionProperties', {}).get('tunnelState', '')
+    if 'iPhone' in hw.get('deviceType', '') or 'iPhone' in name:
+        # prefer a connected tunnel
+        if state == 'connected' and best is None:
+            best = dev.get('identifier')
+        elif best is None:
+            best = dev.get('identifier')
+print(best or '')
+PY
+)
+fi
+if [ -z "$DEVICE" ]; then
+  echo "✗ no paired iPhone found. Pair one (Xcode › Devices) or pass --device <UUID>." >&2
+  echo "  xcrun devicectl list devices" >&2
+  exit 1
+fi
+echo "▸ device: $DEVICE"
+
+# Map the CoreDevice id → hardware UDID for the xcodebuild destination. Falls
+# back to DEVICE itself when no match (e.g. the caller already passed a UDID).
+BUILD_DEST=$(DEVICE="$DEVICE" python3 - <<'PY' 2>/dev/null || true
+import json, os
+want = os.environ.get('DEVICE', '')
+try:
+    d = json.load(open('/tmp/ios-deploy-devices.json'))
+except Exception:
+    print(want); raise SystemExit
+for dev in d.get('result', {}).get('devices', []):
+    hw = dev.get('hardwareProperties', {})
+    if dev.get('identifier') == want and hw.get('udid'):
+        print(hw['udid']); break
+else:
+    print(want)
+PY
+)
+[ -z "$BUILD_DEST" ] && BUILD_DEST="$DEVICE"
+echo "▸ build destination (hardware UDID): $BUILD_DEST"
+
+# ── Optionally rebuild the Rust core xcframework (device + sim slices) ───────
+if [ "$DO_XCFRAMEWORK" = 1 ]; then
+  echo "▸ rebuilding InboxCore.xcframework"
+  "$ROOT/ui/desktop/core/build-ios-xcframework.sh"
+  # The app compiles its OWN copy of the UniFFI Swift binding; the script only
+  # writes it under target/. Sync it so an FFI signature change isn't stale.
+  GEN="$ROOT/ui/desktop/target/uniffi-swift/inbox2_core.swift"
+  DST="$IOS_DIR/Sources/Generated/inbox2_core.swift"
+  [ -f "$GEN" ] && cp "$GEN" "$DST" && echo "▸ synced UniFFI binding → Sources/Generated"
+fi
+
+# ── Build + sign for the device ─────────────────────────────────────────────
+# A failed build must abort, not fall through to installing a STALE .app from
+# derived data (the old `| grep || true` swallowed xcodebuild's exit status).
+echo "▸ building ($CONFIG) for device"
+BUILD_LOG=$(mktemp)
+if ! xcodebuild -project "$IOS_DIR/Inbox2.xcodeproj" -scheme "$SCHEME" \
+  -configuration "$CONFIG" -destination "id=$BUILD_DEST" \
+  -derivedDataPath "$DERIVED" -allowProvisioningUpdates -allowProvisioningDeviceRegistration build \
+  > "$BUILD_LOG" 2>&1; then
+  grep -E "error:" "$BUILD_LOG" >&2 || tail -20 "$BUILD_LOG" >&2
+  echo "✗ build failed (full log: $BUILD_LOG)" >&2
+  exit 1
+fi
+grep -E "warning: .*(signing|provision)|BUILD (SUCCEEDED|FAILED)" "$BUILD_LOG" || true
+
+APP="$DERIVED/Build/Products/$CONFIG-iphoneos/Inbox2.app"
+[ -d "$APP" ] || { echo "✗ build produced no .app at $APP" >&2; exit 1; }
+
+# ── Install (update install — preserves the app's data container) ────────────
+echo "▸ installing (wireless if the device is network-paired)"
+xcrun devicectl device install app --device "$DEVICE" "$APP" \
+  | grep -iE "App installed|bundleID|error" || true
+
+# ── Optionally seed the store from the desktop (skip channel re-auth) ────────
+if [ "$DO_SEED" = 1 ]; then
+  DESK="$HOME/Library/Application Support/com.inbox2.desktop"
+  [ -f "$DESK/inbox2.db" ] || { echo "✗ desktop DB not found at $DESK/inbox2.db" >&2; exit 1; }
+  echo "▸ seeding inbox2.db + .credential_key from the desktop store"
+  # Launch once so Documents/inbox2/ exists, then terminate before overwriting.
+  xcrun devicectl device process launch --device "$DEVICE" "$BID" >/dev/null 2>&1 || true
+  sleep 3
+  # Overwriting the DB under a live app corrupts it ("disk I/O error"). A slow device
+  # may not be up after 3s, so keep looking and refuse to copy while it still runs.
+  # Prints the app's pid (empty = not running); a failed query exits the script, so an
+  # unreachable device can never read as "stopped".
+  app_pid() {
+    local procs
+    procs=$(xcrun devicectl device info processes --device "$DEVICE" 2>/dev/null) \
+      || { echo "✗ couldn't list device processes — not seeding" >&2; exit 1; }
+    # awk, not grep: no match must stay a success under pipefail.
+    echo "$procs" | awk '/Inbox2\.app\/Inbox2 *$/ {print $1; exit}'
+  }
+  for _ in 1 2 3 4 5 6 7 8 9 10; do PID=$(app_pid) || exit 1; [ -n "$PID" ] && break; sleep 1.5; done
+  for _ in 1 2 3 4 5; do
+    PID=$(app_pid) || exit 1
+    [ -z "$PID" ] && break
+    xcrun devicectl device process terminate --device "$DEVICE" --pid "$PID" >/dev/null 2>&1 || true
+    sleep 2
+  done
+  PID=$(app_pid) || exit 1
+  [ -n "$PID" ] && { echo "✗ app still running on the device — not seeding" >&2; exit 1; }
+  sqlite3 "$DESK/inbox2.db" ".backup '/tmp/inbox2-seed.db'"
+  copy() { xcrun devicectl device copy to --device "$DEVICE" \
+      --domain-type appDataContainer --domain-identifier "$BID" \
+      --source "$1" --destination "$2" >/dev/null 2>&1; }
+  copy /tmp/inbox2-seed.db Documents/inbox2/inbox2.db
+  copy "$DESK/.credential_key" Documents/inbox2/.credential_key
+  : > /tmp/inbox2-empty
+  copy /tmp/inbox2-empty Documents/inbox2/inbox2.db-wal   # neutralize stale WAL
+  copy /tmp/inbox2-empty Documents/inbox2/inbox2.db-shm
+  echo "  seeded."
+fi
+
+# ── Launch ──────────────────────────────────────────────────────────────────
+if [ "$DO_LAUNCH" = 1 ]; then
+  echo "▸ launching"
+  xcrun devicectl device process launch --device "$DEVICE" "$BID" \
+    | grep -iE "Launched|error" || true
+fi
+echo "✓ done"

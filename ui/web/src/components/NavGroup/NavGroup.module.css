@@ -1,0 +1,334 @@
+/* ═══════════════════════════════════════════════════════ */
+/* NavGroup — Operational panel section navigation         */
+/* Strong hierarchy, powered states, workstation density   */
+/* ═══════════════════════════════════════════════════════ */
+
+.group {
+  border-bottom: 1px solid var(--border-groove);
+  box-shadow: none;
+}
+
+:global([data-theme="light"]) .group {
+  border-bottom: none;
+}
+
+.group:last-child {
+  border-bottom: none;
+}
+
+/* ── Section header — metallic structural bar ──────── */
+.header {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+  background:
+    linear-gradient(180deg,
+      var(--overlay-6) 0%,
+      var(--overlay-2) 40%,
+      color-mix(in srgb, var(--scrim) 4%, transparent) 70%,
+      color-mix(in srgb, var(--scrim) 8%, transparent) 100%
+    );
+  border-top: 1px solid var(--overlay-4);
+  border-bottom: 1px solid var(--border-groove);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-shadow:
+    inset 0 1px 0 var(--overlay-4);
+  text-shadow: var(--chrome-text-shadow);
+  transition: all var(--duration-fast);
+}
+
+/* Light mode: defined Outlook-style group header — darker label, a faint top
+   tint and a hairline base rule so each section reads as a distinct group. */
+:global([data-theme="light"]) .header {
+  color: var(--text-secondary);
+  font-weight: var(--weight-semibold);
+  padding: var(--space-2) var(--space-3) var(--space-1h) var(--space-4);
+  background:
+    linear-gradient(180deg,
+      rgba(0, 0, 0, 0.05) 0%,
+      rgba(0, 0, 0, 0.02) 100%
+    );
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  box-shadow:
+    inset 0 1px 0 var(--bevel-25);
+}
+
+.header:hover {
+  background:
+    linear-gradient(180deg,
+      var(--overlay-8) 0%,
+      var(--overlay-4) 40%,
+      color-mix(in srgb, var(--scrim) 3%, transparent) 100%
+    );
+  color: var(--text-secondary);
+}
+
+:global([data-theme="light"]) .header:hover {
+  background:
+    linear-gradient(180deg,
+      rgba(0, 0, 0, 0.06) 0%,
+      rgba(0, 0, 0, 0.025) 100%
+    );
+  color: var(--text-tertiary);
+}
+
+.group:first-child .header {
+  border-top: none;
+}
+
+.header::after {
+  content: '\25C2';
+  margin-left: auto;
+  font-size: var(--text-6xs);
+  color: var(--text-muted);
+  opacity: 0.4;
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.headerIcon {
+  opacity: 0.6;
+}
+
+/* Right-aligned header slot (e.g. a Clear link). Absorbs the free space so
+   the action sits on the right; the collapse chevron trails it. */
+.headerAction {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.headerHasAction::after {
+  margin-left: var(--space-2);
+}
+
+/* ── Nav item — substantial operational row ──────── */
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1h) var(--space-3) var(--space-1h) var(--space-5);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  border-bottom: 1px solid var(--overlay-2);
+  position: relative;
+}
+
+:global([data-theme="light"]) .item {
+  border-bottom: none;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.item:hover {
+  background: linear-gradient(90deg,
+    var(--overlay-6) 0%,
+    var(--overlay-3) 40%,
+    transparent 80%
+  );
+  color: var(--text-primary);
+  box-shadow: inset 2px 0 0 var(--overlay-6);
+}
+
+:global([data-theme="light"]) .item:hover {
+  background: linear-gradient(90deg,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.025) 40%,
+    transparent 80%
+  );
+  box-shadow: inset 2px 0 0 rgba(0, 0, 0, 0.12);
+}
+
+.item:hover .icon {
+  opacity: 0.6;
+}
+
+:global([data-theme="light"]) .item:hover .icon {
+  opacity: 0.55;
+}
+
+/* ── Active state — gradient bar + KITT sweep ──── */
+.itemActive {
+  composes: selectionRail from '../../styles/layout.module.css';
+  color: var(--accent-warning);
+  font-weight: var(--weight-bold);
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--accent-warning) 15%, transparent) 0%,
+    color-mix(in srgb, var(--accent-warning) 7%, transparent) 40%,
+    color-mix(in srgb, var(--accent-warning) 2%, transparent) 70%,
+    transparent 100%
+  );
+  box-shadow:
+    inset 0 1px 0 var(--overlay-4),
+    inset 0 -1px 0 color-mix(in srgb, var(--ink) 8%, transparent);
+  position: relative;
+}
+
+/* Light mode: traditional solid-fill selection (see --select-fill), no rail. */
+:global([data-theme="light"]) .itemActive,
+:global([data-theme="light"]) .itemActive:hover {
+  background: var(--select-fill);
+  color: var(--select-fg);
+  box-shadow: none;
+}
+
+:global([data-theme="light"]) .itemActive::before {
+  display: none;
+}
+
+:global([data-theme="light"]) .itemActive .icon {
+  opacity: 0.7;
+  filter: none;
+}
+
+.itemActive:hover {
+  color: var(--accent-warm-bright);
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--accent-warning) 19%, transparent) 0%,
+    color-mix(in srgb, var(--accent-warning) 9%, transparent) 40%,
+    color-mix(in srgb, var(--accent-warning) 3%, transparent) 70%,
+    transparent 100%
+  );
+}
+
+/* ── Icon — denser anchoring ──────── */
+.icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  opacity: 0.35;
+  transition: opacity var(--duration-fast);
+}
+
+.icon path,
+.icon circle,
+.icon rect,
+.icon line {
+  stroke-width: 2.2;
+}
+
+.itemActive .icon {
+  opacity: 0.9;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent-warning) 20%, transparent));
+}
+
+/* ── Colored icon — icon with custom color ──────── */
+.coloredIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--icon-color, var(--text-secondary));
+  opacity: 0.7;
+  transition: opacity var(--duration-fast);
+}
+
+.item:hover .coloredIcon {
+  opacity: 0.85;
+}
+
+.itemActive .coloredIcon {
+  opacity: 1;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--icon-color, transparent) 45%, transparent));
+}
+
+/* ── Queue dot — colored circle indicator ──────── */
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-full);
+  background: var(--dot-color, var(--text-muted));
+  flex-shrink: 0;
+  box-shadow:
+    0 0 4px color-mix(in srgb, var(--dot-color, transparent) 40%, transparent),
+    inset 0 1px 0 var(--overlay-25);
+  border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
+}
+
+.itemActive .dot {
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--dot-color, transparent) 50%, transparent),
+    0 0 12px color-mix(in srgb, var(--dot-color, transparent) 20%, transparent),
+    inset 0 1px 0 var(--overlay-25);
+}
+
+/* ── Label + subtitle ──────────── */
+.label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemSubtitle {
+  font-size: var(--text-3xs);
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+/* ── Badge — operational counter ──────────── */
+.badge {
+  margin-left: auto;
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  color: var(--text-tertiary);
+  min-width: 16px;
+  text-align: center;
+  padding: 0 var(--space-1);
+  background: var(--overlay-4);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--overlay-4);
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+
+.itemActive .badge {
+  color: var(--accent-warning);
+  background: color-mix(in srgb, var(--accent-warning) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent-warning) 15%, transparent);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--accent-warning) 8%, transparent);
+}
+
+/* Groovebox: nav items are keys — the active one a cream keycap, the rest
+   flat on the panel. No rails, no washes, no hairlines between rows. */
+:global([data-theme-variant="groovebox"]) .item {
+  border-bottom: none;
+  margin: 3px var(--space-2);
+  padding-left: var(--space-3);
+  border-radius: 10px;
+}
+:global([data-theme-variant="groovebox"]) .item:hover {
+  background: #1f1f24;
+  box-shadow: none;
+}
+:global([data-theme-variant="groovebox"]) .itemActive,
+:global([data-theme-variant="groovebox"]) .itemActive:hover {
+  background: linear-gradient(180deg, #f6f2e9 0%, #e4ded1 100%);
+  color: #1c1b1f;
+  box-shadow: inset 0 1px 0 #fff, 0 3px 0 #a9a192, 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+:global([data-theme-variant="groovebox"]) .itemActive::before {
+  display: none;
+}
+:global([data-theme-variant="groovebox"]) .itemActive .icon {
+  opacity: 0.8;
+  filter: none;
+}

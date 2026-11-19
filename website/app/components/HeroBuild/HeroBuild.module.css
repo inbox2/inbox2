@@ -1,0 +1,318 @@
+/* The hero opener (HeroBuild.jsx has the four stages). Defaults are the
+   finished, resting window — what reduced motion and no-JS get. */
+
+.track {
+  --tilt: 0;
+  --real: 1;
+  --zoom: 0;
+  --wire: #8691ff;
+  --wire-soft: rgba(134, 145, 255, 0.18);
+  --wire-fill: rgba(10, 12, 30, 0.55);
+  width: 100%;
+  /* Above the hero's floating envelopes: they pass behind the scene. */
+  position: relative;
+  z-index: 3;
+}
+
+/* A long track with the scene pinned in the middle of the viewport while it plays. */
+.track[data-stage="on"] {
+  height: 720vh;
+}
+
+.track[data-stage="on"] .pin {
+  position: sticky;
+  top: 0;
+  /* As tall as the scene, not the viewport: a 100vh pin left the space under
+     the window as a blank band once the pin released. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  /* Top-aligned, not centred: centring left a screen-half of empty space
+     between the hero's platform row and the scene. */
+  align-items: start;
+  justify-items: center;
+  padding-top: 3vh;
+  padding-bottom: 3vh;
+}
+
+/* The camera: perspective for the blueprint tilt, and the showcase zoom. */
+.camera {
+  width: 100%;
+  perspective: 2200px;
+  perspective-origin: 50% 30%;
+  /* Smaller while it is a blueprint so the whole tilted stack fits, full size
+     once assembled, larger for the showcase. */
+  transform: scale(calc(1 - 0.22 * var(--tilt) + 0.4 * var(--zoom)));
+  transform-origin: 50% 30%;
+}
+
+/* The window plane: tilted back and turned while it is a blueprint, flat once
+   assembled. The parts are parallel to it (they only move in Z), so none can
+   cut through it. */
+.window {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2000 / 1250;
+  transform-style: preserve-3d;
+  transform:
+    rotateX(calc(48deg * var(--tilt)))
+    rotateZ(calc(-14deg * var(--tilt)))
+    translateY(calc(-40px * var(--tilt)));
+  transform-origin: 50% 60%;
+}
+
+/* ---- the frame (window chrome) ---- */
+.frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  transform-style: preserve-3d;
+  box-shadow: 0 calc(50px * (1 - var(--tilt))) calc(100px * (1 - var(--tilt))) rgba(0, 0, 0, calc(0.45 * var(--real)));
+}
+
+.dots {
+  position: absolute;
+  left: 1.4%;
+  top: 2%;
+  display: flex;
+  gap: 6px;
+}
+
+.dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid var(--wire);
+}
+
+/* ---- parts ---- */
+.part {
+  position: absolute;
+  left: var(--l);
+  top: var(--t);
+  width: var(--w);
+  height: var(--h);
+  /* Each layer floats at its own depth while the app is a blueprint, and lands
+     on the frame as the tilt flattens. */
+  transform: translateZ(calc(var(--z) * var(--tilt)));
+  transform-style: preserve-3d;
+}
+
+/* The wireframe and the real pixels are stacked; --real cross-fades them. */
+.wire,
+.real {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.wire {
+  border: 1px solid var(--wire);
+  border-radius: 8px;
+  box-shadow:
+    0 0 18px rgba(134, 145, 255, 0.35),
+    inset 0 0 24px rgba(134, 145, 255, 0.12);
+  opacity: calc(1 - var(--real));
+  background-color: var(--wire-fill);
+}
+
+.real {
+  display: block;
+  object-fit: fill;
+  opacity: var(--real);
+  user-select: none;
+}
+
+.frame .wire {
+  border-radius: 16px;
+  background:
+    linear-gradient(var(--wire-soft), var(--wire-soft)) 0 5.6% / 100% 1px no-repeat,
+    var(--wire-fill);
+}
+
+.frame .real {
+  border-radius: 16px;
+  border: 1px solid var(--line-inv);
+  box-sizing: border-box;
+}
+
+/* Regions (left top width height, fractions of the window — keep in step with
+   hero-parts.py PARTS) and each layer's height in the blueprint stack. */
+.channels { --l: 0%;   --t: 5.6%;  --w: 100%;  --h: 7%;    --z: 90px; }
+.sidebar  { --l: 0%;   --t: 12.6%; --w: 8.4%;  --h: 81.8%; --z: 170px; }
+.list     { --l: 8.4%; --t: 12.6%; --w: 41.6%; --h: 81.8%; --z: 260px; }
+.reading  { --l: 50%;  --t: 12.6%; --w: 50%;   --h: 65.9%; --z: 360px; }
+.composer { --l: 50%;  --t: 78.5%; --w: 50%;   --h: 15.9%; --z: 450px; }
+.strip    { --l: 0%;   --t: 94.4%; --w: 100%;  --h: 5.6%;  --z: 50px; }
+
+.strip .real { border-radius: 0 0 15px 15px; }
+
+/* ---- what each wireframe draws: the skeleton of that pane ---- */
+
+/* Channel strip: the account switcher, then a row of channel cards. */
+.channels .wire {
+  background:
+    linear-gradient(var(--wire-soft), var(--wire-soft)) 1% 50% / 9% 60% no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 1%, var(--wire-soft) 1% 6.6%, transparent 6.6% 7.6%) 12% 50% / 48% 70% no-repeat,
+    var(--wire-fill);
+}
+
+/* Sidebar: a short list of folder lines. */
+.sidebar .wire {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 22px, var(--wire-soft) 22px 30px) 18% 4% / 64% 60% no-repeat,
+    var(--wire-fill);
+}
+
+/* List: two columns of conversation rows. */
+.list .wire {
+  background:
+    linear-gradient(var(--wire), var(--wire)) 50% 0 / 1px 100% no-repeat,
+    repeating-linear-gradient(180deg, transparent 0 16px, var(--wire-soft) 16px 24px) 4% 6% / 42% 90% no-repeat,
+    repeating-linear-gradient(180deg, transparent 0 16px, var(--wire-soft) 16px 24px) 96% 6% / 42% 90% no-repeat,
+    var(--wire-fill);
+}
+
+/* Reading pane: a toolbar, two message headers, then a page of text. */
+.reading .wire {
+  background:
+    linear-gradient(var(--wire-soft), var(--wire-soft)) 50% 2% / 94% 6% no-repeat,
+    linear-gradient(var(--wire-soft), var(--wire-soft)) 50% 13% / 94% 8% no-repeat,
+    linear-gradient(var(--wire-soft), var(--wire-soft)) 50% 25% / 94% 8% no-repeat,
+    repeating-linear-gradient(180deg, transparent 0 14px, var(--wire-soft) 14px 20px) 50% 85% / 86% 50% no-repeat,
+    var(--wire-fill);
+}
+
+/* Composer: the text box and its button row. */
+.composer .wire {
+  background:
+    linear-gradient(var(--wire-soft), var(--wire-soft)) 50% 18% / 94% 40% no-repeat,
+    repeating-linear-gradient(90deg, var(--wire-soft) 0 14%, transparent 14% 16%) 4% 86% / 46% 22% no-repeat,
+    linear-gradient(var(--wire-soft), var(--wire-soft)) 96% 86% / 12% 22% no-repeat,
+    var(--wire-fill);
+}
+
+/* Bottom strip: clocks and tickers. */
+.strip .wire {
+  border-radius: 0 0 15px 15px;
+  background:
+    repeating-linear-gradient(90deg, var(--wire-soft) 0 5%, transparent 5% 6.5%) 3% 50% / 40% 40% no-repeat,
+    var(--wire-fill);
+}
+
+:root[data-shot-theme="light"] .frame {
+  box-shadow: 0 calc(50px * (1 - var(--tilt))) calc(100px * (1 - var(--tilt))) rgba(17, 17, 17, calc(0.28 * var(--real)));
+}
+
+:root[data-shot-theme="light"] .frame .real {
+  border-color: rgba(17, 17, 17, 0.14);
+}
+
+/* ---- the tour: other desktop screens over the assembled window ---- */
+/* The window's own clip for the incoming screens: they rise from below its
+   bottom edge, so outside the window they must not show. */
+.slides {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+/* A screen rises from just below the window and lands on top of the one
+   before, a shadow on its leading edge while it travels. */
+.slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  object-fit: fill;
+  user-select: none;
+  --v: 0;
+  transform: translateY(calc((1 - var(--v)) * 102%));
+  box-shadow: 0 -30px 60px rgba(0, 0, 0, calc(0.55 * (1 - var(--v)) * min(1, var(--v) * 8)));
+}
+
+.v1 { --v: var(--v1, 0); }
+.v2 { --v: var(--v2, 0); }
+.v3 { --v: var(--v3, 0); }
+.v4 { --v: var(--v4, 0); }
+
+/* Captions sit over the lower-left of the zoomed window, outside the camera
+   so they stay their own size; each rises in with its slide. No JS: hidden. */
+.captions {
+  position: absolute;
+  left: max(var(--gutter), calc(50% - 600px));
+  bottom: 9vh;
+  z-index: 2;
+  width: min(560px, calc(100% - 2 * var(--gutter)));
+  pointer-events: none;
+}
+
+.caption {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  opacity: var(--c, 0);
+  transform: translateY(calc((1 - var(--c, 0)) * 60px));
+}
+
+.c0 { --c: var(--c0, 0); }
+.c1 { --c: var(--c1, 0); }
+.c2 { --c: var(--c2, 0); }
+.c3 { --c: var(--c3, 0); }
+.c4 { --c: var(--c4, 0); }
+
+.capKicker {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--accent);
+}
+
+/* The yellow slabs the copy floats up on. */
+.capTitle,
+.capText {
+  margin: 0;
+  background: var(--accent);
+  color: var(--ink);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.capTitle {
+  font-family: var(--display);
+  font-size: clamp(30px, 3.2vw, 48px);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  padding: 14px 20px;
+  border-radius: 16px;
+  max-width: 14ch;
+}
+
+.capText {
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 500;
+  padding: 14px 18px;
+  border-radius: 14px;
+  max-width: 34ch;
+}
+
+@media (max-width: 900px) {
+  .track[data-stage="on"] {
+    height: 420vh;
+  }
+
+  .capText {
+    font-size: 15px;
+  }
+}

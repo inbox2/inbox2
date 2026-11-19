@@ -1,0 +1,4 @@
+.star { display: inline-flex; flex: none; padding: 4px; border: 0; border-radius: var(--radius-8); background: none; color: var(--m-ink-faint); cursor: pointer; vertical-align: middle; }
+.star:hover { color: var(--m-ink-soft); background: rgba(24, 34, 66, 0.06); }
+.star[aria-pressed='true'] { color: var(--m-yellow); }
+.star:focus-visible { outline: 2px solid var(--m-accent); outline-offset: 1px; }

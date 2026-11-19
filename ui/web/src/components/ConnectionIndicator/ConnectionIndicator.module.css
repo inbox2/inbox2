@@ -1,0 +1,13 @@
+.banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-2) var(--space-4);
+  background: var(--status-danger-bg, #3d2020);
+  color: var(--status-danger-fg, #f06060);
+  font-size: var(--text-xs);
+  text-align: center;
+  z-index: var(--z-toast);
+  border-top: 1px solid var(--border-subtle);
+}

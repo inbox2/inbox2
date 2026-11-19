@@ -1,0 +1,6 @@
+.frame {
+  width: var(--frame-w, 1900px);
+  height: var(--frame-h, 900px);
+  padding: var(--space-3);
+  background: #1a1a1f;
+}

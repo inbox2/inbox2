@@ -1,0 +1,55 @@
+/* Each --m-* token falls back to the main app's equivalent, so the control
+   works both inside the `management` scope and in the theme-token app. */
+.field { display: flex; flex-direction: column; gap: var(--space-1h); }
+
+.label {
+  font-family: var(--m-sans, var(--font-ui));
+  font-size: var(--text-3xs);
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  color: var(--m-ink-soft, var(--text-tertiary));
+}
+
+/* Inline-block like a raw <select>: natural width in block/inline contexts,
+   blockified + stretched as a flex/grid item (all form-column call sites). */
+.wrap { position: relative; display: inline-block; vertical-align: middle; }
+
+.select {
+  width: 100%;
+  padding: var(--space-3) 36px var(--space-3) var(--space-3h);
+  font-family: var(--m-text, var(--font-ui));
+  font-size: var(--text-sm);
+  color: var(--m-ink, var(--text-primary));
+  background: var(--m-surface-2, var(--surface-input));
+  border: 1px solid var(--m-line-soft, var(--border-default));
+  border-radius: var(--m-r-md, var(--radius-md));
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.select:focus {
+  border-color: var(--m-accent-bright, var(--border-focus));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--m-accent, var(--accent-warm)) 35%, transparent);
+}
+.select:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Compact: fixed 38px control that lines up with the app's standard text
+   inputs (settings fields, FormField) in mixed rows. */
+.compact .select {
+  height: 38px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.chevron {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--m-ink-faint, var(--text-tertiary));
+  font-size: var(--text-2xs);
+}
+
+.hint { font-size: var(--text-2xs); color: var(--m-ink-faint, var(--text-tertiary)); }

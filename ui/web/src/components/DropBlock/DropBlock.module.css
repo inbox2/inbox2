@@ -1,0 +1,585 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DropBlock — rendered in the inbox empty state, over the theme's background image.
+   Glassy Vista-Aero panels; the well is translucent so the photo shows through.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Focusable region — wraps idle + game so the keyboard has a reliable target.
+   Overlays the reading pane (above the DotMatrix background). */
+.focusRoot {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  outline: none;
+}
+.focusRoot:focus-visible {
+  outline: 2px solid var(--accent-warm-bright);
+  outline-offset: -2px;
+  border-radius: var(--radius-md);
+}
+
+/* A 2px systemBlue box around the whole reading pane reads as a browser
+   artefact on the light theme — macOS never outlines a pane. Keep an
+   indicator for the keyboard, just a quiet hairline. */
+:global([data-theme="light"]) .focusRoot:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--glow-blue) 45%, transparent);
+  outline-offset: -1px;
+}
+
+/* ── Idle: the normal zero-state plus a play hint ── */
+.idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  position: relative;
+  z-index: 1;
+}
+.idleLogo {
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-3);
+}
+.idleText { margin-bottom: var(--space-3); }
+
+.playHint {
+  appearance: none;
+  background: rgba(20, 28, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  padding: var(--space-1h) var(--space-3);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+.playHint:hover {
+  border-color: rgba(120, 170, 255, 0.55);
+  color: var(--text-primary);
+}
+.playHint:active { transform: translateY(1px); }
+
+/* Light mode: the dark translucent pill reads as a heavy gray slab on the paper
+   background. It's just a push button — use the macOS button tokens. */
+:global([data-theme="light"]) .playHint {
+  background: var(--btn-bg);
+  border: var(--btn-border);
+  color: var(--text-secondary);
+  backdrop-filter: none;
+  box-shadow: var(--btn-highlight), var(--btn-shadow);
+}
+:global([data-theme="light"]) .playHint:hover {
+  border-color: color-mix(in srgb, var(--glow-blue) 45%, transparent);
+  color: var(--text-primary);
+}
+
+/* Light mode kbd chip — light fill with a dark hairline so the glyph reads. */
+:global([data-theme="light"]) .idle kbd {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+}
+
+/* ── Game stage ── */
+.root {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+.stage {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  max-height: 100%;
+  padding: var(--space-4);
+  box-sizing: border-box;
+}
+
+/* Non-clipping wrapper sized like the well, so the line-clear burst can float
+   above the (overflow-hidden) play area without being clipped. */
+.wellWrap {
+  position: relative;
+  height: min(80%, 660px);
+  aspect-ratio: 1 / 2;
+}
+.well {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  backdrop-filter: blur(3px);
+}
+.wellCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none; /* we handle taps/swipes ourselves — no scroll/zoom hijack */
+}
+
+/* Light, unobtrusive mute/unmute toggle in the top-right of the well. Dim while
+   muted (the default), brighter once sound is on. */
+.soundToggle {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(10, 16, 26, 0.5);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.soundToggle:hover {
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(120, 170, 255, 0.5);
+}
+.soundToggle[data-on="true"] {
+  color: var(--accent-warm-bright);
+  border-color: rgba(120, 170, 255, 0.45);
+}
+
+/* Debug badge — only visible once `~` toggles debug mode. Sits just below the
+   keyboard-shortcuts list; names the hidden bomb key without adding it to the
+   regular on-screen controls. */
+.debugChip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(170, 225, 255, 0.85);
+  background: rgba(10, 16, 26, 0.6);
+  border: 1px solid rgba(120, 210, 255, 0.4);
+  border-radius: var(--radius-full);
+  pointer-events: none;
+}
+.debugChip kbd {
+  font-size: 0.6rem;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(120, 210, 255, 0.4);
+  background: rgba(120, 210, 255, 0.12);
+}
+
+/* ── Comic sound-effect burst on a line clear (POW / BAM) ──
+   Pinned in the upper well; pops in aggressively, holds, then fades. POW stays
+   modest for a single-line clear; BAM is bigger for a four-line quad. */
+.burst {
+  position: absolute;
+  top: var(--burst-top, 34%);
+  left: 50%;
+  z-index: 3;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
+}
+.small {
+  width: 37%;
+  animation: burstPow var(--burst-dur, 720ms) cubic-bezier(0.18, 1.5, 0.3, 1) forwards;
+}
+.big {
+  width: 56%;
+  animation: burstBam var(--burst-dur, 900ms) cubic-bezier(0.16, 1.6, 0.3, 1) forwards;
+}
+@keyframes burstPow {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.10) rotate(-20deg); }
+  30%  { opacity: var(--burst-peak, 1); transform: translate(-50%, -50%) scale(1.18) rotate(7deg); }
+  48%  { transform: translate(-50%, -50%) scale(0.95) rotate(-3deg); }
+  62%  { transform: translate(-50%, -50%) scale(1.02) rotate(1deg); }
+  76%  { opacity: var(--burst-peak, 1); transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.04) rotate(0deg); }
+}
+@keyframes burstBam {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.12) rotate(16deg); }
+  26%  { opacity: var(--burst-peak, 1); transform: translate(-50%, -50%) scale(1.30) rotate(-8deg); }
+  44%  { transform: translate(-50%, -50%) scale(0.94) rotate(4deg); }
+  60%  { transform: translate(-50%, -50%) scale(1.08) rotate(-2deg); }
+  76%  { opacity: var(--burst-peak, 1); transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.06) rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .small, .big { animation-duration: 500ms; animation-timing-function: ease-out; }
+}
+
+/* ── Side panels ── */
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 132px;
+  align-self: center;
+}
+.sideLeft { align-items: stretch; }
+.sideRight { align-items: stretch; }
+
+.panel {
+  background: rgba(14, 20, 32, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
+}
+.panelLabel,
+.statLabel {
+  font-size: var(--text-4xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-1);
+}
+.statLabel { margin-top: var(--space-2); }
+.statLabel:first-child { margin-top: 0; }
+.statValue {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+/* Stat pairs (label over value). Desktop stacks them; the narrow layout lays
+   them out as a 2-column grid (see the media query below). */
+.stats { display: flex; flex-direction: column; gap: var(--space-2); }
+.stat { display: flex; flex-direction: column; }
+.mini {
+  display: block;
+  width: 100%;
+  height: 72px;
+}
+
+/* "New best!" badge in the HUD — a soft golden pulse, no harsh flash. */
+.newBest {
+  margin-top: var(--space-0h);
+  font-size: var(--text-4xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffd479;
+  animation: newBestPulse 1.4s ease-in-out infinite;
+}
+@keyframes newBestPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  padding: var(--space-1) var(--space-1) 0;
+}
+.controlsRow { display: flex; align-items: center; gap: var(--space-1); }
+
+/* On-screen touch d-pad — hidden on desktop, shown in the narrow layout. */
+.touchpad { display: none; }
+
+/* shared kbd chip */
+.idle kbd,
+.controls kbd,
+.overlaySub kbd {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-xs);
+  padding: 0 var(--space-1h);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* ── Light mode: the dark translucent panels read as muddy grey over the light
+   desktop. Same raised-white-chip recipe as the buttons. ── */
+:global([data-theme="light"]) .panel {
+  background: var(--btn-bg);
+  border-color: var(--border-default);
+  box-shadow: var(--btn-highlight), var(--shadow-xs);
+  backdrop-filter: none;
+}
+:global([data-theme="light"]) .panelLabel,
+:global([data-theme="light"]) .statLabel {
+  color: var(--text-muted);
+}
+:global([data-theme="light"]) .controls kbd {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+}
+
+/* ── Overlays (paused / game over) ── */
+/* Darken + blur the busy board behind so the text reads clearly, with a soft
+   central vignette to anchor the panel. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2h, var(--space-2h));
+  background:
+    radial-gradient(ellipse at center, rgba(4, 7, 14, 0.82) 0%, rgba(4, 7, 14, 0.62) 70%);
+  backdrop-filter: blur(5px) saturate(0.7);
+}
+.overlayTitle {
+  font-size: 1.75rem;
+  font-weight: var(--weight-bold);
+  color: var(--bevel);
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 2px 16px rgba(0, 0, 0, 0.7);
+}
+/* Shimmering gold gradient text — same sheen as the Best badge border. Uses
+   background-clip:text, so legibility comes from drop-shadow (text-shadow can't
+   show through a transparent fill). */
+.shimmerText {
+  background: linear-gradient(110deg, #b8860b 0%, #d9b84a 35%, #fff6d6 50%, #d9b84a 65%, #b8860b 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 10px rgba(255, 200, 80, 0.3));
+  animation: bestShimmer 2.8s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .shimmerText { animation: none; }
+}
+.overlayScore {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: var(--weight-semibold);
+  color: var(--bevel);
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 2px 18px rgba(0, 0, 0, 0.65);
+}
+/* "Best" as a high-score badge: gold text + glow, wrapped in a shimmering
+   golden gradient border (animated via a masked pseudo-element ring). */
+.overlayBest {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.03em;
+  color: #ffe9a8;
+  background: rgba(38, 28, 6, 0.55);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 0 14px rgba(255, 200, 80, 0.28);
+}
+.overlayBest::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  /* Uniform gold base with one bright sheen in the middle; both ends are the
+     same gold so tiles join seamlessly (no dull band at the loop point). */
+  background: linear-gradient(110deg, #b8860b 0%, #d9b84a 35%, #fff6d6 50%, #d9b84a 65%, #b8860b 100%);
+  background-size: 200% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: bestShimmer 2.8s linear infinite;
+  pointer-events: none;
+}
+@keyframes bestShimmer {
+  from { background-position: 0% 0; }
+  to { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .overlayBest::before { animation: none; }
+}
+.overlayHint { display: flex; gap: var(--space-2); margin: var(--space-2) 0; }
+.overlaySub {
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+}
+
+.btn,
+.btnGhost {
+  appearance: none;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  padding: var(--space-1h) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.btn {
+  color: var(--bevel);
+  border: 1px solid rgba(120, 170, 255, 0.55);
+  background: linear-gradient(180deg, rgba(90, 140, 230, 0.9), rgba(50, 90, 180, 0.9));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.btnGhost {
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+}
+.btn:hover { border-color: rgba(150, 195, 255, 0.85); }
+.btnGhost:hover { color: var(--text-primary); border-color: rgba(255, 255, 255, 0.35); }
+.btn:active,
+.btnGhost:active { transform: translateY(1px); }
+
+/* Dark themes render over a (possibly bright) photo — brighten + outline the
+   idle zero-state so it stays legible, matching the inbox's own treatment. */
+:global([data-theme="dark"]) .idle {
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 4px rgba(0, 0, 0, 0.7),
+    0 0 16px rgba(0, 0, 0, 0.5);
+}
+:global([data-theme="dark"]) .idleLogo {
+  opacity: 0.9;
+}
+
+/* ── Narrow viewports (phones / the native WebView overlay) ──
+   Tighten the stage so the well stays large, slim the side panels, and drop the
+   keyboard-shortcut hints (the game is touch-driven here). Desktop/empty-pane
+   layouts (wider than this) are unaffected. */
+@media (max-width: 560px) {
+  /* One HUD row — HOLD · NEXT · SCORES (all equal height) — then the well fills
+     the rest. `display: contents` flattens the two asides so their panels become
+     direct grid items we can place into named areas. */
+  .stage {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "hold next score"
+      "well well  well"
+      "pad  pad   pad";
+    gap: var(--space-2);
+    padding: var(--space-2);
+    padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
+  }
+  .side { display: contents; }
+  .controls, .debugChip { display: none; } /* keyboard hints are meaningless on touch */
+  /* No big focus ring around the whole game in the touch/WebView context. */
+  .focusRoot:focus-visible { outline: none; }
+
+  /* Bottom d-pad: light, glassy buttons. */
+  .touchpad {
+    grid-area: pad;
+    display: flex;
+    justify-content: center;
+    gap: var(--space-3);
+    padding-top: var(--space-1);
+  }
+  .padBtn {
+    flex: 1 1 0;
+    max-width: 92px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-md);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  .padBtn:active {
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .panel { padding: var(--space-1h) var(--space-2); }
+  .mini { width: 46px; height: 38px; }
+  .statValue { font-size: var(--text-sm); }
+
+  .sideLeft .panel:nth-child(1) { grid-area: hold; }   /* HOLD */
+  .sideRight .panel { grid-area: next; }               /* NEXT */
+  .sideLeft .panel:nth-child(2) { grid-area: score; }  /* SCORES */
+
+  /* Scores as a centred 2×2 grid (Score · Best / Level · Lines). */
+  .sideLeft .panel:nth-child(2) .stats {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: var(--space-0h) var(--space-4);
+    align-content: center;
+    height: 100%;
+  }
+
+  /* Well fills the bottom row, keeping its 1:2 aspect and centred. */
+  .wellWrap {
+    grid-area: well;
+    justify-self: center;
+    align-self: stretch;
+    height: 100%;
+    width: auto;
+    min-height: 0;
+    aspect-ratio: 1 / 2;
+  }
+}
+
+/* ═══ GROOVEBOX — the game as a toy synth (canvas skin in DropBlock.jsx) ═══ */
+:global([data-theme-variant="groovebox"]) .well {
+  border: 1.5px solid rgba(148, 121, 216, 0.55);
+  border-radius: 20px;
+  backdrop-filter: none;
+}
+:global([data-theme-variant="groovebox"]) .panel {
+  background: #121214;
+  border: 0;
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px rgba(243, 240, 234, 0.05), 0 10px 24px rgba(0, 0, 0, 0.4);
+  backdrop-filter: none;
+}
+:global([data-theme-variant="groovebox"]) .statValue { color: var(--accent-amber); }
+:global([data-theme-variant="groovebox"]) .overlay {
+  background: rgba(10, 10, 11, 0.86);
+  backdrop-filter: none;
+}
+:global([data-theme-variant="groovebox"]) .btn {
+  color: #1a1424;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--btn-primary-bg);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), 0 3px 0 #5a40a8;
+  font-weight: var(--weight-bold);
+}
+:global([data-theme-variant="groovebox"]) .btnGhost,
+:global([data-theme-variant="groovebox"]) .playHint,
+:global([data-theme-variant="groovebox"]) .soundToggle {
+  background: linear-gradient(180deg, #34343a 0%, #26262b 100%);
+  border: 0;
+  color: #e9e6df;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 2px 0 #08080a;
+}
+:global([data-theme-variant="groovebox"]) .soundToggle[data-on="true"] { color: #5fd68a; }
+

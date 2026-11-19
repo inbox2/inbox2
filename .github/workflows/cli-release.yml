@@ -1,0 +1,116 @@
+name: CLI release
+
+# Builds the terminal client as a self-contained bundle (PyInstaller app +
+# the Rust engine_daemon) for macOS (Apple silicon, Intel) and Linux (x86_64,
+# arm64), plus a wheel, and publishes them on the moving `cli-latest` release
+# so the website can link one stable URL per platform:
+#
+#   https://github.com/inbox2/inbox2/releases/download/cli-latest/inbox2-cli-<os>-<arch>.tar.gz
+#
+# Version = MAJOR.MINOR from ui/cli/pyproject.toml + the commit count, the same
+# scheme as bin/version for the desktop. No Windows: the engine bus is a Unix
+# socket (ui/desktop/src-tauri/src/sync/ipc.rs).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ui/cli/**"
+      - "ui/desktop/core/**"
+      - "ui/desktop/src-tauri/**"
+      - ".github/workflows/cli-release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cli-release
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14,         asset: inbox2-cli-darwin-arm64 }
+          - { os: macos-15-intel,   asset: inbox2-cli-darwin-x86_64 }
+          - { os: ubuntu-22.04,     asset: inbox2-cli-linux-x86_64 }   # glibc 2.35 floor
+          - { os: ubuntu-22.04-arm, asset: inbox2-cli-linux-aarch64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the commit count is the patch version
+
+      - name: Tauri system dependencies (engine_daemon lives in the desktop crate)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev \
+            libappindicator3-dev librsvg2-dev patchelf \
+            build-essential libssl-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ui/desktop/src-tauri
+          key: engine-daemon-${{ matrix.asset }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build bundle + wheel
+        env:
+          PYTHON: python
+        run: ui/cli/tools/build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: |
+            ui/cli/dist/*.tar.gz
+            ui/cli/dist/*.whl
+            ui/cli/dist/VERSION
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+
+      - id: version
+        run: echo "v=$(cat assets/VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Move the cli-latest tag to this commit
+        run: |
+          git tag -f cli-latest
+          git push -f origin cli-latest
+
+      - name: Publish / update the cli-latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: cli-latest
+          name: inbox2 CLI ${{ steps.version.outputs.v }}
+          body: |
+            The terminal client, built from `main` (${{ github.sha }}).
+
+            ```sh
+            curl -L https://github.com/${{ github.repository }}/releases/download/cli-latest/inbox2-cli-$(uname -s | tr A-Z a-z)-$(uname -m).tar.gz | tar xz
+            ./inbox2/inbox2
+            ```
+
+            macOS (Apple silicon, Intel) and Linux (x86_64, arm64). Each bundle carries the sync engine; connect an account in the desktop app first and the CLI reuses it. The `.whl` is the same client for `pip install`, which then expects `engine_daemon` on your PATH or the desktop app running.
+          files: |
+            assets/*.tar.gz
+            assets/*.whl
+          prerelease: false
+          make_latest: false

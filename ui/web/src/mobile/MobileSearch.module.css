@@ -1,0 +1,48 @@
+.bar {
+  flex-shrink: 0;
+  padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-4) var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+}
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  color: var(--text-tertiary);
+}
+.field:focus-within { border-color: var(--accent-warm-bright); }
+.input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  color: var(--text-primary);
+  /* 16px stops iOS Safari zooming the page on focus. */
+  font: inherit;
+  font-size: var(--text-base);
+}
+.input::-webkit-search-cancel-button { display: none; }
+.clear { display: grid; place-items: center; width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--overlay-12); color: var(--text-secondary); cursor: pointer; }
+
+.list { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: var(--mobile-nav-clearance); }
+.state { display: flex; flex-direction: column; align-items: center; padding: 64px var(--space-6) 0; text-align: center; color: var(--text-tertiary); }
+.hint { margin: 0; font-size: var(--text-sm); color: var(--text-secondary); }
+.hintSub { margin: var(--space-2) 0 0; font-size: var(--text-2xs); }
+.hintSub code { font-family: var(--font-mono); font-size: 0.95em; color: var(--text-secondary); }
+
+.threadLoading { position: fixed; inset: 0; z-index: var(--z-bar); display: grid; place-items: center; background: var(--bg-base); }
+
+/* Phone: the results (a thread covers them); tablet: results | thread. */
+.columns { flex: 1; min-height: 0; display: flex; }
+.listCol { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.detailCol { flex: 1; min-width: 0; display: flex; flex-direction: column; border-left: 1px solid var(--border-default); }
+@media (min-width: 761px) {
+  .listCol { flex: 0 0 min(400px, 42%); }
+}
+.detailState { flex: 1; display: grid; place-items: center; color: var(--text-tertiary); }
+.retry { margin-top: var(--space-3); padding: var(--space-2) var(--space-4); border: 1px solid var(--border-strong); border-radius: var(--radius-full); background: var(--overlay-6); color: var(--text-primary); font: inherit; font-size: var(--text-xs); cursor: pointer; }

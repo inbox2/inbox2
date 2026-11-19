@@ -1,0 +1,303 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Console shell + views — light SaaS layout: fixed left sidebar (logo top,
+   nav pills, user chip bottom), cream canvas, hairline-bordered cards with
+   generous radii, Fraunces display type. Shared field/modal/table primitives
+   live in adminShared.module.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shell { display: flex; min-height: 100dvh; font-family: var(--m-text); }
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+.side {
+  width: 248px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-5h) var(--space-3h) var(--space-4);
+  background: rgba(24, 34, 66, 0.035);
+  border-right: 1px solid var(--m-line);
+  overflow-y: auto;
+}
+.brand { display: flex; align-items: center; gap: var(--space-2h); padding: 0 var(--space-2h) var(--space-5); }
+.brandMark { width: 27px; height: 27px; object-fit: contain; border-radius: 7px; }
+.brandWord { font-family: var(--m-display); font-weight: 620; font-size: 24px; letter-spacing: -0.01em; color: var(--m-char); }
+.brandKicker { font-size: var(--text-4xs); font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--m-accent-ink); }
+
+.navGroup { padding: var(--space-3) var(--space-3h) var(--space-1); font-size: var(--text-4xs); font-weight: 600; letter-spacing: -0.1px; color: var(--m-ink-faint); }
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2h);
+  width: 100%;
+  padding: var(--space-2h) var(--space-3h);
+  border: 0;
+  background: none;
+  border-radius: var(--radius-full);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 550;
+  color: var(--m-ink-soft);
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.navItem:hover { background: var(--m-wash-deep); color: var(--m-ink); text-decoration: none; }
+.navItem.on { background: var(--m-char); color: #f5f2e9; font-weight: 600; }
+.navCount {
+  margin-left: auto;
+  font-size: var(--text-4xs);
+  font-weight: 650;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--m-amber) 32%, #fff);
+  color: #9a6210;
+}
+.navItem.on .navCount { background: rgba(245, 242, 233, 0.18); color: #f5f2e9; }
+
+
+/* ── Main column ─────────────────────────────────────────────────────────── */
+.main { flex: 1; min-width: 0; padding: var(--space-6) var(--space-7) 80px; }
+.mainInner { min-width: 0; } /* full width, like Disk */
+
+/* Dismissible "add a passkey" nudge above every console page — notice amber,
+   the same hue as .pillWarn / .attnWarn */
+.nudge { display: flex; align-items: center; gap: var(--space-2h); margin-bottom: var(--space-5); padding: var(--space-2h) var(--space-3h); border: 1.5px solid color-mix(in srgb, var(--m-amber) 60%, #fff); border-radius: var(--m-r-lg); background: color-mix(in srgb, var(--m-amber) 20%, #fff); font-size: var(--text-sm); color: var(--m-ink); }
+.nudge > svg:first-child { color: #b06e14; flex-shrink: 0; }
+.nudgeText { flex: 1; min-width: 0; }
+.nudgeClose { display: flex; border: 0; background: none; padding: var(--space-1h); border-radius: var(--m-r-sm); color: var(--m-ink-faint); cursor: pointer; }
+.nudgeClose:hover { background: var(--m-wash); color: var(--m-ink); }
+
+.pageHead { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-5); flex-wrap: wrap; }
+.pageEyebrow { font-size: var(--text-3xs); font-weight: 550; letter-spacing: -0.1px; color: var(--m-ink-faint); margin-bottom: var(--space-1h); }
+.pageTitle { font-family: var(--m-display); font-weight: 580; font-size: var(--text-4xl); letter-spacing: -0.005em; color: var(--m-ink); margin: 0; text-wrap: balance; }
+.pageSub { color: var(--m-ink-soft); margin: var(--space-1h) 0 0; max-width: 58ch; font-size: var(--text-sm); }
+.pageActions { display: flex; gap: var(--space-2h); flex-shrink: 0; }
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--m-surface);
+  border: 1.5px solid var(--m-line);
+  border-radius: var(--m-r-xl);
+}
+.cardHead { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3h) var(--space-4h); border-bottom: 1px solid var(--m-line-soft); }
+.cardTitle { font-family: var(--m-display); font-weight: 600; font-size: var(--text-lg); color: var(--m-ink); margin: 0; }
+.cardMore { font-size: var(--text-2xs); font-weight: 600; color: var(--m-accent-ink); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: none; }
+.cardMore:hover { text-decoration: underline; }
+.cardLoading { display: grid; place-items: center; min-height: 120px; }
+
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: var(--space-3h); align-items: stretch; }
+.mt { margin-top: var(--space-3h); }
+
+/* ── Stat cards ──────────────────────────────────────────────────────────── */
+.statGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3h); margin-bottom: var(--space-3h); }
+.stat { padding: var(--space-3h) var(--space-4) var(--space-3); display: flex; flex-direction: column; gap: var(--space-0h); }
+.statHead { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); font-size: var(--text-3xs); font-weight: 600; letter-spacing: -0.1px; color: var(--m-ink); }
+.statNum { font-size: 27px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; color: var(--m-ink); margin-top: var(--space-1); }
+.statSub { font-size: var(--text-3xs); color: var(--m-ink-soft); }
+.statBottom { margin-top: auto; padding-top: var(--space-2); }
+.statCta { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-2); background: none; border: 0; padding: 0; font: inherit; font-size: var(--text-3xs); font-weight: 600; color: var(--m-accent-ink); cursor: pointer; }
+.statCta:hover { text-decoration: underline; }
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl th {
+  text-align: left;
+  padding: var(--space-2h) var(--space-4h);
+  font-size: var(--text-3xs);
+  font-weight: 550;
+  letter-spacing: -0.1px;
+  color: var(--m-ink-soft);
+  border-bottom: 1px solid var(--m-line);
+  white-space: nowrap;
+}
+.tbl td { padding: var(--space-3) var(--space-4h); border-bottom: 1px solid var(--m-line-soft); vertical-align: middle; font-size: var(--text-xs); color: var(--m-ink); }
+.tbl tr:last-child td { border-bottom: 0; }
+.rowLink { cursor: pointer; }
+.rowLink:hover td { background: var(--m-surface-2); }
+.num { font-variant-numeric: tabular-nums; }
+.right { text-align: right; }
+
+.domainCell { display: flex; align-items: center; gap: var(--space-2h); font-weight: 600; white-space: nowrap; min-width: 0; }
+.favicon { width: 26px; height: 26px; border-radius: var(--radius-6); object-fit: cover; flex-shrink: 0; }
+
+/* ── Status pills — healthy is quiet, problems take color ────────────────── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-4xs);
+  font-weight: 600;
+  padding: 3px var(--space-2h);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+.pillOk { color: var(--m-ink-soft); background: var(--m-wash-deep); }
+.pillOk::before {
+  content: '✓';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--m-green);
+  color: #fff;
+  font-size: 8.5px;
+  line-height: 12px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.pillWarn { color: #111; background: color-mix(in srgb, var(--m-amber) 38%, #fff); }
+.pillBad { color: #111; background: color-mix(in srgb, #ff4b3e 32%, #fff); }
+.pillPlain { color: var(--m-ink-soft); background: rgba(24, 34, 66, 0.08); }
+
+/* DNS record marks: bare labels, circle-check / circle-x carries the state. */
+.dnsMarks { display: inline-flex; gap: var(--space-3h); }
+.dnsMark { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-4xs); font-weight: 600; letter-spacing: 0.02em; white-space: nowrap; }
+.dnsMark::before {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 8.5px;
+  line-height: 12px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.dnsMarkOk { color: var(--m-ink-soft); }
+.dnsMarkOk::before { content: '✓'; background: var(--m-green); }
+.dnsMarkBad { color: var(--m-ink); }
+.dnsMarkBad::before { content: '✕'; background: #d64545; font-size: 7.5px; }
+.dnsMarkNa { color: var(--m-ink-faint); }
+.dnsMarkNa::before { content: ''; background: rgba(24, 34, 66, 0.15); }
+
+/* ── Needs attention ─────────────────────────────────────────────────────── */
+.attnList { list-style: none; margin: 0; padding: var(--space-1h) 0; }
+.attnList li { display: flex; gap: var(--space-3); padding: var(--space-3) var(--space-4h); align-items: flex-start; }
+.attnList li + li { border-top: 1px solid var(--m-line-soft); }
+.attnDot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.attnWarn { background: #b06e14; }
+.attnInfo { background: var(--m-accent); }
+.attnTitle { display: block; font-weight: 600; font-size: var(--text-xs); color: var(--m-ink); }
+.attnSub { color: var(--m-ink-soft); font-size: var(--text-3xs); }
+.attnLink { display: inline-block; margin-top: var(--space-0h); background: none; border: 0; padding: 0; font: inherit; color: var(--m-accent-ink); font-weight: 600; font-size: var(--text-3xs); cursor: pointer; }
+.attnLink:hover { text-decoration: underline; }
+.attnEmpty { padding: var(--space-5) var(--space-4h); font-size: var(--text-xs); color: var(--m-ink-faint); display: flex; align-items: center; gap: var(--space-2); }
+
+/* ── Rules ───────────────────────────────────────────────────────────────── */
+.ruleRow { display: flex; align-items: center; gap: var(--space-3h); padding: var(--space-3) var(--space-4h); }
+.ruleRow + .ruleRow { border-top: 1px solid var(--m-line-soft); }
+.ruleCond { flex: 1; min-width: 0; }
+.ruleName { font-weight: 600; font-size: var(--text-xs); color: var(--m-ink); display: block; }
+.ruleExpr { font-size: var(--text-3xs); color: var(--m-ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.ruleVal { font-family: var(--m-mono); font-size: 0.92em; color: var(--m-ink); background: rgba(24, 34, 66, 0.05); border: 1px solid rgba(24, 34, 66, 0.08); border-radius: var(--radius-4); padding: 0 4px; }
+.ruleArrow { color: var(--m-ink-faint); flex-shrink: 0; }
+.ruleThen { flex: 1; min-width: 0; font-size: var(--text-3xs); color: var(--m-ink-soft); }
+.ruleThen strong { color: var(--m-ink); }
+.ruleActions { display: inline-flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+.toggle { width: 38px; height: 22px; border-radius: 11px; background: var(--m-green); position: relative; flex-shrink: 0; cursor: pointer; border: 0; padding: 0; transition: background 0.15s ease; }
+.toggle::after { content: ''; position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px var(--m-shadow-soft); }
+.toggleOff { background: var(--m-shadow-ink); }
+.toggleOff::after { right: auto; left: 2px; }
+
+/* Rule modal: condition rows + searchable target picker */
+.ruleCondGrid { display: flex; gap: var(--space-2); }
+.ruleCondGrid > * { flex: 1; min-width: 0; }
+.ruleHint { font-size: var(--text-3xs); color: var(--m-ink-faint); margin: var(--space-1h) 0 0; }
+.pickSearch { padding: var(--space-1) var(--space-1) var(--space-2); }
+.rowRemove { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; flex-shrink: 0; border: 0; border-radius: 50%; background: none; color: var(--m-ink-faint); cursor: pointer; }
+.rowRemove:hover { background: color-mix(in srgb, var(--m-pink) 12%, transparent); color: var(--m-pink); }
+
+/* ── Billing / plans ─────────────────────────────────────────────────────── */
+.planGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3h); align-items: stretch; }
+.planCard { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4h); }
+.planCurrent { border: 1.8px solid var(--m-char); }
+.planHead { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.planName { font-family: var(--m-display); font-weight: 600; font-size: var(--text-xl); color: var(--m-ink); }
+.planPrice { font-size: var(--text-4xl); font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; color: var(--m-ink); padding-bottom: var(--space-3); border-bottom: 1px solid var(--m-line-soft); }
+.planPer { font-size: var(--text-3xs); font-weight: 500; color: var(--m-ink-soft); }
+.planFeatures { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-3xs); color: var(--m-ink-soft); }
+.planFeatures li::before { content: '✓'; margin-right: var(--space-2); color: var(--m-accent-ink); font-weight: 700; font-size: var(--text-4xs); }
+.planFeatures li[data-off]::before { content: '—'; color: var(--m-ink-faint); }
+.planFeatures li[data-off] { color: var(--m-ink-faint); }
+.planFoot { margin-top: auto; padding-top: var(--space-3); }
+.planYours {
+  display: block;
+  text-align: center;
+  padding: var(--space-3) var(--space-5h);
+  border-radius: var(--radius-full);
+  background: var(--m-wash);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--m-ink-soft);
+}
+
+/* ── Apps ────────────────────────────────────────────────────────────────── */
+.appsCard { padding: var(--space-4h); }
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1080px) {
+  /* minmax(0, …): a bare 1fr can't shrink below its content, so a wide table
+     inside stretched the column past a phone screen. */
+  .statGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid2 { grid-template-columns: minmax(0, 1fr); }
+  .planGrid { grid-template-columns: minmax(0, 1fr); }
+}
+/* Phones: the sidebar is a slide-out drawer behind a top bar; wide rows
+   reflow instead of pushing the page sideways. */
+.mobileBar { display: none; }
+.navScrim { display: none; }
+@media (max-width: 760px) {
+  .shell { flex-direction: column; }
+  .mobileBar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2h);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    padding: var(--space-2h) var(--space-4);
+    background: var(--m-bg);
+    border-bottom: 1px solid var(--m-line);
+  }
+  .mobileMenuBtn { display: grid; place-items: center; width: 40px; height: 40px; margin-left: calc(-1 * var(--space-2)); border: 0; border-radius: var(--m-r-md); background: none; color: var(--m-ink); cursor: pointer; }
+  .mobileMenuBtn:hover { background: var(--m-wash); }
+  .mobileBar .brandWord { font-size: 20px; }
+
+  .side {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: var(--z-drawer);
+    width: min(280px, 84vw);
+    background: var(--m-bg);
+    box-shadow: 0 0 40px var(--m-shadow-soft);
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+  }
+  .sideOpen { transform: none; }
+  .navScrim { display: block; position: fixed; inset: 0; z-index: var(--z-scrim); background: var(--m-scrim); }
+
+  .main { padding: var(--space-4) var(--space-4) 60px; }
+  .pageTitle { font-size: 24px; }
+  .pageActions { flex-wrap: wrap; flex-shrink: 1; }
+  .statGrid { gap: var(--space-2h); }
+  .nudge { flex-wrap: wrap; }
+  .nudgeText { flex-basis: calc(100% - 64px); }
+
+  /* Tables scroll inside their card rather than widening the page. */
+  .tbl { display: block; overflow-x: auto; }
+
+  .ruleRow { flex-wrap: wrap; }
+  .ruleCond { flex-basis: 100%; }
+  .ruleArrow { display: none; }
+}
+@media (max-width: 760px) and (prefers-reduced-motion: reduce) {
+  .side { transition: none; }
+}
+
+/* The app switcher (avatar), top right above every page. */
+.topBar { display: flex; justify-content: flex-end; margin: calc(-1 * var(--space-3)) 0 var(--space-2); }

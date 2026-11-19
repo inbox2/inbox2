@@ -1,0 +1,194 @@
+/* Join — the one primary button on an otherwise uniform action row. Composed
+   onto the host surface's .actionBtn, so it only overrides the paint.
+   The selector is doubled deliberately: both are single-class rules, so which
+   one wins would otherwise come down to the order the two CSS modules happen to
+   land in the bundle — and .actionBtn won, leaving Join looking like Snooze. */
+.join.join {
+  color: #ffffff;
+  border-color: rgba(11, 54, 116, 0.55);
+  background: linear-gradient(180deg, #3E86E8 0%, #1B69D4 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    0 1px 2px rgba(15, 23, 42, 0.22);
+  /* Room for the brand mark next to the label. */
+  flex: 1.2;
+}
+
+.join.join:hover {
+  color: #ffffff;
+  border-color: rgba(11, 54, 116, 0.7);
+  background: linear-gradient(180deg, #4E93F0 0%, #2273E0 100%);
+}
+
+.join.join:active {
+  color: #ffffff;
+  background: linear-gradient(180deg, #1B69D4 0%, #14559F 100%);
+  box-shadow: inset 0 2px 5px rgba(6, 30, 66, 0.45);
+}
+
+/* Join on a theme-following surface (the menu bar popover): the theme's primary
+   button, token for token what EventDetailPopup's .join uses. */
+.joinThemed.joinThemed {
+  color: var(--btn-primary-fg);
+  border-color: var(--overlay-18);
+  background: var(--btn-primary-bg);
+  box-shadow: var(--btn-shadow), var(--btn-primary-highlight);
+}
+
+.joinThemed.joinThemed:hover {
+  background: var(--btn-primary-bg-hover);
+  box-shadow: var(--btn-shadow), var(--btn-primary-highlight), var(--glow-hover);
+}
+
+.joinThemed.joinThemed:active {
+  background: var(--btn-bg-active);
+  box-shadow: var(--btn-shadow-active);
+}
+
+/* The invitation strip on a mail card — set off from the Read/Archive row below
+   it by the same amber the meeting reminders carry, so "this is calendar" is
+   readable before a single word is. */
+.invite {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1h);
+  padding: var(--space-2);
+  margin-bottom: var(--space-2);
+  border: 1px solid rgba(200, 160, 64, 0.45);
+  border-radius: var(--radius-8);
+  background: rgba(200, 160, 64, 0.12);
+}
+
+.inviteWhen {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #3B3320;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Zone-start card ─────────────────────────────── */
+/* Tinted with the card's rail colour (--event-color, set per zone category). */
+.zoneGlyph {
+  display: inline-flex;
+  color: var(--event-color);
+}
+
+/* Both host cards inset their text 13px per row; the zone rows follow suit. */
+.zoneDetail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 13px var(--space-2h);
+}
+
+.zoneMain {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The voxel focus frame (same art family as Tuli's module icons). */
+.zoneArt {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  filter: drop-shadow(0 3px 6px rgba(15, 23, 42, 0.18));
+  pointer-events: none;
+}
+
+.zoneNote {
+  font-size: var(--text-2xs);
+  color: #4e5663;
+  line-height: 1.4;
+}
+
+.zoneClock {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: var(--space-2);
+  margin-top: var(--space-1h);
+}
+
+/* The meeting card's countdown: the zone clock, at the host card's text inset. */
+.meetClock {
+  margin-top: 0;
+  padding: 0 13px var(--space-1h);
+}
+
+.zoneUntil {
+  font-size: var(--text-3xs);
+  color: #4e5663;
+}
+
+.zoneRemaining {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: #111827;
+}
+
+.zoneTrack {
+  height: 5px;
+  margin-top: var(--space-1h);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--event-color) 18%, rgba(15, 23, 42, 0.08));
+  overflow: hidden;
+}
+
+.zoneFill {
+  width: var(--zone-progress, 0%);
+  height: 100%;
+  border-radius: 3px;
+  background: var(--event-color);
+  transition: width 1s linear;
+}
+
+.zoneLinks {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-0h) 9px var(--space-2h);
+}
+
+.zoneLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: none;
+  font-family: inherit;
+  font-size: var(--text-3xs);
+  font-weight: 500;
+  color: color-mix(in srgb, var(--event-color) 55%, #4e5663);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+/* Hover turns the link into a button: a tinted fill with a bevel. */
+.zoneLink:hover {
+  border-color: color-mix(in srgb, var(--event-color) 30%, transparent);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--event-color) 10%, rgba(255, 255, 255, 0.7)) 0%,
+    color-mix(in srgb, var(--event-color) 18%, rgba(255, 255, 255, 0.4)) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(15, 23, 42, 0.08);
+  color: var(--event-color);
+}
+
+.zoneLink:active {
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.zoneLink:focus-visible {
+  outline: 2px solid var(--event-color);
+  outline-offset: 1px;
+  border-radius: var(--radius-4);
+}
+

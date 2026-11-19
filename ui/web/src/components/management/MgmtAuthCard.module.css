@@ -1,0 +1,45 @@
+.card { width: 100%; max-width: 420px; }
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2h);
+  margin-bottom: var(--space-5h);
+  font-family: var(--m-display);
+  font-weight: 600;
+  font-size: var(--text-lg);
+  color: var(--m-ink);
+}
+.logo img { width: 26px; height: 26px; object-fit: contain; }
+
+.title {
+  margin: 0 0 var(--space-1h);
+  font-family: var(--m-display);
+  font-weight: 600;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+  color: var(--m-ink);
+}
+.subtitle { margin: 0 0 var(--space-5); font-size: var(--text-sm); color: var(--m-ink-soft); line-height: 1.4; }
+.title:last-of-type { margin-bottom: var(--space-5); }
+
+.error {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) 13px;
+  font-size: var(--text-xs);
+  border-radius: var(--m-r-sm);
+  color: var(--m-pink);
+  background: color-mix(in srgb, var(--m-pink) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--m-pink) 34%, transparent);
+}
+.success {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) 13px;
+  font-size: var(--text-xs);
+  border-radius: var(--m-r-sm);
+  color: var(--m-green);
+  background: color-mix(in srgb, var(--m-green) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--m-green) 30%, transparent);
+}
+
+.footer { margin-top: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); text-align: center; font-size: var(--text-xs); color: var(--m-ink-soft); }

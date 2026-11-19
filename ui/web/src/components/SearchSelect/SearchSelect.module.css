@@ -1,0 +1,75 @@
+.root { position: relative; }
+
+/* Matches the settings text inputs: 38px, inset surface, focus ring. */
+.trigger {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 38px;
+  padding: 0 var(--space-3);
+  background: var(--surface-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+}
+.trigger:focus-visible,
+.trigger[aria-expanded='true'] { border-color: var(--border-focus); }
+.trigger:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.icon { flex-shrink: 0; font-size: var(--text-md); line-height: 1; }
+.value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chevron { flex-shrink: 0; color: var(--text-tertiary); font-size: var(--text-xs); }
+
+.panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: var(--z-sticky);
+  background: var(--surface-float);
+  border: 1px solid var(--overlay-12);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl), var(--acrylic-highlight);
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.search {
+  box-sizing: border-box;
+  width: 100%;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--overlay-4);
+  border: 1px solid var(--overlay-8);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  outline: none;
+}
+.search:focus { border-color: var(--overlay-15); box-shadow: var(--glow-focus); }
+
+.list { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; }
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1h) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.highlight { background: var(--overlay-8); color: var(--text-primary); }
+.selected { color: var(--accent-warm-bright); }
+
+.empty { padding: var(--space-2); font-size: var(--text-sm); color: var(--text-tertiary); text-align: center; }

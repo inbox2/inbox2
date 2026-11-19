@@ -1,0 +1,23 @@
+/* Shared layout bits for the management-themed auth/onboarding screens. The look
+ * (cards, fields, buttons) comes from components/management/*; this just handles
+ * form spacing and the footer links. */
+.form { display: flex; flex-direction: column; gap: var(--space-4); }
+
+/* Visual break between the account fields and the credentials. */
+.divider { height: 1px; background: rgba(30, 38, 54, 0.1); margin: var(--space-1) 0; }
+
+.link { color: var(--m-violet); text-decoration: none; font-weight: 600; }
+.link:hover { text-decoration: underline; }
+
+.muted { color: var(--m-ink-soft); }
+
+.textBtn {
+  background: none;
+  border: none;
+  color: var(--m-ink-soft);
+  font-family: var(--m-text);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  padding: var(--space-0h);
+}
+.textBtn:hover { color: var(--m-char); }

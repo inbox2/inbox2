@@ -1,0 +1,113 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   MANAGEMENT design layer — the "console / website" look (matches /console).
+   Shared by the auth screens, the onboarding/connect-domain wizard, and the
+   admin MX console. Distinct from the dark Aero APPLICATION theme (tokens.css +
+   layout.module.css) used by the actual mail client.
+
+   Any management surface wraps its root in `class="management"` to pick up the
+   tokens + base type/colour. Reusable primitives (components/management/*)
+   consume the --m-* custom properties below.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* Terminal Grotesque (Velvetyne, OFL) — self-hosted display wordmark face.
+ * Loaded once here, app-wide; referenced via the --font-grotesque token. */
+@font-face {
+  font-family: 'Terminal Grotesque';
+  src: url('/fonts/terminal-grotesque.woff2') format('woff2'),
+       url('/fonts/terminal-grotesque.woff') format('woff');
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   The console / website look: warm cream paper, hairline ink borders, Fraunces
+   display + Inter body + JetBrains Mono for record values, pill controls,
+   generous card radii. Token NAMES are kept stable so every consumer
+   (primitives + admin pages) re-skins from this one block.
+   ─────────────────────────────────────────────────────────────────────────── */
+.management,
+[data-m-tokens] {
+  /* Surfaces */
+  --m-bg: #f2ede2;          /* page canvas — warm cream */
+  --m-char: #182242;        /* deep panel (navy hero / dark accents) */
+  --m-char2: #fcfaf4;       /* raised panel (modals, dropdowns) */
+  --m-surface: #fcfaf4;     /* card surface */
+  --m-surface-2: #f4efe4;   /* inset tiles / inputs */
+
+  /* Borders — hairline ink */
+  --m-line: rgba(24, 34, 66, 0.13);        /* main hairline */
+  --m-line-soft: rgba(24, 34, 66, 0.09);   /* subtle hairline */
+  --m-groove: rgba(24, 34, 66, 0.09);      /* legacy alias used by pages */
+  --m-line-strong: rgba(24, 34, 66, 0.22); /* emphasised control border */
+
+  /* Ink washes + shadows — the alpha steps the console actually uses */
+  --m-wash: rgba(24, 34, 66, 0.06);        /* hover / selected fill */
+  --m-wash-deep: rgba(24, 34, 66, 0.07);   /* nav hover, quiet pills, skeleton fill */
+  --m-shadow-ink: rgba(24, 34, 66, 0.18);  /* floating panel shadow, off toggle */
+  --m-shadow-soft: rgba(24, 34, 66, 0.2);  /* drawer / sheet shadow */
+  --m-scrim: rgba(24, 34, 66, 0.35);       /* mobile drawer scrim */
+
+  /* Accents — steel blue primary, kept restrained */
+  --m-accent: #2f7ad6;
+  --m-accent-bright: #47bfff;   /* hover flash on filled controls */
+  --m-accent-ink: #17509f;      /* accent as TEXT on cream (links, kickers) */
+  --m-yellow: #2f7ad6;      /* legacy "primary CTA" alias → steel blue */
+  --m-violet: #2f7ad6;      /* legacy focus alias → steel blue */
+  --m-pink: #c24f44;        /* danger */
+  --m-amber: #ffb03a;       /* warning / pending */
+  --m-green: #2e8f5b;       /* success */
+  --m-card: #fcfaf4;        /* legacy card alias */
+
+  /* Text */
+  --m-ink: #182242;
+  --m-ink-soft: #5b6178;
+  --m-ink-faint: #8d92a5;
+
+  /* Radii — generous, lugha-card-like; controls pill themselves */
+  --m-r-xl: 18px;
+  --m-r-lg: 12px;
+  --m-r-md: 10px;
+  --m-r-sm: 8px;
+
+  /* Type */
+  --m-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --m-text: 'Inter', var(--font-ui);
+  --m-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --m-sans: 'Inter', var(--font-ui);
+
+  /* Glass (over panels) */
+  --m-glass: rgba(255, 255, 255, 0.55);
+  --m-glass-border: rgba(24, 34, 66, 0.13);
+  --m-glass-blur: blur(18px) saturate(1.2);
+}
+
+/* The base look. `[data-m-tokens]` above hands only the palette to a surface
+   that portals outside .management (the light DropdownMenu) without re-skinning
+   its type. */
+.management {
+  /* Body type runs 2px larger than the app scale — console text was too small
+     to read. Headings (--text-md and up) keep the shared scale. */
+  --text-4xs: 0.75rem;    /* 12px */
+  --text-3xs: 0.8125rem;  /* 13px */
+  --text-2xs: 0.875rem;   /* 14px */
+  --text-xs: 0.9375rem;   /* 15px */
+  --text-sm: 1rem;        /* 16px */
+  --text-base: 1.0625rem; /* 17px */
+
+  font-family: var(--m-text);
+  color: var(--m-ink);
+  background: var(--m-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.management ::selection { background: var(--m-char); color: #fff; }
+/* quiet sentence-case label (lugha voice), used across console surfaces */
+.management :where(.mLabel) {
+  font-family: var(--m-sans);
+  font-size: var(--text-3xs);
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  color: var(--m-ink-faint);
+}

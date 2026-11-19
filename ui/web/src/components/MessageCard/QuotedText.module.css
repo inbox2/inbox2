@@ -1,0 +1,38 @@
+/* ═══════════════════════════════════════════════════════ */
+/* QuotedText — collapsible quoted email toggle            */
+/* ═══════════════════════════════════════════════════════ */
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--overlay-4);
+  border: 1px solid var(--overlay-6);
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.15em;
+  padding: 0 var(--space-2);
+  height: 20px;
+  cursor: pointer;
+  margin-top: var(--space-2);
+  transition: all var(--duration-fast);
+  line-height: 1;
+}
+
+.toggle:hover {
+  background: var(--overlay-8);
+  border-color: var(--overlay-10);
+  color: var(--text-secondary);
+}
+
+.toggleExpanded {
+  letter-spacing: var(--tracking-wide);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.signatureBlock {
+  color: var(--text-tertiary);
+}

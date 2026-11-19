@@ -1,0 +1,35 @@
+[project]
+name = "inbox2-cli"
+version = "0.1.0"
+license = "Apache-2.0"
+description = "Inbox2 TUI client built with Textual, over the shared Rust engine bus"
+requires-python = ">=3.12"
+dependencies = [
+    "textual>=8.2",
+    "rich>=15.0",
+    "click>=8.5",
+    "rich-pixels>=3.0.1",
+    "html2text>=2025.4",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=9.0",
+    "pytest-asyncio>=1.4",
+]
+
+[project.scripts]
+inbox2 = "inbox2_cli.cli:main"
+
+[tool.setuptools]
+packages = ["inbox2_cli"]
+
+[tool.setuptools.package-data]
+inbox2_cli = ["assets/*.png"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

@@ -1,0 +1,417 @@
+/* ═══════════════════════════════════════════════════════ */
+/* EisenhowerMatrix — Tactical command center surface      */
+/* Mission control: live urgency, operational density,     */
+/* workflow scaffolding, institutional gravitas            */
+/* ═══════════════════════════════════════════════════════ */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: var(--space-px);
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--bevel) 3.5%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--bevel) 4%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--ink) 25%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--ink) 35%, transparent),
+    0 2px 12px color-mix(in srgb, var(--ink) 20%, transparent);
+}
+
+/* ═══ QUADRANT BASE ═══ */
+.quadrant {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2h) var(--space-3);
+  min-height: 0;
+  position: relative;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: box-shadow var(--duration-normal) var(--ease-out);
+}
+
+.quadrant:hover {
+  scrollbar-color: var(--overlay-6) transparent;
+}
+
+/* ── Operational dot-grid texture ── */
+.quadrant::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.35;
+  background-image:
+    radial-gradient(circle, color-mix(in srgb, var(--accent-primary) 8%, transparent) 0.6px, transparent 0.6px);
+  background-size: 16px 16px;
+  background-position: 8px 8px;
+  mask-image: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.5) 0%, transparent 80%);
+}
+
+/* ═══ PER-QUADRANT ATMOSPHERE ═══ */
+
+/* DO FIRST — active, energized, decision-heavy */
+.quadrantDoFirst {
+  background:
+    radial-gradient(ellipse at 25% 20%, color-mix(in srgb, var(--accent-primary) 4%, transparent) 0%, transparent 45%),
+    linear-gradient(165deg, rgba(14, 15, 21, 0.96) 0%, rgba(10, 11, 16, 0.98) 100%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent-danger) 6%, transparent);
+}
+
+/* DELEGATE — collaborative steel, cooler */
+.quadrantDelegate {
+  background:
+    radial-gradient(ellipse at 75% 20%, color-mix(in srgb, var(--accent-primary) 4%, transparent) 0%, transparent 50%),
+    linear-gradient(190deg, rgba(13, 14, 20, 0.96) 0%, rgba(10, 11, 16, 0.98) 100%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent-primary) 5%, transparent);
+}
+
+/* SCHEDULE — temporal, planning surface */
+.quadrantSchedule {
+  background:
+    radial-gradient(ellipse at 20% 75%, color-mix(in srgb, var(--accent-teal) 4%, transparent) 0%, transparent 50%),
+    linear-gradient(170deg, rgba(12, 13, 18, 0.96) 0%, rgba(9, 10, 15, 0.98) 100%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent-teal) 4%, transparent);
+}
+
+/* LATER — recessed backlog */
+.quadrantLater {
+  background:
+    linear-gradient(180deg, rgba(10, 11, 15, 0.97) 0%, rgba(8, 9, 12, 0.99) 100%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--bevel) 2%, transparent);
+}
+
+/* ── Drop target highlight ── */
+.quadrantOver {
+  box-shadow:
+    inset 0 0 0 2px var(--accent-primary),
+    inset 0 0 30px color-mix(in srgb, var(--accent-primary) 6%, transparent) !important;
+}
+
+/* ═══ QUADRANT HEADER ═══ */
+.quadrantHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-1h);
+  border-bottom: 1px solid color-mix(in srgb, var(--bevel) 4%, transparent);
+  position: relative;
+  z-index: 1;
+}
+
+.quadrantHeaderBar {
+  width: 3px;
+  height: 16px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+}
+
+.quadrantDoFirst .quadrantHeaderBar {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-danger) 70%, transparent) 0%, color-mix(in srgb, var(--accent-danger) 20%, transparent) 100%);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-danger) 20%, transparent);
+}
+.quadrantDelegate .quadrantHeaderBar {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-primary) 55%, transparent) 0%, color-mix(in srgb, var(--accent-primary) 15%, transparent) 100%);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent-primary) 10%, transparent);
+}
+.quadrantSchedule .quadrantHeaderBar {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-teal) 55%, transparent) 0%, color-mix(in srgb, var(--accent-teal) 15%, transparent) 100%);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent-teal) 10%, transparent);
+}
+.quadrantLater .quadrantHeaderBar {
+  background: linear-gradient(180deg, rgba(100, 100, 120, 0.3) 0%, rgba(100, 100, 120, 0.08) 100%);
+}
+
+.quadrantIcon {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.quadrantDoFirst .quadrantIcon { color: var(--accent-danger); }
+.quadrantDelegate .quadrantIcon { color: var(--accent-primary); }
+.quadrantSchedule .quadrantIcon { color: var(--accent-teal); }
+.quadrantLater .quadrantIcon { color: var(--text-muted); }
+
+.quadrantLabel {
+  font-size: var(--text-3xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.quadrantDoFirst .quadrantLabel { color: color-mix(in srgb, var(--accent-danger) 80%, transparent); }
+.quadrantDelegate .quadrantLabel { color: color-mix(in srgb, var(--accent-primary) 60%, transparent); }
+.quadrantSchedule .quadrantLabel { color: color-mix(in srgb, var(--accent-teal) 60%, transparent); }
+.quadrantLater .quadrantLabel { color: rgba(100, 100, 120, 0.6); }
+
+.quadrantCount {
+  margin-left: auto;
+  font-size: var(--text-4xs);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  padding: var(--space-px) var(--space-1h);
+  border-radius: var(--radius-full);
+  line-height: 16px;
+}
+
+.quadrantDoFirst .quadrantCount {
+  color: color-mix(in srgb, var(--accent-danger) 70%, transparent);
+  background: color-mix(in srgb, var(--accent-danger) 10%, transparent);
+}
+.quadrantDelegate .quadrantCount {
+  color: color-mix(in srgb, var(--accent-primary) 55%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 7%, transparent);
+}
+.quadrantSchedule .quadrantCount {
+  color: color-mix(in srgb, var(--accent-teal) 55%, transparent);
+  background: color-mix(in srgb, var(--accent-teal) 7%, transparent);
+}
+.quadrantLater .quadrantCount {
+  color: rgba(100, 100, 120, 0.5);
+  background: rgba(100, 100, 120, 0.07);
+}
+
+/* ═══ ITEMS LIST ═══ */
+.quadrantItems {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-px);
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ═══ EMPTY STATE — operational scaffolding ═══ */
+.emptyQuadrant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: var(--space-2);
+  position: relative;
+  z-index: 1;
+  padding: var(--space-4);
+}
+
+.emptyIcon {
+  opacity: 0.3;
+}
+
+.emptyLabel {
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.quadrantDoFirst .emptyLabel {
+  color: color-mix(in srgb, var(--accent-danger) 55%, transparent);
+}
+.quadrantDelegate .emptyLabel {
+  color: color-mix(in srgb, var(--accent-primary) 45%, transparent);
+}
+.quadrantSchedule .emptyLabel {
+  color: color-mix(in srgb, var(--accent-teal) 45%, transparent);
+}
+.quadrantLater .emptyLabel {
+  color: rgba(100, 100, 120, 0.4);
+}
+
+.emptyHint {
+  font-size: var(--text-3xs);
+  color: var(--text-secondary);
+  opacity: 0.7;
+  text-align: center;
+  line-height: 1.4;
+  max-width: 200px;
+}
+
+/* ═══ ACTION DROP ZONES ═══ */
+.actionZones {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.actionZonesVisible {
+  opacity: 1;
+  max-height: 44px;
+  padding: var(--space-2) 0 0;
+}
+
+.actionZone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-1h);
+  border-radius: var(--radius-md);
+  border: 1.5px dashed rgba(255, 255, 255, 0.07);
+  background: transparent;
+  transition: all var(--duration-fast) var(--ease-out);
+  font-size: var(--text-4xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.actionZoneOver {
+  border-style: solid;
+}
+
+.actionZoneArchive { composes: actionZone; }
+.actionZoneArchive.actionZoneOver {
+  border-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 5%, transparent);
+  color: var(--text-primary);
+  box-shadow: inset 0 0 16px color-mix(in srgb, var(--accent-primary) 4%, transparent);
+}
+
+.actionZoneUntag { composes: actionZone; }
+.actionZoneUntag.actionZoneOver {
+  border-color: var(--accent-teal);
+  background: color-mix(in srgb, var(--accent-teal) 5%, transparent);
+  color: var(--accent-teal);
+  box-shadow: inset 0 0 16px color-mix(in srgb, var(--accent-teal) 4%, transparent);
+}
+
+.actionZoneDelete {
+  composes: actionZone;
+  border-color: color-mix(in srgb, var(--accent-danger) 20%, transparent);
+  color: color-mix(in srgb, var(--accent-danger) 60%, transparent);
+}
+.actionZoneDelete.actionZoneOver {
+  border-color: var(--accent-danger);
+  background: color-mix(in srgb, var(--accent-danger) 5%, transparent);
+  color: var(--accent-danger);
+  box-shadow: inset 0 0 16px color-mix(in srgb, var(--accent-danger) 4%, transparent);
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* LIGHT MODE — mirror the inbox panel design               */
+/* Light surfaces, groove dividers, soft inset shadows;      */
+/* per-quadrant atmosphere preserved as faint accent tints.  */
+/* ═══════════════════════════════════════════════════════ */
+
+:global([data-theme="light"]) .matrix {
+  background: var(--border-groove);
+  box-shadow: var(--panel-groove), var(--panel-ambient);
+}
+
+/* Unified cool-gray base across all four quadrants; per-quadrant accent radial
+   provides the differentiation. LATER sits one step recessed (backlog). */
+:global([data-theme="light"]) .quadrantDoFirst {
+  background:
+    radial-gradient(ellipse at 25% 20%, color-mix(in srgb, var(--accent-danger) 7%, transparent) 0%, transparent 55%),
+    linear-gradient(165deg, #f6f8fb 0%, #eef1f5 100%);
+  box-shadow: inset 0 1px 0 var(--bevel-50);
+}
+
+:global([data-theme="light"]) .quadrantDelegate {
+  background:
+    radial-gradient(ellipse at 75% 20%, color-mix(in srgb, var(--accent-primary) 7%, transparent) 0%, transparent 55%),
+    linear-gradient(190deg, #f6f8fb 0%, #eef1f5 100%);
+  box-shadow: inset 0 1px 0 var(--bevel-50);
+}
+
+:global([data-theme="light"]) .quadrantSchedule {
+  background:
+    radial-gradient(ellipse at 20% 75%, color-mix(in srgb, var(--accent-teal) 7%, transparent) 0%, transparent 55%),
+    linear-gradient(170deg, #f6f8fb 0%, #eef1f5 100%);
+  box-shadow: inset 0 1px 0 var(--bevel-50);
+}
+
+:global([data-theme="light"]) .quadrantLater {
+  background: linear-gradient(180deg, #eef1f5 0%, #e7eaf0 100%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--bevel) 40%, transparent);
+}
+
+/* Dot-grid texture — dark dots on a light surface */
+:global([data-theme="light"]) .quadrant::after {
+  background-image:
+    radial-gradient(circle, rgba(0, 0, 0, 0.05) 0.6px, transparent 0.6px);
+  opacity: 0.5;
+}
+
+/* Header divider — subtle groove */
+:global([data-theme="light"]) .quadrantHeader {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme="light"]) .quadrantIcon { opacity: 0.8; }
+
+/* Header bars */
+:global([data-theme="light"]) .quadrantDoFirst .quadrantHeaderBar {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-danger) 60%, transparent) 0%, color-mix(in srgb, var(--accent-danger) 15%, transparent) 100%);
+  box-shadow: none;
+}
+:global([data-theme="light"]) .quadrantDelegate .quadrantHeaderBar {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-primary) 55%, transparent) 0%, color-mix(in srgb, var(--accent-primary) 12%, transparent) 100%);
+  box-shadow: none;
+}
+:global([data-theme="light"]) .quadrantSchedule .quadrantHeaderBar {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-teal) 55%, transparent) 0%, color-mix(in srgb, var(--accent-teal) 12%, transparent) 100%);
+  box-shadow: none;
+}
+:global([data-theme="light"]) .quadrantLater .quadrantHeaderBar {
+  background: linear-gradient(180deg, rgba(90, 88, 79, 0.3) 0%, rgba(90, 88, 79, 0.08) 100%);
+}
+
+/* Labels — saturated accents for contrast on light */
+:global([data-theme="light"]) .quadrantDoFirst .quadrantLabel { color: var(--accent-danger); }
+:global([data-theme="light"]) .quadrantDelegate .quadrantLabel { color: var(--accent-primary); }
+:global([data-theme="light"]) .quadrantSchedule .quadrantLabel { color: var(--accent-teal); }
+:global([data-theme="light"]) .quadrantLater .quadrantLabel { color: var(--text-tertiary); }
+
+/* Count chips */
+:global([data-theme="light"]) .quadrantDoFirst .quadrantCount {
+  color: var(--accent-danger); background: color-mix(in srgb, var(--accent-danger) 10%, transparent);
+}
+:global([data-theme="light"]) .quadrantDelegate .quadrantCount {
+  color: var(--accent-primary); background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+}
+:global([data-theme="light"]) .quadrantSchedule .quadrantCount {
+  color: var(--accent-teal); background: color-mix(in srgb, var(--accent-teal) 10%, transparent);
+}
+:global([data-theme="light"]) .quadrantLater .quadrantCount {
+  color: var(--text-tertiary); background: rgba(0, 0, 0, 0.06);
+}
+
+/* Empty-state labels */
+:global([data-theme="light"]) .quadrantDoFirst .emptyLabel { color: color-mix(in srgb, var(--accent-danger) 55%, transparent); }
+:global([data-theme="light"]) .quadrantDelegate .emptyLabel { color: color-mix(in srgb, var(--accent-primary) 55%, transparent); }
+:global([data-theme="light"]) .quadrantSchedule .emptyLabel { color: color-mix(in srgb, var(--accent-teal) 55%, transparent); }
+:global([data-theme="light"]) .quadrantLater .emptyLabel { color: var(--text-muted); }
+
+/* Action drop zones */
+:global([data-theme="light"]) .actionZone {
+  border-color: var(--border-strong);
+  color: var(--text-tertiary);
+}
+:global([data-theme="light"]) .actionZoneDelete {
+  border-color: color-mix(in srgb, var(--accent-danger) 30%, transparent);
+  color: color-mix(in srgb, var(--accent-danger) 70%, transparent);
+}

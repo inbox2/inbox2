@@ -1,0 +1,215 @@
+/* ═══════════════════════════════════════════════════════ */
+/* ToolbarGroup — Modern desktop control surface           */
+/* Translucent, precise, low-profile, segmented            */
+/* ═══════════════════════════════════════════════════════ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-1h) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  background: var(--btn-bg);
+  border: var(--btn-border);
+  box-shadow: var(--btn-shadow);
+  transition:
+    background var(--duration-fast),
+    color var(--duration-fast),
+    box-shadow var(--duration-fast);
+  cursor: pointer;
+  position: relative;
+}
+
+.button:hover {
+  background: var(--btn-bg-hover);
+  color: var(--text-primary);
+}
+
+.button:active {
+  background: var(--btn-bg-active);
+  box-shadow: var(--btn-shadow-active);
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: var(--glow-focus);
+}
+
+/* Compose — the one primary action in a toolbar, so it gets the same filled
+   systemBlue treatment as the composer's Send button (components/Button).
+   Light only, per the rest of this pass. Written as `.button.compose` so it
+   outranks the plain `.button:hover` colour rule above. */
+:global([data-theme="light"]) .button.compose {
+  background: var(--btn-primary-bg);
+  color: var(--text-inverse);
+  font-weight: var(--weight-bold);
+  border: 1px solid transparent;
+  box-shadow: var(--btn-shadow), var(--btn-primary-highlight);
+}
+
+:global([data-theme="light"]) .button.compose:hover {
+  background: var(--btn-primary-bg-hover);
+  color: var(--text-inverse);
+}
+
+:global([data-theme="light"]) .button.compose:active {
+  background: var(--btn-primary-bg);
+  box-shadow: var(--btn-shadow-active);
+}
+
+/* Grouped toolbar — unified segmented surface */
+.group {
+  display: flex;
+  gap: 0;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--overlay-6);
+}
+
+:global([data-theme="light"]) .group {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--border-subtle);
+}
+
+/* Dark themes place toolbars over the background photo (which can be bright).
+   Frost the group so the segmented controls read against any backdrop. */
+:global([data-theme="dark"]) .group {
+  background: rgba(10, 12, 18, 0.5);
+  border-color: color-mix(in srgb, var(--bevel) 12%, transparent);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--ink) 28%, transparent);
+}
+
+/* macOS + Windows desktop: the native window material (macOS HudWindow vibrancy
+   / Windows Acrylic) provides the glass. A CSS backdrop-filter anywhere in the
+   webview forces a compositing layer that OCCLUDES that native material for the
+   WHOLE window — so the app chrome loses its translucency (same reason .chrome in
+   layout.module.css disables backdrop-filter). Drop it; the semi-opaque .group
+   background alone reads fine, and the native material does the blur. */
+:global([data-os="macos"]) .group,
+:global([data-os="windows"]) .group {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:global([data-theme="dark"]) .group .button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--bevel);
+}
+
+:global([data-theme="dark"]) .group .button + .button::before {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.group .button {
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.group .button:hover {
+  background: var(--overlay-6);
+}
+
+:global([data-theme="light"]) .group .button:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.group .button:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.group .button:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.group .button:only-child {
+  border-radius: var(--radius-sm);
+}
+
+/* Separator between group buttons — hairline */
+.group .button + .button::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 5px;
+  bottom: 5px;
+  width: 1px;
+  background: var(--overlay-6);
+}
+
+:global([data-theme="light"]) .group .button + .button::before {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Section break inside a group — a full-height rule with breathing room, for
+   a button that isn't part of the message actions (the reading pane's mode
+   picker). Stronger than the hairline so it reads as a boundary, not a seam. */
+.divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 0 var(--space-1);
+  background: var(--overlay-12);
+}
+
+:global([data-theme="light"]) .divider {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* The button after a divider already has its boundary. */
+.group .divider + .button::before {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* Pastel icon colors — visible on hover only              */
+/* ═══════════════════════════════════════════════════════ */
+
+.colorBlue:hover svg { color: #8cb4e0; }
+.colorIndigo:hover svg { color: #a0a0dc; }
+.colorTeal:hover svg { color: #7cc0b8; }
+.colorRose:hover svg { color: #d09ab0; }
+.colorAmber:hover svg { color: #ccb07c; }
+.colorSage:hover svg { color: #8cbc8c; }
+.colorRed:hover svg { color: #e08a8a; }
+
+/* Light mode: deeper, more grounded icon tints */
+:global([data-theme="light"]) .colorBlue:hover svg { color: #5a8cc0; }
+:global([data-theme="light"]) .colorIndigo:hover svg { color: #7878b8; }
+:global([data-theme="light"]) .colorTeal:hover svg { color: #4a9a90; }
+:global([data-theme="light"]) .colorRose:hover svg { color: #b07488; }
+:global([data-theme="light"]) .colorAmber:hover svg { color: #a88a50; }
+:global([data-theme="light"]) .colorSage:hover svg { color: #5a905a; }
+:global([data-theme="light"]) .colorRed:hover svg { color: #c0453f; }
+
+/* Chrome bar variant — translucent surface controls */
+.chrome {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1h) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--chrome-btn-fg);
+  background: var(--overlay-6);
+  border: 1px solid var(--overlay-8);
+  box-shadow: none;
+  transition: background var(--duration-fast), color var(--duration-fast);
+  cursor: pointer;
+}
+
+.chrome:hover {
+  background: var(--overlay-12);
+  color: var(--chrome-btn-fg-hover);
+}
+
+.chrome:active {
+  background: var(--overlay-4);
+}

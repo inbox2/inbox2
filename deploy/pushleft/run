@@ -1,0 +1,16 @@
+#!/bin/sh
+# Maps Pushleft's variables onto the names inbox2 reads, then runs the command.
+# The managed database comes as PG*; the other roles of the project as
+# PUSHLEFT_ROLE_<ROLE>_HOST (<role>.<project>.internal).
+set -e
+# Secrets arrive as files (/run/secrets/NAME; several are multi-line PEM/JSON,
+# which an env-file cannot carry); the app reads them from the environment.
+for f in /run/secrets/*; do
+  [ -f "$f" ] && export "$(basename "$f")=$(cat "$f")"
+done
+[ -n "$PGHOST" ] && export DB_HOST="$PGHOST" DB_PORT="$PGPORT" DB_NAME="$PGDATABASE" \
+  DB_USERNAME="$PGUSER" API_DATABASE_PASSWORD="$PGPASSWORD"
+[ -n "$PUSHLEFT_ROLE_NATS_HOST" ] && export NATS_URL="nats://$PUSHLEFT_ROLE_NATS_HOST:4222"
+[ -n "$PUSHLEFT_ROLE_RSPAMD_HOST" ] && export RSPAMD_URL="http://$PUSHLEFT_ROLE_RSPAMD_HOST:11334" \
+  MX_RSPAMD_URL="http://$PUSHLEFT_ROLE_RSPAMD_HOST:11334"
+exec "$@"

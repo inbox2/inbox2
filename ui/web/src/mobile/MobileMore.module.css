@@ -1,0 +1,53 @@
+.body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-4) var(--space-4) var(--mobile-nav-clearance); }
+
+.profile { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-1) var(--space-5); }
+.who { display: flex; flex-direction: column; min-width: 0; }
+.name { font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.email { font-size: var(--text-2xs); color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.group {
+  margin: var(--space-5) var(--space-1) var(--space-2);
+  font-size: var(--text-4xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.card {
+  overflow: hidden;
+  margin-bottom: var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  background: var(--bg-raised);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 52px;
+  padding: var(--space-2) var(--space-3h);
+  border: 0;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.row + .row { border-top: 1px solid var(--border-default); }
+.row:active { background: var(--overlay-6); }
+.row:focus-visible { outline: 2px solid var(--accent-warm-bright); outline-offset: -2px; }
+.rowIcon { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; border-radius: var(--radius-lg); background: var(--overlay-8); color: var(--text-secondary); }
+.rowText { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rowLabel { font-size: var(--text-sm); }
+.rowSub { font-size: var(--text-3xs); color: var(--text-tertiary); }
+.chev { color: var(--text-muted); flex-shrink: 0; }
+.danger { color: var(--accent-danger); justify-content: center; }
+.danger .rowIcon { background: var(--accent-danger-dim); color: var(--accent-danger); }
+
+/* Tablet: a readable column, not a 1000px-wide list. */
+@media (min-width: 761px) {
+  .body > * { max-width: 640px; margin-left: auto; margin-right: auto; }
+}

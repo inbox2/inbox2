@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Rebuild the shared @inbox2/email-body bundle and copy it to every native client
+# that embeds it. The web/desktop app imports the package source directly (vite
+# alias), but iOS and Android ship a built IIFE bundle as an app asset — those
+# copies MUST be regenerated whenever packages/email-body/src changes, or the
+# native WebViews silently run stale email-rendering logic (e.g. Android missing
+# the <pre>-unwrap fix). The drift guard in packages/email-body/__tests__/
+# bundleSync.test.js fails CI if these fall out of sync.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PKG="$ROOT/packages/email-body"
+OUT="$PKG/dist/email-body.js"
+
+echo "building $OUT"
+( cd "$PKG" && yarn --silent build )
+
+for dest in \
+  "$ROOT/ui/ios/Resources/email-body.js" \
+  "$ROOT/ui/android/app/src/main/assets/email-body.js"
+do
+  cp "$OUT" "$dest"
+  echo "synced -> $dest"
+done
+
+echo "done. all embedded email-body.js copies are byte-identical to dist."

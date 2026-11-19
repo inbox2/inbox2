@@ -1,0 +1,8 @@
+# Omakase Ruby styling for Rails (https://github.com/rails/rubocop-rails-omakase).
+# Run: bin/rubocop (add -a to autocorrect). Pre-push and bin/ci run it.
+inherit_gem: { rubocop-rails-omakase: rubocop.yml }
+
+# House style is `[a, b]` / `%w[a b]` — omakase's `[ a, b ]` would restyle
+# every array in the app for no behavioural gain.
+Layout/SpaceInsideArrayLiteralBrackets:
+  Enabled: false

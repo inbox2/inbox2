@@ -1,0 +1,139 @@
+/* MoveEventDialog — content styling on shared Modal, after ConfirmDialog */
+
+.dialog {
+  width: 100%;
+  max-width: 380px;
+  padding: var(--space-5);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  color: var(--text-primary);
+}
+
+.title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  margin: 0;
+}
+
+.event {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.eventTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.when {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.error {
+  font-size: var(--text-sm);
+  color: var(--accent-danger);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.scope {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--space-4) 0;
+}
+
+.legend {
+  /* Named for screen readers; the rows say it visually. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-2h) var(--space-3);
+  background: var(--overlay-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--duration-fast), border-color var(--duration-fast);
+}
+
+.option:hover {
+  background: var(--overlay-4);
+}
+
+.option:has(.radio:checked) {
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent-primary) 55%, transparent);
+}
+
+.option:has(.radio:focus-visible) {
+  box-shadow: var(--glow-focus);
+}
+
+.scope:disabled .option {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.radio {
+  margin: 2px 0 0;
+  accent-color: var(--accent-primary);
+}
+
+.optionText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0h);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+
+.optionHint {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-normal);
+  color: var(--text-muted);
+}
+
+.message {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.btn {
+  font-size: var(--text-xs);
+  padding: var(--space-1h) var(--space-4);
+}
+
+/* Saving: still focusable (aria-disabled, not disabled), but no longer looks pressable. */
+.btn[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: default;
+  pointer-events: none;
+}

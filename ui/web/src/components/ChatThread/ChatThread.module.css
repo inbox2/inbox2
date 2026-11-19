@@ -1,0 +1,530 @@
+/* ═══════════════════════════════════════════════════════ */
+/* ChatThread — brand-themed social DM bubble stream         */
+/* Custom props (--brand-accent/-tint/-radius/-wallpaper)    */
+/* are set on .wrap by ChatThread via style.setProperty.     */
+/* ═══════════════════════════════════════════════════════ */
+
+.wrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* Frosted-glass panel: a heavy dark scrim (keeps text readable) that still lets
+     a hint of the wallpaper/desktop through, plus a blur for depth. */
+  background: color-mix(in srgb, var(--bg-base) 86%, transparent);
+  backdrop-filter: var(--acrylic-blur);
+  -webkit-backdrop-filter: var(--acrylic-blur);
+}
+
+/* Optional platform wallpaper (e.g. WhatsApp doodles), tinted to the brand and
+   kept very faint so bubbles stay legible. */
+.wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--brand-wallpaper, none);
+  background-size: 280px;
+  color: var(--brand-accent, var(--accent-primary));
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+.thread {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1h);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Date/time separator ──────────────────────────────── */
+.separator {
+  align-self: center;
+  margin: var(--space-2) 0 var(--space-1);
+}
+
+.separator span {
+  font-size: var(--text-3xs);
+  color: var(--text-tertiary);
+  background: var(--overlay-3);
+  border-radius: var(--radius-full);
+  padding: var(--space-0h) var(--space-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Bubble row ───────────────────────────────────────── */
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-1h);
+  max-width: 100%;
+}
+
+.inbound {
+  justify-content: flex-start;
+}
+
+.outbound {
+  justify-content: flex-end;
+}
+
+/* Turn change: give a left↔right switch extra breathing room (on top of the
+   base gap) so a new speaker reads as a new turn, while consecutive same-side
+   messages stay tight. Separators sit between rows and break this adjacency. */
+.inbound + .outbound,
+.outbound + .inbound {
+  margin-top: var(--space-2);
+}
+
+.gutter {
+  /* The 28px avatar plus its ring + gap on each side (Avatar.module.css). */
+  width: 36px;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+
+.bubbleWrap {
+  display: flex;
+  flex-direction: column;
+  max-width: min(68%, 540px);
+  min-width: 0;
+}
+
+.outbound .bubbleWrap {
+  align-items: flex-end;
+}
+
+.bubble {
+  position: relative;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--brand-radius, var(--radius-16));
+  line-height: var(--leading-snug);
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Emoji reaction — a small pill straddling the bubble's bottom edge
+   (WhatsApp/Messenger style). */
+.reaction {
+  position: absolute;
+  bottom: -10px;
+  right: 8px;
+  font-size: var(--text-2xs);
+  line-height: 1;
+  padding: var(--space-0h) var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--bg-elevated);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.inbound .reaction {
+  right: auto;
+  left: 8px;
+}
+
+/* Keyboard focus ring (F4 message stepping). */
+.focused .bubble {
+  outline: 2px solid var(--brand-accent, var(--accent-primary));
+  outline-offset: 2px;
+}
+
+/* Inbound: frosted-glass chip — translucent over the panel with a blur + light
+   hairline so it reads as glass while staying legible. */
+.inbound .bubble {
+  background: color-mix(in srgb, var(--bg-elevated) 72%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid var(--overlay-4);
+  border-bottom-left-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+/* Outbound: brand-accent glass bubble, white text in both themes for contrast. */
+.outbound .bubble {
+  background: color-mix(in srgb, var(--brand-accent, var(--accent-primary)) 85%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border-bottom-right-radius: var(--radius-sm);
+  color: #fff;
+}
+
+.text {
+  font-size: var(--text-base);
+  white-space: pre-wrap;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.text a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.outbound .text a {
+  color: #fff;
+}
+
+/* ── Attachments ──────────────────────────────────────── */
+.attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1h);
+  margin-top: var(--space-1h);
+}
+
+.attachImg {
+  max-width: 220px;
+  max-height: 220px;
+  border-radius: var(--radius-md);
+  display: block;
+}
+
+.attachChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-2xs);
+  padding: var(--space-0h) var(--space-1h);
+  border-radius: var(--radius-sm);
+  background: var(--overlay-3);
+  color: var(--text-secondary);
+  max-width: 220px;
+}
+
+.outbound .attachChip {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.attachName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachSize {
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* ── Time (tucked into the bubble's trailing corner) ──── */
+.time {
+  display: block;
+  text-align: right;
+  margin-top: var(--space-0h);
+  font-size: var(--text-3xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+  opacity: 0.85;
+}
+
+.outbound .time {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.draftTag {
+  margin-right: var(--space-1);
+  font-weight: var(--weight-semibold);
+  color: var(--accent-warning);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.outbound .draftTag {
+  color: #fff;
+}
+
+/* ── Group sender name (first bubble of a run) ────────── */
+.senderLabel {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  color: var(--brand-accent, var(--accent-primary));
+  margin-bottom: var(--space-0h);
+}
+
+/* ── Clickable attachments (open in the default app) ──── */
+.attachImgBtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  border-radius: var(--radius-md);
+}
+
+.attachChipBtn {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-2xs);
+}
+
+.attachChipBtn:hover {
+  background: var(--overlay-4);
+}
+
+.loadEarlier {
+  align-self: center;
+  margin-bottom: var(--space-2);
+  padding: var(--space-0h) var(--space-3);
+  border: 1px solid var(--overlay-4);
+  border-radius: var(--radius-full);
+  background: var(--overlay-3);
+  color: var(--text-secondary);
+  font-size: var(--text-2xs);
+  cursor: pointer;
+}
+
+.loadEarlier:hover {
+  color: var(--text-primary);
+}
+
+.attachImgBtn:focus-visible,
+.attachChipBtn:focus-visible,
+.loadEarlier:focus-visible {
+  outline: 2px solid var(--brand-accent, var(--accent-primary));
+  outline-offset: 2px;
+}
+
+/* Messenger-width column centred in a wide pane (local WhatsApp). */
+.threadNarrow {
+  padding-inline: max(var(--space-6), calc((100% - 820px) / 2));
+}
+
+/* Over a lane (WhatsApp columns): the lane's gradient is the background. */
+.wrapBare {
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* "New messages ↓": something arrived while the reader was scrolled up. */
+.newPill {
+  position: absolute;
+  bottom: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-full);
+  /* The brand accent darkened: white text on WhatsApp's light #25D366 itself
+     fails contrast, on this mix it doesn't. */
+  background: color-mix(in srgb, var(--brand-accent, var(--accent-primary)) 45%, #000);
+  color: #fff;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.newPill:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* A deleted message: italic and muted, as WhatsApp shows it. */
+.deleted {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* ── Typed media (local WhatsApp): MediaAttachment ─────── */
+.bubbleMedia {
+  padding: var(--space-1);
+}
+
+.bubbleMedia .text,
+.bubbleMedia .senderLabel {
+  padding: var(--space-1) var(--space-2) 0;
+}
+
+.bubbleMedia .time {
+  padding: 0 var(--space-2) var(--space-0h);
+}
+
+/* A lone sticker: no bubble, just the sticker and its time. */
+.bubbleBare.bubbleBare {
+  background: none;
+  border: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 0;
+}
+
+.bubbleBare .time {
+  color: var(--text-tertiary);
+}
+
+.mediaStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Photos, GIFs, video posters: framed at their own aspect ratio (--aspect, set
+   from WhatsApp's record) so nothing shifts while they load. */
+.media {
+  position: relative;
+  display: block;
+  width: min(280px, 100%);
+  aspect-ratio: var(--aspect, 4 / 3);
+  max-height: 340px;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--brand-radius, var(--radius-16)) - 4px);
+  overflow: hidden;
+  background: var(--overlay-3);
+  cursor: zoom-in;
+}
+
+button.media:focus-visible {
+  outline: 2px solid var(--brand-accent, var(--accent-primary));
+  outline-offset: 2px;
+}
+
+.mediaImg,
+.mediaBlank {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mediaMissing {
+  cursor: default;
+  filter: saturate(0.6);
+}
+
+.play {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+}
+
+.mediaBadge {
+  position: absolute;
+  left: var(--space-1h);
+  bottom: var(--space-1h);
+  padding: 1px var(--space-1h);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: var(--text-3xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.sticker {
+  display: block;
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+}
+
+.voice {
+  display: block;
+  width: min(260px, 100%);
+  height: 36px;
+}
+
+.doc {
+  display: flex;
+  flex-direction: column;
+  width: min(280px, 100%);
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--brand-radius, var(--radius-16)) - 4px);
+  overflow: hidden;
+  background: var(--overlay-3);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.doc:hover {
+  background: var(--overlay-4);
+}
+
+button.doc:focus-visible {
+  outline: 2px solid var(--brand-accent, var(--accent-primary));
+  outline-offset: 2px;
+}
+
+.docThumb {
+  display: block;
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  object-position: top;
+}
+
+.docRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  min-width: 0;
+}
+
+.docText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.docName {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.docMeta {
+  font-size: var(--text-3xs);
+  opacity: 0.75;
+}
+
+.linkCard {
+  display: flex;
+  flex-direction: column;
+  width: min(280px, 100%);
+  border-radius: calc(var(--brand-radius, var(--radius-16)) - 4px);
+  overflow: hidden;
+  background: var(--overlay-3);
+}
+
+.linkThumb {
+  display: block;
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+}
+
+.linkTitle {
+  padding: var(--space-1h) var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+/* Sent from Inbox2, not yet confirmed by the source (local WhatsApp): shown
+   at once, faded, with "Sending…" in place of the time. */
+.pending {
+  opacity: 0.6;
+}

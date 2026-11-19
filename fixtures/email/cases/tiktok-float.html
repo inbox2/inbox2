@@ -1,0 +1,20 @@
+<!-- Notification template that sets html,body{height:100%} (pins the iframe body to
+     its 150px default viewport so scrollHeight reports 150 and the frame clips) and
+     wraps the body in a float:left element (a float doesn't contribute height, so the
+     body collapses). FRAME_FIT_CSS (height:auto + display:flow-root, injected LAST)
+     fixes both. Verified under Playwright WebKit. -->
+<html>
+<head><style>
+  html, body { height: 100% !important; margin: 0; }
+</style></head>
+<body>
+  <div style="float:left;width:100%">
+    <table width="600" align="center"><tr><td style="padding:32px">
+      <img src="https://t.tiktok.example/banner.png" width="600" height="180" style="display:block;width:100%;height:auto" alt="">
+      <h2>Someone viewed your profile</h2>
+      <p>Open the app to see who's been checking you out.</p>
+      <a href="https://tiktok.example/app">Open TikTok</a>
+    </td></tr></table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,138 @@
+# ═══════════════════════════════════════════════════════
+# Inbox2 — Development Services
+# ═══════════════════════════════════════════════════════
+#
+# Profiles:
+#   queue   — NATS + JetStream (message queue)
+#   storage — Garage S3-compatible object store
+#   spam    — Rspamd anti-spam engine
+#   test    — GreenMail IMAP server (desktop IMAP integration tests)
+#   all     — everything except test (test is opt-in only)
+#
+# Usage (from the repo root):
+#   docker compose -f docker/docker-compose.yml --profile queue up            # just NATS
+#   docker compose -f docker/docker-compose.yml --profile queue --profile storage up
+#   docker compose -f docker/docker-compose.yml --profile all up              # everything
+#   docker compose -f docker/docker-compose.yml --profile test up -d          # GreenMail for tests
+#
+# PostgreSQL is NOT included — assumed available on the host.
+# Rails uses the default local socket connection.
+
+# Explicit project name. Without it Compose names the project after the
+# directory — "docker" — which several repos on this machine share (Tuli has a
+# docker/ too). That made them ONE project: `docker compose ps` in either listed
+# the other's containers, `down` in either stopped the other's, and inbox2's
+# `garage` service resolved to the container Tuli was already running. Naming the
+# project pins every container to this repo.
+name: inbox2
+
+services:
+
+  # ███╗░░██╗░█████╗░████████╗░██████╗
+  # ████╗░██║██╔══██╗╚══██╔══╝██╔════╝
+  # ██╔██╗██║███████║░░░██║░░░╚█████╗░
+  # ██║╚████║██╔══██║░░░██║░░░░╚═══██╗
+  # ██║░╚███║██║░░██║░░░██║░░░██████╔╝
+  # ╚═╝░░╚══╝╚═╝░░╚═╝░░░╚═╝░░░╚═════╝
+  # NATS with JetStream — message queue (spec 16.2.3)
+  nats:
+    image: nats:2-alpine
+    command: ["--js", "--store_dir", "/data", "--port", "4222", "--http_port", "4223"]
+    profiles:
+      - queue
+      - all
+    ports:
+      - "4222:4222"   # Client connections
+      - "4223:4223"   # HTTP monitoring
+    volumes:
+      - nats_data:/data
+    networks:
+      - inbox2_net
+
+  # ░██████╗░░█████╗░██████╗░░█████╗░░██████╗░███████╗
+  # ██╔════╝░██╔══██╗██╔══██╗██╔══██╗██╔════╝░██╔════╝
+  # ██║░░██╗░███████║██████╔╝███████║██║░░██╗░█████╗░░
+  # ██║░░╚██╗██╔══██║██╔══██╗██╔══██║██║░░╚██╗██╔══╝░░
+  # ╚██████╔╝██║░░██║██║░░██║██║░░██║╚██████╔╝███████╗
+  # ░╚═════╝░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚═╝░╚═════╝░╚══════╝
+  # Garage — S3-compatible object store (spec 16.3.3)
+  garage:
+    image: dxflrs/garage:v1.0.1
+    profiles:
+      - storage
+      - all
+    ports:
+      - "4900:3900"   # S3 API
+      - "4902:3902"   # Admin API
+    environment:
+      GARAGE_ALLOW_WORLD_READABLE_TMPDIR: "true"
+    volumes:
+      # Garage refuses to start without a config file at /etc/garage.toml — this
+      # service never had one mounted, so the storage profile could not come up
+      # even when it was asked for.
+      - ./garage.toml:/etc/garage.toml:ro
+      - garage_data:/var/lib/garage/data
+      - garage_meta:/var/lib/garage/meta
+    networks:
+      - inbox2_net
+
+  # ██████╗░░██████╗██████╗░░█████╗░███╗░░░███╗██████╗░
+  # ██╔══██╗██╔════╝██╔══██╗██╔══██╗████╗░████║██╔══██╗
+  # ██████╔╝╚█████╗░██████╔╝███████║██╔████╔██║██║░░██║
+  # ██╔══██╗░╚═══██╗██╔═══╝░██╔══██║██║╚██╔╝██║██║░░██║
+  # ██║░░██║██████╔╝██║░░░░░██║░░██║██║░╚═╝░██║██████╔╝
+  # ╚═╝░░╚═╝╚═════╝░╚═╝░░░░░╚═╝░░╚═╝╚═╝░░░░░╚═╝╚═════╝
+  # Rspamd — anti-spam engine (spec 16.5.2)
+  rspamd:
+    image: rspamd/rspamd:latest
+    profiles:
+      - spam
+      - all
+    ports:
+      - "4334:11334"  # Web UI + API
+    volumes:
+      - rspamd_data:/var/lib/rspamd
+    networks:
+      - inbox2_net
+
+  # ░██████╗░██████╗░███████╗███████╗███╗░░██╗███╗░░░███╗░█████╗░██╗██╗░░░░░
+  # ██╔════╝░██╔══██╗██╔════╝██╔════╝████╗░██║████╗░████║██╔══██╗██║██║░░░░░
+  # ██║░░██╗░██████╔╝█████╗░░█████╗░░██╔██╗██║██╔████╔██║███████║██║██║░░░░░
+  # ██║░░╚██╗██╔══██╗██╔══╝░░██╔══╝░░██║╚████║██║╚██╔╝██║██╔══██║██║██║░░░░░
+  # ╚██████╔╝██║░░██║███████╗███████╗██║░╚███║██║░╚═╝░██║██║░░██║██║███████╗
+  # ░╚═════╝░╚═╝░░╚═╝╚══════╝╚══════╝╚═╝░░╚══╝╚═╝░░░░░╚═╝╚═╝░░╚═╝╚═╝╚══════╝
+  # GreenMail — tiny multi-arch (amd64 + arm64) test IMAP server for the
+  # desktop IMAP integration tests. Zero config: no config files, no TLS cert
+  # to mount, no version drift. Serves IMAP on 3143 and IMAPS (implicit TLS)
+  # on 3993. Provisions testuser/testpass so wrong passwords are rejected; the
+  # self-signed IMAPS cert requires INBOX2_IMAP_ACCEPT_INVALID_CERTS=1.
+  #
+  #   docker compose -f docker/docker-compose.yml --profile test up -d
+  #   INBOX2_IMAP_ACCEPT_INVALID_CERTS=1 IMAP_TEST_HOST=localhost IMAP_TEST_PORT=3993 \
+  #     cargo test --manifest-path ui/desktop/src-tauri/Cargo.toml --test imap_integration -- --ignored
+  greenmail:
+    image: greenmail/standalone:2.1.0
+    profiles:
+      - test
+    ports:
+      - "3143:3143"   # IMAP
+      - "3993:3993"   # IMAPS (implicit TLS)
+    environment:
+      # setup.test.all = enable all protocols on the 3xxx ports;
+      # hostname=0.0.0.0 = bind all interfaces (reachable through Docker's
+      #   port-forward; the default 127.0.0.1 is not);
+      # users = provision testuser/testpass so wrong passwords are rejected;
+      # verbose = log activity for debugging.
+      GREENMAIL_OPTS: "-Dgreenmail.setup.test.all -Dgreenmail.hostname=0.0.0.0 -Dgreenmail.users=testuser:testpass -Dgreenmail.verbose"
+    networks:
+      - inbox2_net
+
+volumes:
+  nats_data:
+  garage_data:
+  garage_meta:
+  rspamd_data:
+
+networks:
+  inbox2_net:
+    driver: bridge

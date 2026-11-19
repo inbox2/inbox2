@@ -1,0 +1,78 @@
+/* DateField — input-shaped trigger + the MiniCalendar floating under it.
+   The trigger carries the caller's input class so it matches its neighbours;
+   these defaults only cover what a button needs to pass for an input. */
+
+.field {
+  display: inline-flex;
+  /* stretch: the trigger takes the time input's height (settings pins inputs
+     at 38px) and vice versa, so the pair never reads as two different controls */
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.trigger {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  background: var(--surface-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+}
+
+.trigger:focus-visible {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: var(--glow-focus);
+}
+
+.trigger:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.trigger > :first-child {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.placeholder {
+  color: var(--text-tertiary);
+}
+
+/* The time half stays a native field (its popup is a short list, and typing a
+   clock beats a picker), but follows the theme instead of the OS. */
+.time {
+  color-scheme: dark;
+}
+
+:global([data-theme="light"]) .time {
+  color-scheme: light;
+}
+
+/* Popover is a positioning shell; the surface is ours — same recipe as DayPeek. */
+.pop {
+  padding: var(--space-1);
+  background: var(--surface-float);
+  border: 1px solid var(--overlay-12);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shadow-xl),
+    var(--acrylic-highlight);
+}
+
+/* The picker opens from inside modals (zone editor, event editor), and the
+   shared popover layer sits under --z-modal, so lift it just above. */
+.layer.layer { /* doubled: beats Popover's own z-index whatever the bundle order */
+  z-index: calc(var(--z-modal) + 1);
+}

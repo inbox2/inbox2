@@ -1,0 +1,145 @@
+/* Paywall overlay for the Spaces / AI-triage dashboard. Sits over a blurred
+ * mock-data treemap. Inherits the dashboard's bento tokens (--yellow / --violet
+ * / --display / glass-*) from the .page ancestor, with safe fallbacks. */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  pointer-events: none; /* let the card alone catch clicks */
+}
+
+.card {
+  pointer-events: auto;
+  width: min(440px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3h);
+  padding: var(--space-7);
+  border-radius: var(--r-lg, 18px);
+  background: rgba(20, 20, 26, 0.4);
+  backdrop-filter: blur(40px) saturate(1.4);
+  -webkit-backdrop-filter: blur(40px) saturate(1.4);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 60px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  text-align: left;
+}
+
+.badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1h);
+  padding: var(--space-1h) var(--space-3);
+  border-radius: var(--radius-full);
+  font-family: var(--text, inherit);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--display, inherit);
+  font-weight: 600;
+  font-size: 27px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.body {
+  margin: 0;
+  font-family: var(--text, inherit);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.bullets {
+  margin: var(--space-1) 0 var(--space-0h);
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2h);
+}
+
+.bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2h);
+  font-family: var(--text, inherit);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.bulletIcon {
+  flex-shrink: 0;
+  margin-top: var(--space-px);
+  color: var(--violet);
+}
+
+.cta {
+  margin-top: var(--space-1h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4h);
+  border: none;
+  border-radius: var(--r-md, var(--radius-14));
+  font-family: var(--text, inherit);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: #1a1a1f;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--yellow, #ffd23f) 0%, #ffe27a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 22px rgba(255, 210, 63, 0.28);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.cta:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 12px 28px rgba(255, 210, 63, 0.36);
+}
+.cta:active { transform: translateY(0); }
+.cta:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.poweredBy {
+  margin: var(--space-2h) 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1h);
+  font-family: var(--text, inherit);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.poweredMark {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.askAdmin {
+  margin: var(--space-0h) 0 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--text, inherit);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.88);
+}

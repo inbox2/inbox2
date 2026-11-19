@@ -1,0 +1,84 @@
+/* ═══ CONVERSATION STRIP — transparent rows over a colored surface ═══ */
+
+.list {
+  container-type: inline-size;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 28px;
+  flex-shrink: 0;
+  padding: 0 var(--space-0h);
+  border-top: 1px solid color-mix(in srgb, var(--q-fg, #fff) 16%, transparent);
+  font-size: var(--text-2xs);
+  color: var(--q-fg, #fff);
+}
+/* Interactive rows (an onOpen handler is wired): hover tint + focus ring.
+ * pointer-events is re-enabled explicitly — hosts like the treemap's msgPanel
+ * set pointer-events:none on the whole panel so its empty areas pass clicks
+ * through to the cell; the rows themselves must still be hit-testable. */
+.rowOpen { cursor: pointer; pointer-events: auto; }
+.rowOpen:hover { background: color-mix(in srgb, var(--q-fg, #fff) 10%, transparent); }
+.rowOpen:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--q-fg, #fff) 60%, transparent);
+  outline-offset: -1px;
+}
+.channel { display: inline-flex; flex-shrink: 0; }
+.channel img { border-radius: var(--radius-4); display: block; }
+.from { font-weight: 600; white-space: nowrap; flex: 0 1 auto; min-width: 5em; max-width: 34%; overflow: hidden; text-overflow: ellipsis; }
+.subject { white-space: nowrap; flex: 1 1 auto; min-width: 0; max-width: 60%; overflow: hidden; text-overflow: ellipsis; color: color-mix(in srgb, var(--q-fg, #fff) 72%, transparent); }
+
+/* A row is sender + subject + label + date. Drop the least useful parts first
+   as the list narrows, so what's left stays readable instead of being clipped
+   off the edge of the card. */
+@container (max-width: 520px) { .preview { display: none; } }
+@container (max-width: 300px) { .date { display: none; } }
+@container (max-width: 210px) { .chip { display: none; } }
+.preview { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: color-mix(in srgb, var(--q-fg, #fff) 44%, transparent); }
+.clip { color: color-mix(in srgb, var(--q-fg, #fff) 52%, transparent); flex-shrink: 0; }
+.date { font-family: var(--font-mono); font-size: var(--text-4xs); color: color-mix(in srgb, var(--q-fg, #fff) 55%, transparent); flex-shrink: 0; margin-left: auto; }
+
+/* Jev chips (priority, then label) — outlined pills in the tone's hue, text
+ * kept on the host foreground so they read on any cell tint. */
+.chip {
+  flex-shrink: 0;
+  font-size: var(--text-4xs);
+  font-weight: 600;
+  line-height: 1.5;
+  padding: 0 var(--space-1h);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  --chip-color: color-mix(in srgb, var(--q-fg, #fff) 60%, transparent);
+  color: var(--q-fg, #fff);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 75%, transparent);
+  background: color-mix(in srgb, var(--chip-color) 22%, transparent);
+}
+.tone_urgent { --chip-color: var(--accent-danger); }
+.tone_pending { --chip-color: var(--accent-gold); }
+.tone_open { --chip-color: var(--accent-success); }
+/* tone_custom keeps the neutral default unless a palette color is set via JS. */
+
+.assignees { display: inline-flex; align-items: center; flex-shrink: 0; }
+.assignee { margin-left: -4px; line-height: 0; border-radius: 50%; box-shadow: 0 0 0 1px color-mix(in srgb, var(--q-fg, #fff) 70%, transparent); }
+.assignee:first-child { margin-left: 0; }
+.assigneeMore { margin-left: var(--space-1); font-size: var(--text-4xs); font-weight: 600; opacity: 0.8; }
+
+/* Groovebox: solid pastel chips with dark type (neutral ones over the panel
+   grey), matching the theme's tag chips — not outlined pills. */
+:global([data-theme-variant="groovebox"]) .chip {
+  background: linear-gradient(var(--chip-color), var(--chip-color)), #3a3a41;
+  color: #141416;
+  border: 0;
+  border-radius: var(--radius-6);
+  font-weight: var(--weight-bold);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+}
+

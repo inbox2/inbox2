@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "336750114074",
+    "project_id": "inbox2-497321",
+    "storage_bucket": "inbox2-497321.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:336750114074:android:faacb3c2d88c6573e328a3",
+        "android_client_info": {
+          "package_name": "com.inbox2.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAohIQnpgf_A9n4jkviEfBtDKcw8Py0FQg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

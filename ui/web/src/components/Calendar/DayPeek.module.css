@@ -1,0 +1,124 @@
+/* Mini-calendar hover preview — a single FullCalendar-style day column. */
+
+/* <Popover> is a positioning shell only — the surface belongs to the content,
+   so without this the peek rendered transparent over whatever was behind it.
+   Same recipe as EventDetailPopup's .popup. */
+.peek {
+  width: 230px;
+  padding: var(--space-2) 0 var(--space-2);
+  background: var(--surface-float);
+  border: 1px solid var(--overlay-12);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shadow-xl),
+    var(--acrylic-highlight);
+  overflow: hidden;
+}
+
+.header {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 var(--space-3) var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.allDay {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3) 0;
+}
+
+.allDayChip {
+  font-size: var(--text-3xs);
+  color: var(--text-secondary);
+  background: var(--overlay-6);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--space-2);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty {
+  padding: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  opacity: 0.7;
+}
+
+.grid {
+  display: flex;
+  height: var(--peek-h, 300px);
+  max-height: 340px;
+  overflow-y: auto;
+  padding: var(--space-2) var(--space-2) 0 0;
+}
+
+.gutter {
+  flex: 0 0 42px;
+  position: relative;
+}
+
+.hour,
+.hourLine {
+  height: 22px;
+}
+
+.hour {
+  font-size: var(--text-4xs);
+  color: var(--text-muted);
+  text-align: right;
+  padding-right: var(--space-1h);
+  font-variant-numeric: tabular-nums;
+  /* Sit on the line, like FullCalendar's axis labels. */
+  transform: translateY(-0.4em);
+}
+
+.track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.hourLine {
+  border-bottom: 1px solid var(--overlay-2);
+}
+
+.event {
+  position: absolute;
+  top: var(--evt-top, 0);
+  height: var(--evt-h, 14px);
+  /* One column = full width; N concurrent events split it (see layoutDay). */
+  left: calc(var(--space-1) + var(--evt-left, 0%));
+  width: calc(var(--evt-w, 100%) - var(--space-1) * 2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1h);
+  overflow: hidden;
+  padding: 0 var(--space-1h);
+  border-radius: var(--radius-sm);
+  /* Solid fill + dark ink, exactly how the full calendar draws the event. */
+  background: var(--evt-color);
+  font-size: var(--text-4xs);
+  color: var(--evt-ink);
+  white-space: nowrap;
+}
+
+.eventTime {
+  opacity: 0.72;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.eventTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: var(--weight-medium);
+}

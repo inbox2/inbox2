@@ -1,0 +1,62 @@
+/* SyncProgressBar — indeterminate animated sliver, or a deterministic fill */
+
+.track {
+  position: relative;
+  height: 2px;
+  width: 100%;
+  overflow: hidden;
+  background: transparent;
+  flex: none;
+}
+
+.indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
+  border-radius: var(--radius-pill, var(--radius-xs));
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent-warm-bright, #60a5fa) 50%,
+    transparent 100%
+  );
+  animation: syncSlide 1.1s ease-in-out infinite;
+}
+
+@keyframes syncSlide {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
+/* Deterministic fill — width driven by --sync-pct (set via ref, no inline styles). */
+.fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: var(--sync-pct, 0%);
+  border-radius: var(--radius-pill, var(--radius-xs));
+  background: var(--accent-warm-bright, #60a5fa);
+  transition: width 0.4s ease-out;
+}
+
+/* Light sheen sweeping the full track on top of the deterministic fill, so the
+   bar still reads as actively working while showing real progress. */
+.shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 35%;
+  pointer-events: none;
+  /* Light BMW blue sheen. */
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(108, 183, 240, 0.65) 50%,
+    transparent 100%
+  );
+  animation: syncSlide 1.8s ease-in-out infinite;
+}

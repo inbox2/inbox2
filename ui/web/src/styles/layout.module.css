@@ -1,0 +1,1384 @@
+/* ═══════════════════════════════════════════════════════ */
+/* Inbox2 — Premium Desktop Operational Layout             */
+/* Aero atmosphere × panel architecture × workstation      */
+/* ═══════════════════════════════════════════════════════ */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* APP CHROME — atmospheric top frame, iconic presence     */
+/* ═══════════════════════════════════════════════════════ */
+
+.chrome {
+  height: var(--chrome-height);
+  min-height: var(--chrome-height);
+  background: var(--chrome-surface);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--chrome-border);
+  box-shadow: var(--chrome-shadow);
+  position: relative;
+  z-index: 10;
+  -webkit-app-region: drag;
+  overflow: hidden;
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Web build (no native window material behind the webview) — there's nothing for
+   the blur to frost, so drop the faux glass and give the chrome a purpose-built
+   desktop title-bar look: a LIGHTER graphite-navy gradient (top-lit, bottom-
+   shadowed). It's deliberately lighter than the page so the near-black selected
+   tab-chip reads as a clearly recessed, high-contrast chip against it — mirroring
+   the Tauri chrome (dark active tab on a lighter bar). A too-dark bar collapses
+   that contrast and the selection vanishes.
+   ALL web themes (warm/dark/stars/light) — the default --chrome-surface is a
+   translucent blue meant to frost native material that doesn't exist on web.
+   Scoped :not([data-tauri]) so the desktop chrome is untouched. */
+:global(:root:not([data-tauri])) .chrome {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background:
+    linear-gradient(180deg, #4a5566 0%, #3a4453 55%, #2d3644 100%);
+  border-bottom-color: rgba(0, 0, 0, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 2px 10px rgba(20, 28, 42, 0.22);
+}
+
+/* macOS + Windows desktop — transparent app background so the native window
+   material shows through (macOS: HudWindow vibrancy; Windows: Acrylic, set in
+   src-tauri/src/lib.rs). Linux has no native material, so it keeps the opaque
+   .app base background (var(--bg-base)) and the chrome's own CSS backdrop-filter
+   glass. */
+:global([data-os="macos"]) .app,
+:global([data-os="windows"]) .app {
+  background: transparent;
+}
+
+/* macOS desktop — inset the chrome for the overlaid traffic lights (top-left)
+   and disable CSS backdrop-filter: WebKit compositing layers from it occlude the
+   native NSVisualEffectView, so native vibrancy handles the blur instead.
+   overflow:clip avoids the compositing layer that overflow:hidden creates. */
+:global([data-os="macos"]) .chrome {
+  padding-left: 86px;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  overflow: clip;
+}
+
+/* Windows desktop — native Acrylic provides the chrome glass, so drop the CSS
+   backdrop-filter (it would occlude the native material, same as macOS) and use
+   overflow:clip to avoid the compositing layer overflow:hidden creates. No
+   traffic-light inset: on Windows and Linux the window has no native title bar
+   and the chrome bar's right end carries the controls (Chrome/WindowControls). */
+:global([data-os="windows"]) .chrome {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  overflow: clip;
+}
+
+/* Fullscreen — traffic lights hidden, reclaim the space (macOS only) */
+:global([data-os="macos"][data-tauri-fullscreen]) .chrome {
+  padding-left: var(--space-4);
+}
+
+/* Atmospheric diffusion overlay — subtle to preserve glassmorphic transparency */
+.chrome::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 100% at 50% 0%, rgba(120, 160, 220, 0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 80% at 30% 50%, rgba(100, 140, 200, 0.02) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* No atmosphere on the light title bar — macOS bars are a flat material. */
+:global([data-theme="light"]) .chrome::before {
+  display: none;
+}
+
+/* ── Workspace tabs — embedded into chrome surface ────── */
+.chromeTabs {
+  display: flex;
+  align-items: flex-end;
+  align-self: flex-end;
+  gap: var(--space-px);
+  margin-bottom: -1px;
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.chromeTabs::-webkit-scrollbar { display: none; }
+
+/* The flex items are Tooltip's wrapper spans, not the buttons — without this
+   they shrink when the bar is tight (mail adds Compose) and each tab overlaps
+   the 1px gap to its neighbour. Overflow scrolls instead. */
+.chromeTabs > * { flex-shrink: 0; }
+
+.chromeTab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  background: var(--overlay-4);
+  border: 1px solid var(--overlay-6);
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  color: var(--tab-inactive-fg);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+  box-shadow: none;
+  position: relative;
+  -webkit-app-region: no-drag;
+}
+
+.chromeTab:hover:not(.chromeTabActive):not(.chromeTabDisabled) {
+  background: var(--overlay-8);
+  border-color: var(--overlay-10);
+  color: var(--text-primary);
+  box-shadow: inset 0 -2px 4px color-mix(in srgb, var(--bevel) 3%, transparent), 0 -1px 3px color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+/* Light tabs read like Safari's: inactive tabs are flat and borderless so they
+   recede into the bar; only the selected one is a raised white chip. Boxing
+   every tab (the dark-mode treatment) made the strip look like eight buttons
+   with no selection. */
+:global([data-theme="light"]) .chromeTab {
+  background: transparent;
+  border-color: transparent;
+  opacity: 0.72;
+}
+
+:global([data-theme="light"]) .chromeTab:hover:not(.chromeTabActive):not(.chromeTabDisabled) {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1d1d1f;
+  border-color: transparent;
+  box-shadow: none;
+  opacity: 1;
+}
+
+:global([data-theme="light"]) .chromeTabActive {
+  background: #ffffff;
+  border-color: var(--border-default);
+  opacity: 1;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 1px 2px rgba(0, 0, 0, 0.10);
+}
+
+.chromeTabDisabled {
+  color: var(--tab-inactive-fg);
+  cursor: default;
+  opacity: 0.5;
+}
+
+.chromeTabDisabled:hover {
+  color: var(--tab-inactive-fg);
+  opacity: 0.5;
+}
+
+.chromeTabActive {
+  background: var(--tab-active-bg);
+  border-color: var(--tab-active-border);
+  border-bottom: none;
+  color: var(--tab-active-fg);
+  box-shadow: var(--tab-active-shadow);
+}
+
+/* Web chrome tabs (ALL themes — warm/dark/stars/light) — applies to any non-Tauri
+   build. The base .chromeTab* rules are tuned for the Tauri chrome, which sits on
+   light native window material; on web the chrome bar is a dark surface, so the
+   base "faint white inactive + dark recessed active" tabs both vanish into it.
+   Re-render with white-glass inactive tabs that actually read, plus a firm dark
+   selected chip (crisp top-highlight + defined border) that stands out against
+   them. Scoped :not([data-tauri]) so the desktop look is untouched.
+   (Ordering matters: .chromeTabActive must come after .chromeTab here — equal
+   specificity — so the active background isn't clobbered by the inactive rule.) */
+:global(:root:not([data-tauri])) .chromeTab {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--overlay-8);
+  color: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: none;
+}
+
+:global(:root:not([data-tauri])) .chromeTab:hover:not(.chromeTabActive):not(.chromeTabDisabled) {
+  background: var(--overlay-12);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  box-shadow:
+    inset 0 -2px 4px rgba(255, 255, 255, 0.03),
+    0 -1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* The selected tab reads as a darker, recessed chip "connected" to the page below
+   — but the web chrome bar is already dark, so a faint dark tint disappears. Give
+   it a firm dark fill, a crisp top-highlight edge, and a defined border so it
+   stands out against the lighter inactive tabs (mirrors the Tauri active look). */
+:global(:root:not([data-tauri])) .chromeTabActive {
+  background: linear-gradient(180deg, #12151b 0%, #0e1016 100%);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f4f5f8;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 1px 5px rgba(0, 0, 0, 0.4);
+}
+
+/* Light theme on web: same macOS title-bar treatment as the desktop build —
+   a light opaque bar with dark glyphs, so the browser tab strip doesn't sit
+   under a graphite bar the rest of the theme has nothing to do with. */
+:global(:root:not([data-tauri])[data-theme="light"]) .chrome {
+  background: linear-gradient(180deg, #f7f7f9 0%, #ececee 100%);
+  border-bottom-color: var(--border-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+:global(:root:not([data-tauri])[data-theme="light"]) .chromeTab {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.09);
+  color: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:global(:root:not([data-tauri])[data-theme="light"]) .chromeTab:hover:not(.chromeTabActive):not(.chromeTabDisabled) {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: var(--border-default);
+  color: #1d1d1f;
+  box-shadow: none;
+}
+
+:global(:root:not([data-tauri])[data-theme="light"]) .chromeTabActive {
+  background: #ffffff;
+  border-color: var(--border-strong);
+  color: #1d1d1f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* ── Rainbow tabs (opt-in — Settings › Theme › Advanced) ─────────────────
+   The Obsidian "rainbow folders" look: each tab is tinted with a colour from
+   the Catppuccin accent palette, assigned by position via .rb0…rb8 (set in
+   ChromeBar). --rb carries the tab's hue; .chromeTabRainbow paints with it —
+   a soft tint when idle, a bright near-solid fill (dark text) when selected,
+   so the active tab still reads clearly. Selectors carry :root + .chromeTabs
+   so they outrank the per-build .chromeTab background overrides above in both
+   the web and Tauri chrome, and work regardless of theme. */
+.rb0 { --rb: #f38ba8; } /* pink */
+.rb1 { --rb: #eba0ac; } /* flamingo */
+.rb2 { --rb: #fab387; } /* peach */
+.rb3 { --rb: #f9e2af; } /* yellow */
+.rb4 { --rb: #a6e3a1; } /* green */
+.rb5 { --rb: #94e2d5; } /* teal */
+.rb6 { --rb: #89dceb; } /* sky */
+.rb7 { --rb: #89b4fa; } /* blue */
+.rb8 { --rb: #b4befe; } /* lavender */
+
+:global(:root) .chromeTabs .chromeTabRainbow {
+  /* Solid pastel fill (like the label pills), faintly dimmed so the selected
+     tab can outshine it; dark ink text reads cleanly on every hue. The web
+     tabs' glass backdrop-filter is useless behind this opaque fill and its
+     compositing layer resamples the label at fractional offsets (soft/double
+     text), so drop it. */
+  background: color-mix(in srgb, var(--rb) 90%, #000000 10%);
+  border-color: color-mix(in srgb, var(--rb) 70%, #000000 20%);
+  color: color-mix(in srgb, var(--rb) 15%, #1d212b);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:global(:root) .chromeTabs .chromeTabRainbow:hover:not(.chromeTabActive):not(.chromeTabDisabled) {
+  /* Lighten toward the selected look but stop short of it (idle is 90% hue,
+     active peaks at hue+16% white), and keep the dark ink — the web chrome's
+     generic hover rule sets white text, which washes out on the pastel fill. */
+  background: color-mix(in srgb, var(--rb) 100%, #ffffff 8%);
+  border-color: color-mix(in srgb, var(--rb) 85%, #000000 8%);
+  color: color-mix(in srgb, var(--rb) 15%, #1d212b);
+}
+:global(:root) .chromeTabs .chromeTabRainbow.chromeTabActive {
+  /* Full-brightness fill + white top-highlight, inset ring and drop shadow so
+     the current tab reads as a lifted, glossy chip against the flat siblings. */
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--rb) 100%, #ffffff 16%) 0%,
+    var(--rb) 100%);
+  border-color: color-mix(in srgb, var(--rb) 100%, #ffffff 45%);
+  color: color-mix(in srgb, var(--rb) 15%, #1d212b);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+    0 2px 10px rgba(0, 0, 0, 0.4);
+}
+/* Provider icons / avatars sit directly on the coloured fill and blend in, so
+   give each a small white "coin" (white pad + thin ring + soft drop) so photos,
+   monograms and favicons pop cleanly off the pastel. Deliberately no border-
+   radius — the icon keeps its own shape (circle for avatars, rounded-square for
+   favicons) and the pad + ring follow it. Rainbow tabs only; the unified cube
+   (an inline SVG, not an <img>) is left untouched. */
+:global(:root) .chromeTabs .chromeTabRainbow img {
+  background: #ffffff;
+  padding: 1.5px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.28);
+}
+/* The default badge (faint white pill + light text) vanishes on the pastel
+   fill — swap it for a dark-ink pill so the count reads on every hue. */
+:global(:root) .chromeTabs .chromeTabRainbow .chromeTabBadge {
+  background: rgba(23, 25, 31, 0.75);
+  color: #ffffff;
+}
+/* Drop the icon's duotone same-colour fill on rainbow tabs — against the solid
+   pastel that faint inner fill reads as a halo/glow. Zero it so the tail-tab
+   glyphs (calendar/explorer) render as clean flat strokes. */
+:global(:root) .chromeTabs .chromeTabRainbow svg [fill="currentColor"] {
+  fill-opacity: 0;
+}
+/* Same for the duotone's faint accent strokes (30%/50%-opacity ticks) — on the
+   pastel fill they read as a ghost "shadow" of the glyph. Force every stroke
+   solid so the icon is one crisp flat drawing. */
+:global(:root) .chromeTabs .chromeTabRainbow svg * {
+  stroke-opacity: 1;
+  opacity: 1;
+}
+
+/* Unified inbox logo inside tab (30% larger than the 18px tab glyphs for prominence) */
+.chromeTabLogo {
+  height: 23px;
+  width: 23px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Per-channel tab with email label */
+.chromeTabChannel {
+  width: auto;
+  padding: 0 var(--space-3);
+  gap: var(--space-2);
+  max-width: 140px;
+}
+
+.chromeTabChannelLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: inherit;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+/* Channel tab mid-drag (dnd-kit reorder) — matches the switcher dropdown look */
+.chromeTabDragging {
+  opacity: 0.4;
+  z-index: 1;
+}
+
+.chromeTabBadge {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-lg);
+  background: var(--overlay-15);
+  color: var(--bevel);
+  font-size: var(--text-4xs);
+  font-weight: var(--weight-bold);
+  line-height: 16px;
+  text-align: center;
+  text-shadow: none;
+  flex-shrink: 0;
+}
+
+/* The unified cube is a fixed 38px square with a centered icon, so its combined
+   unread badge floats in the top-right corner instead of flowing inline like the
+   per-channel tab badges (which sit after the label). */
+.chromeTabCubeBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 14px;
+  height: 14px;
+  line-height: 14px;
+  padding: 0 3px;
+  pointer-events: none;
+}
+
+/* Sign-in expired: a red dot in the badge slot, signalling the channel needs
+   reconnection (it replaces the unread count for that channel). */
+.chromeTabReauthDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-danger-text);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--status-danger-text) 60%, transparent);
+  flex-shrink: 0;
+}
+
+.chromeSearchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 200px;
+  flex-shrink: 1;
+  min-width: 120px;
+  -webkit-app-region: no-drag;
+}
+
+.chromeSearch {
+  width: 100%;
+  padding: var(--space-1h) var(--space-6) var(--space-1h) var(--space-3);
+  background: var(--chrome-inset-bg);
+  border: 1px solid var(--overlay-6);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  box-shadow: none;
+  transition: background var(--duration-fast), border-color var(--duration-fast);
+}
+
+.chromeSearch:focus {
+  background: var(--chrome-inset-bg-hover);
+  border-color: var(--overlay-12);
+  box-shadow: none;
+  outline: none;
+}
+
+.chromeSearch::placeholder { color: var(--chrome-placeholder); }
+
+/* Web + light only — the chrome is a dark desktop title-bar, but the search
+   input inherits light-mode tokens (dark text on a light inset), so it reads as
+   black-on-black. Override to a dark translucent inset with white text and a
+   muted-white placeholder so it stays legible against the dark chrome. */
+:global(:root:not([data-tauri])[data-theme="light"]) .chromeSearch {
+  background: rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.10);
+  color: #f1f2f6;
+}
+
+:global(:root:not([data-tauri])[data-theme="light"]) .chromeSearch:focus {
+  background: rgba(0, 0, 0, 0.30);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+:global(:root:not([data-tauri])[data-theme="light"]) .chromeSearch::placeholder {
+  color: rgba(255, 255, 255, 0.50);
+}
+
+:global(:root:not([data-tauri])[data-theme="light"]) .chromeSearchClear {
+  background: var(--overlay-12);
+  color: rgba(255, 255, 255, 0.70);
+}
+
+:global(:root:not([data-tauri])[data-theme="light"]) .chromeSearchClear:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.chromeSearchClear {
+  position: absolute;
+  right: var(--space-1h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  background: var(--overlay-8);
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background var(--duration-micro), color var(--duration-micro);
+  z-index: 1;
+}
+
+.chromeSearchClear:hover {
+  background: var(--overlay-12);
+  color: var(--text-primary);
+}
+
+.chromeActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  position: relative;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+
+/* ── Navigation back/forward ── */
+.chromeNavBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--tab-inactive-fg);
+  cursor: pointer;
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+
+.chromeNavBtn:hover {
+  color: var(--text-primary);
+  background: var(--overlay-6);
+}
+
+.chromeNavBtn:active {
+  background: var(--overlay-3);
+}
+
+/* ── Window controls (Windows/Linux, no native title bar) ── */
+.winControls {
+  display: flex;
+  align-items: center;
+  margin-left: var(--space-2);
+  -webkit-app-region: no-drag;
+}
+
+.winControl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--tab-inactive-fg);
+  cursor: pointer;
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+
+.winControl:hover {
+  color: var(--text-primary);
+  background: var(--overlay-6);
+}
+
+.winControl:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: -1px;
+  color: var(--text-primary);
+}
+
+.winControlClose:hover {
+  color: var(--text-primary);
+  background: var(--btn-danger-bg-hover);
+}
+
+.chromeNavBtnDisabled {
+  color: var(--text-muted);
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ── Shared triage label — used by ConversationItem + EmailPreviewPopup ── */
+.aeroLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  color: var(--triage-color, var(--text-secondary));
+  background: color-mix(in srgb, var(--triage-color, transparent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--triage-color, transparent) 18%, transparent);
+  border-radius: var(--radius-xs);
+  padding: var(--space-0h) var(--space-2) var(--space-1);
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+}
+
+/* Light mode: render the triage label as a solid filled chip with the same
+   bevel + light foreground as the Tag chips, so it sits in-band with the labels
+   beside it (Urgent/Legal) instead of reading as a separate ghost outline. */
+:global([data-theme="light"]) .aeroLabel {
+  color: var(--text-inverse);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+  background: var(--triage-color, var(--accent-primary));
+  border-color: color-mix(in srgb, var(--ink) 22%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 color-mix(in srgb, var(--ink) 18%, transparent),
+    0 1px 1.5px rgba(0, 0, 0, 0.14);
+}
+
+:global([data-theme="light"]) .aeroLabel .triageIcon,
+:global([data-theme="light"]) .aeroLabel svg {
+  opacity: 0.95;
+}
+
+.chromeRefreshSpin {
+  animation: chromeRefreshSpin 1s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes chromeRefreshSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* MAIN BODY — three-column panel architecture             */
+/* ═══════════════════════════════════════════════════════ */
+
+.body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  background: var(--bg-workspace);
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* SIDEBAR — dense, layered, operational nav               */
+/* ═══════════════════════════════════════════════════════ */
+
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--surface-sidebar-grad);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--sidebar-border);
+  box-shadow:
+    inset -1px 0 0 var(--overlay-3),
+    1px 0 4px color-mix(in srgb, var(--ink) 6%, transparent);
+  position: relative;
+}
+
+:global([data-theme="light"]) .sidebar {
+  border-right-color: var(--border-default);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Subtle texture gradient */
+.sidebar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 30% at 50% 0%, rgba(60, 80, 120, 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 20% at 30% 70%, rgba(40, 60, 100, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+:global([data-theme="light"]) .sidebar::after {
+  background:
+    radial-gradient(ellipse 90% 25% at 50% 0%, rgba(255, 255, 255, 0.5) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 20% at 40% 100%, rgba(210, 218, 228, 0.18) 0%, transparent 50%);
+}
+
+.sidebarBody {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.sidebarFooter {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* MESSAGE LIST — deeply recessed inset panel              */
+/* ═══════════════════════════════════════════════════════ */
+
+.list {
+  width: var(--list-width);
+  min-width: var(--list-width);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-list-grad);
+  border-right: 1px solid var(--list-border);
+  box-shadow: var(--panel-deep-inset);
+  position: relative;
+}
+
+:global([data-theme="light"]) .list {
+  border-right-color: var(--border-default);
+}
+
+/* Ambient inner edge highlight */
+.list::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 10%, var(--overlay-3) 50%, transparent 90%);
+  z-index: 1;
+}
+
+:global([data-theme="light"]) .list::before {
+  background: linear-gradient(90deg, transparent 10%, color-mix(in srgb, var(--bevel) 30%, transparent) 50%, transparent 90%);
+}
+
+.listHeader {
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background:
+    linear-gradient(180deg,
+      var(--overlay-6) 0%,
+      var(--overlay-3) 40%,
+      color-mix(in srgb, var(--scrim) 4%, transparent) 70%,
+      color-mix(in srgb, var(--scrim) 8%, transparent) 100%
+    );
+  border-top: 1px solid var(--overlay-6);
+  border-bottom: 1px solid var(--border-groove);
+  box-shadow:
+    inset 0 1px 0 var(--overlay-4);
+}
+
+:global([data-theme="light"]) .listHeader {
+  background:
+    linear-gradient(180deg,
+      #fdfdfe 0%,
+      #f0f0f2 100%
+    );
+  border-top: none;
+  border-bottom: 1px solid var(--border-default);
+  box-shadow:
+    inset 0 1px 0 var(--bevel-25);
+}
+
+.listTitle {
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-shadow: var(--chrome-text-shadow);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.listTitleIcon {
+  opacity: 0.3;
+}
+
+.listTitleClear {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  opacity: 0.4;
+  line-height: 1;
+  transition: opacity var(--duration-fast);
+}
+
+.listTitleClear:hover {
+  opacity: 0.8;
+}
+
+.listControls { display: flex; gap: var(--space-1); }
+
+.selectionDismiss {
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity var(--duration-fast);
+}
+
+.selectionDismiss:hover {
+  opacity: 0.9;
+}
+
+.selectionCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 var(--space-1);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--glow-blue) 90%, transparent) 0%, rgba(80, 130, 210, 0.85) 100%);
+  color: white;
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  border-radius: var(--radius-full);
+  font-variant-numeric: tabular-nums;
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--glow-blue) 30%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--bevel) 20%, transparent);
+}
+
+.listSearch {
+  padding: var(--space-1h) var(--space-2);
+  border-bottom: 1px solid var(--border-groove);
+  background: var(--overlay-3);
+}
+
+:global([data-theme="light"]) .listSearch {
+  border-bottom-color: rgba(0, 0, 0, 0.04);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.listSearchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.listSearchClear {
+  position: absolute;
+  right: var(--space-1h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  background: var(--overlay-8);
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background var(--duration-micro), color var(--duration-micro);
+}
+
+.listSearchClear:hover {
+  background: var(--overlay-12);
+  color: var(--text-primary);
+}
+
+.searchInput {
+  width: 100%;
+  padding: var(--space-1) var(--space-3);
+  padding-right: var(--space-5);
+  background: var(--bg-input);
+  border: var(--acrylic-border-strong);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-inset);
+  transition: all var(--duration-normal);
+}
+
+.searchInput:focus {
+  border-color: var(--border-focus);
+  box-shadow: var(--shadow-inset), var(--glow-focus);
+  outline: none;
+}
+
+.searchInput::placeholder { color: var(--text-muted); }
+
+.listBody {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Reconnect guidance above the list when the open channel's sign-in expired.
+   A solid yellow notice (intentional literals — a classic warning banner). */
+.reauthBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 var(--space-3) var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: #f5c945;
+  color: #3a2c00;
+}
+.reauthBannerIcon { flex-shrink: 0; color: #3a2c00; }
+.reauthBannerText {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  color: #3a2c00;
+}
+.reauthBannerBtn {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: none;
+  background: #3a2c00;
+  color: #f5c945;
+  font-size: var(--text-3xs);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+}
+.reauthBannerBtn:hover {
+  background: #4d3a00;
+}
+
+/* "Update" tag the chrome bell wears while a newer desktop build is published
+   (same amber as the reauth banner — the same "needs a click" register). */
+.chromeUpdateTag {
+  padding: 1px var(--space-1h);
+  border-radius: var(--radius-sm);
+  background: #f5c945;
+  color: #3a2c00;
+  font-size: var(--text-6xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  line-height: 1.4;
+}
+
+/* Active Space drill-down indicator (treemap → inbox). Dismissible. */
+.spaceFilterBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 var(--space-3) var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--overlay-2);
+  border: 1px solid var(--overlay-4);
+  color: var(--text-secondary);
+}
+.spaceFilterLabel {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.spaceFilterClear {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.spaceFilterClear:hover { background: var(--overlay-3); color: var(--text-primary); }
+
+@keyframes syncSlide {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(250%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* SELECTION RAIL — animated KITT sweep on the active item's */
+/* left edge. Shared via `composes` by ConversationItem,    */
+/* NavGroup, and CalendarSidebar. The host element must      */
+/* establish a positioning context (position: relative).     */
+/* ═══════════════════════════════════════════════════════ */
+.selectionRail::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--gradient-selection-rail);
+  background-size: 3px 200%;
+  animation: kittSweep 1.5s ease-in-out;
+}
+
+@keyframes kittSweep {
+  0% { background-position: 0 0; opacity: 0.4; }
+  50% { background-position: 0 100%; opacity: 1; }
+  100% { background-position: 0 0; opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* CONVERSATION DETAIL — recessed workspace surface        */
+/* ═══════════════════════════════════════════════════════ */
+
+.detail {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-workspace);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Subtle atmospheric radial — anchors content without shadows */
+.detail::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 20%, rgba(40, 52, 72, 0.04) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 80% 75%, rgba(25, 35, 55, 0.025) 0%, transparent 50%),
+    radial-gradient(ellipse 120% 80% at 50% 100%, rgba(8, 10, 16, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Light mode: cool neutral center, soft edge vignette */
+:global([data-theme="light"]) .detail::before {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 35%, rgba(255, 255, 255, 0.4) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 30% 70%, rgba(220, 226, 236, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.02) 100%);
+}
+
+.detailHeader {
+  padding: var(--space-1h) var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--toolbar-height);
+  background: transparent;
+  border-bottom: 1px solid var(--overlay-4);
+  box-shadow: none;
+  position: relative;
+  z-index: 1;
+}
+
+:global([data-theme="light"]) .detailHeader {
+  /* Native toolbar — subtle top-to-bottom shading + hairline divider */
+  background: var(--header-surface);
+  border-bottom: 1px solid var(--border-default);
+  box-shadow: var(--header-edge);
+}
+
+.detailSubject {
+  font-family: var(--font-display);
+  font-size: var(--display-size);
+  font-weight: var(--display-weight);
+  color: var(--text-primary);
+  letter-spacing: var(--tracking-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: var(--space-4);
+}
+
+.detailMessages {
+  flex: 1;
+  overflow-y: auto;
+  /* Reserve the scrollbar lane up front. With classic (non-overlay) scrollbars,
+     the bar appearing/disappearing changes the content width, which reflows
+     width-sensitive email bodies (wrapping text, max-width images) inside their
+     auto-height iframes → height changes → scrollbar toggles back → infinite
+     "bouncing". A stable gutter removes that feedback loop. */
+  scrollbar-gutter: stable;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  z-index: 1;
+}
+
+:global([data-theme="light"]) .detailMessages {
+  padding: var(--space-4) var(--space-4) var(--space-3);
+}
+
+/* Timeline spine — disabled, conflicts with dot texture */
+/* .detailMessages::before kept for future use */
+.detailMessages::before {
+  content: none;
+  position: absolute;
+  top: var(--space-8);
+  bottom: var(--space-8);
+  left: 34px;
+  width: 1px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    var(--overlay-4) 10%,
+    var(--overlay-4) 90%,
+    transparent 100%
+  );
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* CONTEXT SIDEBAR — operational intelligence panel        */
+/* ═══════════════════════════════════════════════════════ */
+
+.contextSidebar {
+  width: var(--context-width);
+  min-width: var(--context-width);
+  background: var(--surface-list-grad);
+  border-left: 1px solid var(--list-border);
+  overflow-y: auto;
+  box-shadow:
+    var(--panel-deep-inset),
+    inset 1px 0 0 var(--overlay-2);
+  position: relative;
+}
+
+:global([data-theme="light"]) .contextSidebar {
+  /* Inspector — cool gray, one step off the white content area */
+  background: #f5f5f7;
+  border-left-color: var(--border-default);
+  box-shadow:
+    var(--panel-deep-inset),
+    inset 1px 0 0 var(--bevel-15);
+}
+
+/* Atmospheric edge illumination */
+.contextSidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg,
+    var(--overlay-4) 0%,
+    var(--overlay-2) 50%,
+    transparent 100%
+  );
+  z-index: 1;
+}
+
+:global([data-theme="light"]) .contextSidebar::before {
+  background: linear-gradient(180deg,
+    var(--bevel-25) 0%,
+    color-mix(in srgb, var(--bevel) 12%, transparent) 50%,
+    transparent 100%
+  );
+}
+
+.contextValueBold {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--text-sender);
+}
+
+.contextLink {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+  transition: color var(--duration-fast);
+}
+
+.contextLink:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
+/* Triage label dropdown (Details section) */
+.contextLabelInner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  cursor: pointer;
+}
+
+.contextLabelEmpty {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-0h) var(--space-1h);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  background: var(--overlay-3);
+  border: 1px dashed var(--overlay-5);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  line-height: 1.5;
+  transition: color var(--duration-fast), border-color var(--duration-fast);
+}
+
+.contextLabelEmpty:hover {
+  color: var(--text-secondary);
+  border-color: var(--overlay-6);
+}
+
+.contextLabelButton {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.contextLabelChevron { opacity: 0.7; }
+
+/* ═══════════════════════════════════════════════════════ */
+/* EMPTY STATES                                            */
+/* ═══════════════════════════════════════════════════════ */
+
+.listEmpty {
+  padding: var(--space-8) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+/* Empty list → centered copy floating over a low-fidelity ghost stack. */
+.listEmptyWrap {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.zeroStateGhost {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  padding: var(--space-1) var(--space-2);
+  overflow: hidden;
+}
+
+.listEmptyWrap .listEmpty {
+  position: relative;
+  z-index: 1;
+}
+
+.detailEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  position: relative;
+  z-index: 1;
+}
+/* Full strength — the dimming is a dark-theme-only thing (see below), where the
+   logo sits on a background photo. */
+.zeroStateLogo {
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-3);
+}
+.zeroStateMessage {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+/* ── Dark themes render empty/zero states over a background photo (which can
+   be bright). Brighten the foreground and add a tight outline so every label,
+   message and icon stays legible regardless of the image behind it. ── */
+:global([data-theme="dark"]) .detailEmpty,
+:global([data-theme="dark"]) .listEmpty {
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow:
+    0 1px 2px color-mix(in srgb, var(--ink) 90%, transparent),
+    0 0 4px color-mix(in srgb, var(--ink) 70%, transparent),
+    0 0 16px color-mix(in srgb, var(--ink) 50%, transparent);
+}
+:global([data-theme="dark"]) .detailEmpty .zeroStateMessage,
+:global([data-theme="dark"]) .listEmpty .zeroStateMessage {
+  color: rgba(255, 255, 255, 0.82);
+}
+:global([data-theme="dark"]) .detailEmpty .zeroStateLogo,
+:global([data-theme="dark"]) .listEmpty .zeroStateLogo {
+  opacity: 0.9;
+  filter: drop-shadow(0 1px 3px color-mix(in srgb, var(--ink) 90%, transparent)) drop-shadow(0 0 10px color-mix(in srgb, var(--ink) 55%, transparent));
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* RESIZE HANDLES — panel boundary drag affordance         */
+/* ═══════════════════════════════════════════════════════ */
+
+.resizeHandle {
+  width: 8px;
+  margin: 0 -4px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  position: relative;
+  z-index: 5;
+}
+
+.resizeHandle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 24px;
+  border-radius: 1px;
+  background: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.resizeHandle:hover::after {
+  opacity: 0.35;
+}
+
+.resizeHandle:active::after {
+  opacity: 0.6;
+  background: var(--accent-primary);
+}
+
+/* ═══════════════════════════════════════════════════════ */
+/* RESPONSIVE                                              */
+/* ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 1100px) {
+  .contextSidebar { display: none; }
+  .resizeHandleContext { display: none; }
+}
+@media (max-width: 768px) {
+  .sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: var(--z-sidebar); }
+  .list { width: 100%; min-width: 0; }
+  .detail { display: none; }
+  .chrome { padding: 0 var(--space-2); }
+  .chromeSearch { width: auto; flex: 1; min-width: 80px; }
+  .resizeHandle { display: none; }
+}
+
+/* ═══ GROOVEBOX — floating panels over the guidebook grid (tokens.css) ═══ */
+:global([data-theme-variant="groovebox"]) .body {
+  padding: var(--gb-gutter);
+  gap: var(--gb-gutter);
+  background: var(--gb-grid-bg);
+}
+
+:global([data-theme-variant="groovebox"]) .sidebar,
+:global([data-theme-variant="groovebox"]) .list,
+:global([data-theme-variant="groovebox"]) .detail,
+:global([data-theme-variant="groovebox"]) .contextSidebar {
+  border: 0;
+  border-radius: var(--gb-panel-radius);
+  box-shadow: var(--gb-panel-shadow);
+  overflow: hidden;
+}
+
+:global([data-theme-variant="groovebox"]) .sidebar::after {
+  display: none;
+}
+
+/* The drag handles sit in the gutter instead of adding a second one. */
+:global([data-theme-variant="groovebox"]) .resizeHandle {
+  margin: 0 calc(-4px - var(--gb-gutter) / 2);
+}

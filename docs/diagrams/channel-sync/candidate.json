@@ -1,0 +1,306 @@
+{
+ "schema_version": 1,
+ "diagram_type": "sequence",
+ "meta": {
+  "title": "Archive on a Gmail channel, end to end",
+  "output": "docs/diagrams/channel-sync/channel-sync.html",
+  "quality_profile": "showcase",
+  "legend": {
+   "entries": {
+    "emphasis": {
+     "label": "Main path"
+    },
+    "dashed": {
+     "label": "Timer or push hint"
+    },
+    "return": {
+     "label": "Reply / event"
+    }
+   }
+  }
+ },
+ "participants": [
+  {
+   "id": "ui",
+   "type": "frontend",
+   "label": "React UI",
+   "sublabel": "webview"
+  },
+  {
+   "id": "shell",
+   "type": "backend",
+   "label": "Tauri shell",
+   "sublabel": "commands"
+  },
+  {
+   "id": "engine",
+   "type": "backend",
+   "label": "SyncEngine",
+   "sublabel": "inbox2-core"
+  },
+  {
+   "id": "db",
+   "type": "database",
+   "label": "SQLite",
+   "sublabel": "inbox2.db"
+  },
+  {
+   "id": "gmail",
+   "type": "external",
+   "label": "Gmail REST",
+   "sublabel": "provider"
+  },
+  {
+   "id": "rails",
+   "type": "cloud",
+   "label": "Rails",
+   "sublabel": "PushSyncChannel"
+  }
+ ],
+ "segments": [
+  {
+   "from": 150,
+   "to": 356,
+   "label": "Optimistic write"
+  },
+  {
+   "from": 366,
+   "to": 550,
+   "label": "Write-back"
+  },
+  {
+   "from": 556,
+   "to": 852,
+   "label": "Resync"
+  }
+ ],
+ "messages": [
+  {
+   "id": "m1",
+   "from": "ui",
+   "to": "shell",
+   "y": 168,
+   "label": "invoke(perform_conversation_action, archive)",
+   "variant": "emphasis"
+  },
+  {
+   "id": "m2",
+   "from": "shell",
+   "to": "engine",
+   "y": 196,
+   "label": "perform_conversation_action",
+   "variant": "emphasis"
+  },
+  {
+   "id": "m3",
+   "from": "engine",
+   "to": "db",
+   "y": 224,
+   "label": "UPDATE conversation status (optimistic)",
+   "variant": "emphasis",
+   "note": "Applied before any network call. While a pending row exists, a concurrent sync may not overwrite this message's flags."
+  },
+  {
+   "id": "m4",
+   "from": "engine",
+   "to": "db",
+   "y": 316,
+   "label": "INSERT writeback_actions (pending)",
+   "variant": "emphasis"
+  },
+  {
+   "id": "m5",
+   "from": "engine",
+   "to": "ui",
+   "y": 344,
+   "label": "event: sync \u2192 UI re-reads SQLite",
+   "variant": "return"
+  },
+  {
+   "id": "m6",
+   "from": "engine",
+   "to": "db",
+   "y": 386,
+   "label": "5 s tick: claim pending action",
+   "variant": "dashed"
+  },
+  {
+   "id": "m7",
+   "from": "engine",
+   "to": "gmail",
+   "y": 414,
+   "label": "messages.modify (remove INBOX)",
+   "variant": "emphasis"
+  },
+  {
+   "id": "m8",
+   "from": "gmail",
+   "to": "engine",
+   "y": 442,
+   "label": "200 OK",
+   "variant": "return"
+  },
+  {
+   "id": "m9",
+   "from": "engine",
+   "to": "db",
+   "y": 470,
+   "label": "mark completed, keep 180 s (settle guard)",
+   "variant": "emphasis",
+   "note": "A sync that still shows the pre-mutation state cannot resurrect the thread while the completed row is retained."
+  },
+  {
+   "id": "m10",
+   "from": "rails",
+   "to": "ui",
+   "y": 562,
+   "label": "PushSyncChannel hint (ActionCable)",
+   "variant": "dashed",
+   "note": "Content-free signal. Without it, the 60 s poll tick runs the same incremental sync."
+  },
+  {
+   "id": "m11",
+   "from": "ui",
+   "to": "shell",
+   "y": 644,
+   "label": "resync hint",
+   "variant": "dashed"
+  },
+  {
+   "id": "m12",
+   "from": "shell",
+   "to": "engine",
+   "y": 672,
+   "label": "resync account",
+   "variant": "dashed"
+  },
+  {
+   "id": "m13",
+   "from": "engine",
+   "to": "gmail",
+   "y": 700,
+   "label": "history.list(startHistoryId)",
+   "variant": "emphasis"
+  },
+  {
+   "id": "m14",
+   "from": "gmail",
+   "to": "engine",
+   "y": 728,
+   "label": "changes (thread already archived)",
+   "variant": "return"
+  },
+  {
+   "id": "m15",
+   "from": "engine",
+   "to": "db",
+   "y": 756,
+   "label": "apply changes; state agrees",
+   "variant": "emphasis"
+  },
+  {
+   "id": "m16",
+   "from": "engine",
+   "to": "ui",
+   "y": 784,
+   "label": "event: sync",
+   "variant": "return"
+  },
+  {
+   "id": "m17",
+   "from": "ui",
+   "to": "db",
+   "y": 812,
+   "label": "SELECT via tauri-plugin-sql",
+   "variant": "default"
+  },
+  {
+   "id": "m18",
+   "from": "db",
+   "to": "ui",
+   "y": 840,
+   "label": "rows \u2192 refresh list",
+   "variant": "return"
+  }
+ ],
+ "activations": [
+  {
+   "participant": "ui",
+   "from": 163,
+   "to": 350,
+   "type": "frontend"
+  },
+  {
+   "participant": "engine",
+   "from": 191,
+   "to": 350,
+   "type": "backend"
+  },
+  {
+   "participant": "engine",
+   "from": 381,
+   "to": 476,
+   "type": "backend"
+  },
+  {
+   "participant": "gmail",
+   "from": 409,
+   "to": 448,
+   "type": "external"
+  },
+  {
+   "participant": "ui",
+   "from": 557,
+   "to": 650,
+   "type": "frontend"
+  },
+  {
+   "participant": "engine",
+   "from": 667,
+   "to": 790,
+   "type": "backend"
+  },
+  {
+   "participant": "gmail",
+   "from": 695,
+   "to": 734,
+   "type": "external"
+  },
+  {
+   "participant": "ui",
+   "from": 779,
+   "to": 846,
+   "type": "frontend"
+  }
+ ],
+ "cards": [
+  {
+   "dot": "emerald",
+   "title": "Optimistic write",
+   "items": [
+    "engine/conversation_actions.rs applies the change to SQLite first",
+    "writeback_actions row queued; the 5 s drain is kicked",
+    "UI never waits for Gmail"
+   ]
+  },
+  {
+   "dot": "amber",
+   "title": "Write-back and settle guard",
+   "items": [
+    "5 s tick drains writeback_actions with exponential backoff",
+    "Gmail: messages.modify; IMAP: UID STORE/MOVE; Graph: PATCH/move",
+    "Completed rows kept WRITEBACK_SETTLE_GRACE_SECS = 180",
+    "A sync showing pre-mutation flags is ignored while the row is pending or retained"
+   ]
+  },
+  {
+   "dot": "cyan",
+   "title": "Resync",
+   "items": [
+    "ActionCable PushSyncChannel carries no mail data, only a hint",
+    "The 60 s tick polls every account the same way",
+    "Incremental sync applies provider changes; UI re-reads SQLite on the sync event"
+   ]
+  }
+ ]
+}

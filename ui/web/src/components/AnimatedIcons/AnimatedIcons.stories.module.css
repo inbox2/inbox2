@@ -1,0 +1,10 @@
+.hoverWrapper {
+  display: inline-block;
+  padding: var(--space-4);
+  cursor: pointer;
+}
+
+.row {
+  display: flex;
+  gap: var(--space-6);
+}

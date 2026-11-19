@@ -1,0 +1,18 @@
+{
+  "producer": "libsodium-wrappers-sumo (ui/web e2ee.js primitives)",
+  "domain_public_key": "/QZWu34P2u0qojs9tEY3Ybd2NyRWaLhk5EO6UotYsxs=",
+  "domain_secret_key": "7bqhyrqv71zl6lMeNa7AH+jdlTldph8KV87LXgUCZrE=",
+  "expect": {
+    "subject": "Sealed by JS",
+    "plain": "Body sealed by libsodium.js — ünïcode ok"
+  },
+  "sealed": {
+    "domain_key_version": 1,
+    "aad": "42|1|<interop@js.test>",
+    "sealed_dek": "T0pktRAIJ7OWBRARqmFjzaaPIWuKYBMEMpVfjIZzxQNr7WKNTEBG3hqtcJA816jVy3oVxLsqq9aOXt1L8ePJI+AGmw4J+SARZm/eHpYZpFc=",
+    "header_nonce": "dzDGzLzsALXfdakHQjKT6vxXHm4IcXw/",
+    "header_ciphertext": "3SJDogzO1dd8ZBUR+f+dR0AOVS0B2uJKO6r5uOg8r5fSQFevYtl0O8WP6vjwGhrln4iJ2qXS909rBXV0ZhBc2YMnnlukWJ2K/CF/jEr601330byeRHg=",
+    "body_nonce": "NCWuIkQ+eAJTPb1i3mx0Knx4z7LCWigt",
+    "body_ciphertext": "RgGf6cQzoZzlY0faPXrKdQiZ1o7fxwoJOpxwJBJVsHp8qpKMNezG5+O1MgaOSzvgrAfaQ1YihycITNj4S/xV1wUyCrkWDRaNGzVwuJ9ILoAVb2nywkyQQ1HG"
+  }
+}

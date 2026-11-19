@@ -1,0 +1,41 @@
+default: &default
+  bucket: <%= ENV.fetch("S3_BUCKET", "inbox2-attachments") %> # the e2e suite points it at its own bucket
+  region: garage
+  endpoint: http://localhost:4900
+  # Fixed local-dev credentials, matching the key `bin/garage-init` imports.
+  # Garage enforces the format ("GK" + 24 hex, secret 64 hex), so these can't be
+  # friendly strings — and they have to be fixed, or every Garage rebuild would
+  # mean copying a freshly generated key into the environment.
+  access_key_id: <%= ENV.fetch("S3_ACCESS_KEY", "GK1b0a5c9d3e7f2a8b4c6d0e12") %>
+  secret_access_key: <%= ENV.fetch("S3_SECRET_KEY", "0f9d4c7a2b83e615d0c4a97b3e28f61d5a0c93b7e24f8d61a05c37b9e42d81f6") %>
+  force_path_style: true
+  # Disk (docs/plans/disk-build.md): its own bucket, never the attachments one.
+  # Browsers upload and download through presigned URLs, so they are signed for
+  # disk_public_endpoint, the address a browser reaches (the API itself may talk
+  # to storage on a cluster-internal one).
+  disk_bucket: inbox2-disk
+  disk_public_endpoint: http://localhost:4900
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+  bucket: inbox2-test-attachments
+  disk_bucket: inbox2-test-disk
+
+production:
+  bucket: <%= ENV.fetch("S3_BUCKET", "inbox2-attachments") %>
+  region: <%= ENV.fetch("S3_REGION", "us-east-1") %>
+  endpoint: <%= ENV.fetch("S3_ENDPOINT", nil) %>
+  # ENV[] and not ENV.fetch(): this file is ERB-rendered in full before the
+  # environment's section is picked, so a fetch with no default here raised
+  # KeyError in development and test too — S3StorageService could not even be
+  # CONSTRUCTED locally, which is why nothing about attachments was testable
+  # without setting prod credentials. Absence is caught in the service instead,
+  # where it can name the missing variable.
+  access_key_id: <%= ENV["S3_ACCESS_KEY"] %>
+  secret_access_key: <%= ENV["S3_SECRET_KEY"] %>
+  force_path_style: <%= ENV.fetch("S3_FORCE_PATH_STYLE", "true") %>
+  disk_bucket: <%= ENV.fetch("DISK_S3_BUCKET", "inbox2-disk") %>
+  disk_public_endpoint: <%= ENV.fetch("DISK_S3_PUBLIC_ENDPOINT", nil) %>

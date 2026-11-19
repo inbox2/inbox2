@@ -1,0 +1,194 @@
+.frame {
+  width: 100%;
+  background: var(--ink);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--line-inv);
+}
+
+/* The rim is the screenshot's own edge — a dark one around a light screen reads
+   as a black outline, so it flips with the shot. */
+:root[data-shot-theme="light"] .frame {
+  background: var(--paper);
+  border-color: rgba(17, 17, 17, 0.14);
+  box-shadow: 0 50px 100px rgba(17, 17, 17, 0.28);
+}
+
+:root[data-shot-theme="light"] .bar {
+  background: #ededea;
+  border-bottom-color: rgba(17, 17, 17, 0.1);
+}
+
+:root[data-shot-theme="light"] .title,
+:root[data-shot-theme="light"] .url {
+  color: var(--mute);
+}
+
+.frame img {
+  display: block;
+  width: 100%;
+}
+
+.bar {
+  height: 40px;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bar i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: block;
+}
+
+.bar i:nth-child(1) { background: #ff5f57; }
+.bar i:nth-child(2) { background: #febc2e; }
+.bar i:nth-child(3) { background: #28c840; }
+
+.title {
+  margin-left: 12px;
+  font-size: 12px;
+  color: var(--faint-inv);
+}
+
+.url {
+  margin-left: 12px;
+  width: min(420px, 60%);
+  height: 24px;
+  border-radius: 7px;
+  background: #2a2a2a;
+  font-size: 12px;
+  color: var(--faint-inv);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 6px;
+}
+
+.url b {
+  color: #fff;
+  font-weight: 500;
+}
+
+.reflectWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Reflection — a disturbed surface, not a mirror. Three things do the work:
+   the flip is sliced into horizontal bands (real water reflections break up
+   along the wave crests), each band is nudged sideways so the edges no longer
+   line up with the original, and a sheen drifts across the whole thing. */
+.reflection {
+  position: relative;
+  height: 210px;
+  width: 100%;
+  overflow: hidden;
+  /* Never fully opaque, even at the top: a reflection that starts solid reads
+     as a second screen. It is half gone by a third of the way down. */
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.26) 30%, transparent 62%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.26) 30%, transparent 62%);
+  pointer-events: none;
+}
+
+/* The sheen: two offset gradients drifting at different speeds, so the light on
+   the surface never repeats exactly. */
+.reflection::after {
+  content: "";
+  position: absolute;
+  inset: -20% -10%;
+  background:
+    radial-gradient(60% 42% at 30% 8%, rgba(255, 255, 255, 0.16), transparent 70%),
+    radial-gradient(52% 38% at 74% 26%, rgba(255, 255, 255, 0.1), transparent 72%),
+    radial-gradient(66% 70% at 50% 0%, rgba(255, 255, 255, 0.1), transparent 76%);
+  animation: swell 13s ease-in-out infinite alternate;
+}
+
+.flip {
+  position: relative;
+  transform-origin: top;
+  opacity: 0.42;
+  /* Enough blur that no line of it is readable — the point is that something
+     bright is down there, not what it says. */
+  filter: blur(3.4px) brightness(1.8) saturate(1.3);
+  /* Transforms don't compose, so the keyframes have to restate the flip. This
+     static one is what reduced-motion falls back to — without it the global
+     `animation-duration: 0.01ms` rule leaves the reflection un-flipped.
+     Keep SLANT and the scaleY in sync with the keyframes below. */
+  transform: translateY(86%) scaleY(-0.86) skewX(-3.2deg);
+  animation: chop 9s ease-in-out infinite alternate;
+}
+
+/* The chop. Bands cut out of the flip so the reflection reads as slats of light
+   rather than a continuous image. The stops are uneven on purpose — evenly
+   spaced bands read as corduroy, not water. */
+.flip::after {
+  content: "";
+  position: absolute;
+  inset: -2% -4%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 5px,
+    rgba(0, 0, 0, 0.42) 6px,
+    rgba(0, 0, 0, 0.42) 9px,
+    rgba(0, 0, 0, 0) 10px,
+    rgba(0, 0, 0, 0) 17px,
+    rgba(0, 0, 0, 0.3) 18px,
+    rgba(0, 0, 0, 0.3) 20px,
+    rgba(0, 0, 0, 0) 21px,
+    rgba(0, 0, 0, 0) 31px
+  );
+  /* Sits inside the already-flipped box, so it only adds its own drift —
+     applying `chop` again would flip it a second time. */
+  animation: ripple 7s ease-in-out infinite alternate;
+}
+
+/* Slow lateral wander: the surface is moving, so the reflection never settles.
+   Transform-only, so it stays on the compositor.
+   `scaleY(-0.86)` is the flip plus foreshortening — the surface is receding,
+   not parallel to the screen — and the skew leans it off square so it stops
+   lining up with the frame above it. translateY matches the scale (86%), or a
+   gap opens between the frame and its reflection. */
+@keyframes chop {
+  from { transform: translateY(86%) scaleY(-0.86) skewX(-3.7deg) translateX(-0.5%); }
+  to   { transform: translateY(86%) scaleY(-0.86) skewX(-2.7deg) translateX(0.5%); }
+}
+
+/* Out of step with `chop` (7s vs 9s), so the bands slide over the image
+   underneath instead of travelling with it. */
+@keyframes ripple {
+  from { transform: translate3d(0.6%, -1%, 0); }
+  to   { transform: translate3d(-0.6%, 1%, 0); }
+}
+
+@keyframes swell {
+  from { transform: translate3d(-3%, 0, 0); }
+  to   { transform: translate3d(3%, 0, 0); }
+}
+
+/* The light screenshots are the opposite problem: nearly white on a near-black
+   section, so the flip is dimmed instead of lifted and the sheen goes dark —
+   a bright surface reflecting into a dark pond, not a lamp under it. */
+:root[data-shot-theme="light"] .flip {
+  opacity: 0.3;
+  filter: blur(3.4px) brightness(0.58) saturate(1.15);
+}
+
+:root[data-shot-theme="light"] .reflection::after {
+  background: linear-gradient(to bottom, rgba(17, 17, 17, 0.28), rgba(17, 17, 17, 0.62));
+}
+
+@media (max-width: 900px) {
+  .reflection {
+    height: 110px;
+  }
+}

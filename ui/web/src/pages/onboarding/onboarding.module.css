@@ -1,0 +1,56 @@
+/* Management-themed onboarding / connect-domain wizard. Chrome + fields come
+ * from components/management/*; these are the wizard-specific bits. */
+
+.card { width: 100%; max-width: 560px; }
+/* The DNS verify step has a 5-column records table — give it room so the long
+   record values don't wrap character-by-character. */
+.cardWide { max-width: 760px; }
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1h);
+  margin-bottom: var(--space-4);
+  padding: 0;
+  background: none;
+  border: none;
+  font-family: var(--m-text);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--m-ink-soft);
+  cursor: pointer;
+}
+.back:hover { color: var(--m-ink); }
+
+.step {
+  font-family: var(--m-mono);
+  font-size: var(--text-3xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--m-ink-soft);
+  background: #fff;
+  border: 1px solid var(--m-line-soft);
+  padding: var(--space-1h) var(--space-3);
+}
+
+.title {
+  margin: 0 0 var(--space-1h);
+  font-family: var(--m-display);
+  font-weight: 600;
+  font-size: var(--text-3xl);
+  letter-spacing: -0.01em;
+  color: var(--m-ink);
+}
+.sub { margin: 0 0 var(--space-5); font-size: var(--text-sm); color: var(--m-ink-soft); line-height: 1.45; }
+
+.error {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) 13px;
+  font-size: var(--text-xs);
+  border-radius: var(--m-r-md);
+  color: var(--m-pink);
+  background: color-mix(in srgb, var(--m-pink) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--m-pink) 22%, transparent);
+}
+
+.form { display: flex; flex-direction: column; gap: var(--space-4); }
