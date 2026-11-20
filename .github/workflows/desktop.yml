@@ -106,6 +106,14 @@ jobs:
           echo "$ASC_KEY_P8" | base64 --decode > "$RUNNER_TEMP/asc/AuthKey_$ASC_KEY_ID.p8"
           echo "APPLE_API_KEY_PATH=$RUNNER_TEMP/asc/AuthKey_$ASC_KEY_ID.p8" >> "$GITHUB_ENV"
 
+      # ort copies its DLLs into the target dir when Windows won't let it
+      # symlink (no Developer Mode), and panics on a fresh runner where those
+      # directories don't exist yet.
+      - name: Windows target dirs for ort's DLL copy
+        if: matrix.name == 'windows'
+        shell: bash
+        run: mkdir -p ui/desktop/target/release/deps ui/desktop/target/release/examples
+
       - name: tauri build
         shell: bash
         working-directory: ui/desktop

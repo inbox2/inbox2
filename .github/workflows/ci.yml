@@ -86,6 +86,13 @@ jobs:
       - run: corepack enable
       - run: yarn install --frozen-lockfile --ignore-scripts
       - run: yarn lint
+      # The iOS/Android email-body bundles are generated (gitignored); the
+      # bundleSync drift guard compares them against a fresh build.
+      - name: Generate the native email-body bundles
+        working-directory: .
+        run: |
+          bin/android bundle
+          cp ui/android/app/src/main/assets/email-body.js ui/ios/Resources/email-body.js
       - name: JS unit tests (vitest, node project — excludes browser Storybook tests)
         run: yarn vitest run --project unit
 

@@ -105,7 +105,7 @@ describe('demo mode is read-only', () => {
     vi.resetModules();
     const action = vi.fn();
     vi.doMock('../mxMirror.js', () => ({ default: { action } }));
-    vi.doMock('../tauri.js', () => ({ isTauri: () => true }));
+    vi.doMock('../tauri.js', () => ({ isTauri: () => true, getOS: () => 'macos' }));
     vi.doMock('../localData.js', () => ({ mirroredOrg: async () => 'org_1' }));
     const api = (await import('../localFirstApi.js')).default;
 

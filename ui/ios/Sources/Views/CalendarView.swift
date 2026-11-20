@@ -112,118 +112,12 @@ struct CalendarView: View {
         return out
     }
 
+    // The body is split in three (screen → sheets → tasks): as one expression
+    // Xcode 26's type checker gives up on it ("unable to type-check this
+    // expression in reasonable time"), which fails the CI archive.
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                ScreenHeader("Calendar") {
-                    // iPad: the mode switch rides in the title bar to save a row.
-                    if isPad { modeTabs.frame(maxWidth: 340) }
-                    IconButton("plus", tint: p.accentViolet) {
-                        createRange = nil
-                        if zoneStore.enabled { showCreateChoice = true } else { showNewEvent = true }
-                    }
-                    .disabled(!hasWritableCalendars && !zoneStore.enabled)
-                }
-                if !isPad {
-                    modeTabs
-                        .padding(.horizontal, Space.s4)
-                        .padding(.vertical, Space.s2)
-                }
-
-                switch mode {
-                case .agenda: agendaBody
-                case .day:
-                    CalendarDayView(day: $selectedDay, channelOrder: channelOrder,
-                                    highlight: showCreateChoice ? createRange : nil,
-                                    onSelect: { selected = $0 }, onEditZone: { editingZone = $0 },
-                                    onSelectBlock: { pendingBlockRemove = $0 },
-                                    onCreate: { range in
-                                        guard hasWritableCalendars || zoneStore.enabled else { return }
-                                        createRange = range
-                                        showCreateChoice = true
-                                    })
-                case .week:
-                    CalendarWeekView(day: $selectedDay, channelOrder: channelOrder,
-                                     highlight: showCreateChoice ? createRange : nil,
-                                     onSelect: { selected = $0 }, onEditZone: { editingZone = $0 },
-                                     onSelectBlock: { pendingBlockRemove = $0 },
-                                     onCreate: { range in
-                                         guard hasWritableCalendars || zoneStore.enabled else { return }
-                                         createRange = range
-                                         showCreateChoice = true
-                                     },
-                                     onOpenDay: { d in
-                                         selectedDay = d
-                                         withAnimation(.easeOut(duration: 0.15)) { mode = .day }
-                                     })
-                case .month: monthBody
-                }
-            }
-            .pageBackground()
-            .toolbar(.hidden, for: .navigationBar)
-            .safeAreaInset(edge: .bottom) { Color.clear.frame(height: isPad ? 0 : 70) }
-            .onAppear { if isPad && !padModeSet { padModeSet = true; mode = .week } }
-            // iPad sidebar: a mini-month pick jumps the grid to that day…
-            .onChange(of: chrome.calendarJump) { _, d in
-                guard let d else { return }
-                chrome.calendarJump = nil
-                selectedDay = cal.startOfDay(for: d)
-                monthAnchor = d
-                if mode == .agenda { mode = isPad ? .week : .day }
-            }
-            // …and its New event runs the same create flow as "+".
-            .onChange(of: chrome.calendarCreateTick) {
-                guard hasWritableCalendars || zoneStore.enabled else { return }
-                createRange = nil
-                if zoneStore.enabled { showCreateChoice = true } else { showNewEvent = true }
-            }
-            .onChange(of: selectedDay, initial: true) { chrome.calendarDay = selectedDay }
-            // The sidebar's New event greys out exactly when "+" does.
-            .onChange(of: hasWritableCalendars || zoneStore.enabled, initial: true) { _, can in chrome.calendarCanCreate = can }
-            .sheet(item: $selected) { EventDetailSheet(event: $0) }
-            .sheet(isPresented: $showNewEvent) {
-                NewEventSheet(initialDay: createDay, initialStart: createRange?.lowerBound,
-                              initialEnd: createRange?.upperBound)
-            }
-            .sheet(isPresented: $showCreateChoice, onDismiss: runPendingCreate) {
-                CreateChoiceSheet(
-                    range: createRange,
-                    kinds: [hasWritableCalendars ? .event : nil,
-                            zoneStore.enabled ? .zone : nil,
-                            // Drag ranges only ("+" has no range) — created at once, no sheet.
-                            blockStore.enabled && createRange != nil ? .block : nil].compactMap { $0 },
-                    onPick: { pendingCreate = $0; showCreateChoice = false })
-            }
-            .sheet(isPresented: $showNewZone) {
-                ZoneSheet(initialDay: createDay, initialStart: createRange?.lowerBound, initialEnd: createRange?.upperBound)
-            }
-            .sheet(item: $editingZone) { ZoneSheet(initialDay: $0.start, editing: $0) }
-            .confirmationDialog("Delete this event?", isPresented: Binding(
-                get: { pendingInviteDelete != nil }, set: { if !$0 { pendingInviteDelete = nil } }
-            ), titleVisibility: .visible, presenting: pendingInviteDelete) { ev in
-                Button("Decline & delete", role: .destructive) { runDelete(ev, decline: true) }
-                Button("Delete only") { runDelete(ev, decline: false) }
-                Button("Cancel", role: .cancel) {}
-            } message: { ev in
-                Text("Let \(ev.organizerLabel ?? "the organizer") know you won't attend?")
-            }
-            .confirmationDialog("Remove blocked time?", isPresented: Binding(
-                get: { pendingBlockRemove != nil }, set: { if !$0 { pendingBlockRemove = nil } }
-            ), titleVisibility: .visible, presenting: pendingBlockRemove) { b in
-                Button("Remove", role: .destructive) {
-                    Task { if let err = await blockStore.delete(b) { actionError = err } }
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: { _ in
-                Text("People can book this time again.")
-            }
-            .alert("Couldn't update event", isPresented: Binding(
-                get: { actionError != nil }, set: { if !$0 { actionError = nil } }
-            )) {
-                Button("OK", role: .cancel) { actionError = nil }
-            } message: {
-                Text(actionError ?? "")
-            }
+            screenWithSheets
             .task(id: engine.dataVersion) { await reloadAgenda() }
             .task(id: engine.dataVersion) { await reloadChart() }
             .task(id: engine.dataVersion) {
@@ -248,6 +142,123 @@ struct CalendarView: View {
             .onChange(of: events.count) { visibleCount = pageSize }
             // Paging days on the timeline keeps the month grid on the same month.
             .onChange(of: selectedDay) { if mode == .day || mode == .week { monthAnchor = selectedDay } }
+        }
+    }
+
+    private var screen: some View {
+        VStack(spacing: 0) {
+            ScreenHeader("Calendar") {
+                // iPad: the mode switch rides in the title bar to save a row.
+                if isPad { modeTabs.frame(maxWidth: 340) }
+                IconButton("plus", tint: p.accentViolet) {
+                    createRange = nil
+                    if zoneStore.enabled { showCreateChoice = true } else { showNewEvent = true }
+                }
+                .disabled(!hasWritableCalendars && !zoneStore.enabled)
+            }
+            if !isPad {
+                modeTabs
+                    .padding(.horizontal, Space.s4)
+                    .padding(.vertical, Space.s2)
+            }
+
+            switch mode {
+            case .agenda: agendaBody
+            case .day:
+                CalendarDayView(day: $selectedDay, channelOrder: channelOrder,
+                                highlight: showCreateChoice ? createRange : nil,
+                                onSelect: { selected = $0 }, onEditZone: { editingZone = $0 },
+                                onSelectBlock: { pendingBlockRemove = $0 },
+                                onCreate: { range in
+                                    guard hasWritableCalendars || zoneStore.enabled else { return }
+                                    createRange = range
+                                    showCreateChoice = true
+                                })
+            case .week:
+                CalendarWeekView(day: $selectedDay, channelOrder: channelOrder,
+                                 highlight: showCreateChoice ? createRange : nil,
+                                 onSelect: { selected = $0 }, onEditZone: { editingZone = $0 },
+                                 onSelectBlock: { pendingBlockRemove = $0 },
+                                 onCreate: { range in
+                                     guard hasWritableCalendars || zoneStore.enabled else { return }
+                                     createRange = range
+                                     showCreateChoice = true
+                                 },
+                                 onOpenDay: { d in
+                                     selectedDay = d
+                                     withAnimation(.easeOut(duration: 0.15)) { mode = .day }
+                                 })
+            case .month: monthBody
+            }
+        }
+        .pageBackground()
+        .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .bottom) { Color.clear.frame(height: isPad ? 0 : 70) }
+        .onAppear { if isPad && !padModeSet { padModeSet = true; mode = .week } }
+        // iPad sidebar: a mini-month pick jumps the grid to that day…
+        .onChange(of: chrome.calendarJump) { _, d in
+            guard let d else { return }
+            chrome.calendarJump = nil
+            selectedDay = cal.startOfDay(for: d)
+            monthAnchor = d
+            if mode == .agenda { mode = isPad ? .week : .day }
+        }
+        // …and its New event runs the same create flow as "+".
+        .onChange(of: chrome.calendarCreateTick) {
+            guard hasWritableCalendars || zoneStore.enabled else { return }
+            createRange = nil
+            if zoneStore.enabled { showCreateChoice = true } else { showNewEvent = true }
+        }
+        .onChange(of: selectedDay, initial: true) { chrome.calendarDay = selectedDay }
+        // The sidebar's New event greys out exactly when "+" does.
+        .onChange(of: hasWritableCalendars || zoneStore.enabled, initial: true) { _, can in chrome.calendarCanCreate = can }
+    }
+
+    private var screenWithSheets: some View {
+        screen
+        .sheet(item: $selected) { EventDetailSheet(event: $0) }
+        .sheet(isPresented: $showNewEvent) {
+            NewEventSheet(initialDay: createDay, initialStart: createRange?.lowerBound,
+                          initialEnd: createRange?.upperBound)
+        }
+        .sheet(isPresented: $showCreateChoice, onDismiss: runPendingCreate) {
+            CreateChoiceSheet(
+                range: createRange,
+                kinds: [hasWritableCalendars ? .event : nil,
+                        zoneStore.enabled ? .zone : nil,
+                        // Drag ranges only ("+" has no range) — created at once, no sheet.
+                        blockStore.enabled && createRange != nil ? .block : nil].compactMap { $0 },
+                onPick: { pendingCreate = $0; showCreateChoice = false })
+        }
+        .sheet(isPresented: $showNewZone) {
+            ZoneSheet(initialDay: createDay, initialStart: createRange?.lowerBound, initialEnd: createRange?.upperBound)
+        }
+        .sheet(item: $editingZone) { ZoneSheet(initialDay: $0.start, editing: $0) }
+        .confirmationDialog("Delete this event?", isPresented: Binding(
+            get: { pendingInviteDelete != nil }, set: { if !$0 { pendingInviteDelete = nil } }
+        ), titleVisibility: .visible, presenting: pendingInviteDelete) { ev in
+            Button("Decline & delete", role: .destructive) { runDelete(ev, decline: true) }
+            Button("Delete only") { runDelete(ev, decline: false) }
+            Button("Cancel", role: .cancel) {}
+        } message: { ev in
+            Text("Let \(ev.organizerLabel ?? "the organizer") know you won't attend?")
+        }
+        .confirmationDialog("Remove blocked time?", isPresented: Binding(
+            get: { pendingBlockRemove != nil }, set: { if !$0 { pendingBlockRemove = nil } }
+        ), titleVisibility: .visible, presenting: pendingBlockRemove) { b in
+            Button("Remove", role: .destructive) {
+                Task { if let err = await blockStore.delete(b) { actionError = err } }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("People can book this time again.")
+        }
+        .alert("Couldn't update event", isPresented: Binding(
+            get: { actionError != nil }, set: { if !$0 { actionError = nil } }
+        )) {
+            Button("OK", role: .cancel) { actionError = nil }
+        } message: {
+            Text(actionError ?? "")
         }
     }
 
