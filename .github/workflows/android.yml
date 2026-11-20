@@ -36,6 +36,13 @@ jobs:
       # A rising code per build; offset past any build made before CI.
       VERSION_CODE: ${{ github.run_number }}0
     steps:
+      # The job holds a three-ABI Rust build and an R8 release build; the
+      # runner's preinstalled toolchains we don't use leave too little disk.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost /opt/hostedtoolcache/CodeQL
+          df -h / && free -m
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -48,10 +55,17 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
-      - uses: Swatinem/rust-cache@v2
+      # Restored here and saved right after the core build, before the
+      # intermediates are dropped (a post-job save would store an empty target).
+      - name: Restore the Rust cache
+        uses: actions/cache/restore@v4
         with:
-          workspaces: ui/desktop
-          key: android-core
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ui/desktop/target
+          key: android-core-${{ hashFiles('ui/desktop/Cargo.lock') }}-${{ github.sha }}
+          restore-keys: android-core-${{ hashFiles('ui/desktop/Cargo.lock') }}-
       - name: cargo-ndk
         run: cargo install cargo-ndk --locked
 
@@ -63,6 +77,21 @@ jobs:
         run: |
           export ANDROID_NDK_HOME="$(ls -d "$ANDROID_HOME"/ndk/* | sort -V | tail -1)"
           bash ui/desktop/core/build-android-jni.sh
+
+      - name: Save the Rust cache
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ui/desktop/target
+          key: android-core-${{ hashFiles('ui/desktop/Cargo.lock') }}-${{ github.sha }}
+
+      # Only the outputs are needed from here on; the intermediates are GBs.
+      - name: Drop the Rust intermediates
+        run: |
+          find ui/desktop/target -mindepth 1 -maxdepth 1 ! -name android-jniLibs ! -name uniffi-kotlin -exec rm -rf {} +
+          df -h /
 
       - name: email-body bundle
         run: |
@@ -87,7 +116,10 @@ jobs:
         working-directory: ui/android
         run: |
           export VERSION_NAME="$(../../bin/version)"
-          ./gradlew --no-daemon :app:assembleRelease
+          # Kotlin in Gradle's own process, so one JVM holds the memory, not two.
+          ./gradlew --no-daemon -Pkotlin.compiler.execution.strategy=in-process \
+            -Dorg.gradle.jvmargs="-Xmx5g -Dfile.encoding=UTF-8" :app:assembleRelease \
+            || { df -h /; free -m; exit 1; }
           ls -la app/build/outputs/apk/release/
 
       - name: Firebase App Distribution
