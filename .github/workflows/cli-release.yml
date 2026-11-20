@@ -91,19 +91,16 @@ jobs:
       - id: version
         run: echo "v=$(cat assets/VERSION)" >> "$GITHUB_OUTPUT"
 
-      # Recreated rather than moved: GITHUB_TOKEN may not push a tag onto a
-      # commit that changed workflow files (no `workflows` permission), but the
-      # release API creates the tag server-side at target_commitish.
-      - name: Drop the previous cli-latest release and tag
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release delete cli-latest --cleanup-tag --yes -R "${{ github.repository }}" || true
-
       - name: Publish / update the cli-latest release
         uses: softprops/action-gh-release@v2
         with:
+          # The tag stays where it was first created: GITHUB_TOKEN may not move
+          # a tag onto a commit that changed workflow files, and the download
+          # URLs go through the tag *name* anyway. The body names the commit
+          # each build came from; the assets are replaced in place.
           tag_name: cli-latest
           target_commitish: ${{ github.sha }}
+          overwrite_files: true
           name: inbox2 CLI ${{ steps.version.outputs.v }}
           body: |
             The terminal client, built from `main` (${{ github.sha }}).
