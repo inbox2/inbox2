@@ -85,11 +85,15 @@ jobs:
             libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev \
             libayatana-appindicator3-dev librsvg2-dev patchelf
 
-      - uses: dtolnay/rust-toolchain@stable
+      # Pinned: from Cargo's new build-dir layout (build/<crate>/<hash>/out)
+      # ort-sys's copy-dylibs looks one level too shallow for the release dir
+      # and fails the Windows build, the only target whose ONNX Runtime comes
+      # as DLLs. 1.96 is what the releases so far were built with.
+      - uses: dtolnay/rust-toolchain@1.96.0
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: ui/desktop
-          key: desktop-${{ matrix.name }}
+          key: desktop-${{ matrix.name }}-1.96
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
