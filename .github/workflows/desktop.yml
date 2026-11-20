@@ -119,6 +119,9 @@ jobs:
           rustup target add x86_64-pc-windows-msvc
           cargo install cargo-xwin --locked
           echo "$(brew --prefix llvm)/bin" >> "$GITHUB_PATH"
+          # ort-sys links its DLLs into <target>/release{,/deps,/examples} and
+          # fails when one doesn't exist yet (always, on a fresh runner).
+          mkdir -p ui/desktop/target/x86_64-pc-windows-msvc/release/{deps,examples}
 
       - name: tauri build
         shell: bash
