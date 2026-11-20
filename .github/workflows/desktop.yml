@@ -56,7 +56,7 @@ jobs:
   build:
     needs: version
     strategy:
-      fail-fast: true
+      fail-fast: false   # publish needs all three anyway; see every result
       matrix:
         include:
           - { os: macos-15,      name: macos,   bundles: "app,dmg" }
