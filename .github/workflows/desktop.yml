@@ -9,7 +9,8 @@ name: Desktop release
 #   version → bin/version (MAJOR.MINOR from tauri.conf.json, PATCH from the
 #             commit count + PATCH_BASE), shared by every job
 #   macos   → aarch64 .app/.dmg, Developer ID signed + notarized
-#   windows → x86_64 NSIS installer (no Authenticode: SmartScreen warns once)
+#   windows → x86_64 NSIS installer, cross-compiled on a Mac (no Authenticode:
+#             SmartScreen warns once)
 #   linux   → x86_64 .deb, signed for the updater after the build
 #   publish → latest.json + every artifact into the Pushleft downloads bucket;
 #             latest.json goes up last, so a client polling mid-upload keeps
@@ -59,7 +60,10 @@ jobs:
       matrix:
         include:
           - { os: macos-15,      name: macos,   bundles: "app,dmg" }
-          - { os: windows-2022,  name: windows, bundles: "nsis" }
+          # Windows is cross-compiled on a Mac with cargo-xwin + NSIS, exactly as
+          # bin/release-desktop does: a native windows runner trips ort-sys's
+          # DLL copy (C: cache vs D: workspace).
+          - { os: macos-15,      name: windows, bundles: "nsis" }
           # glibc 2.39: ort's prebuilt ONNX Runtime needs 2.38+ (the old Docker
           # build ran on Debian 13, glibc 2.41, so this is no new floor).
           - { os: ubuntu-24.04,  name: linux,   bundles: "deb" }
@@ -68,6 +72,8 @@ jobs:
       V: ${{ needs.version.outputs.v }}
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      # makensis on macOS dies with std::bad_alloc under a C locale.
+      LANG: en_US.UTF-8
     steps:
       - uses: actions/checkout@v4
 
@@ -106,22 +112,22 @@ jobs:
           echo "$ASC_KEY_P8" | base64 --decode > "$RUNNER_TEMP/asc/AuthKey_$ASC_KEY_ID.p8"
           echo "APPLE_API_KEY_PATH=$RUNNER_TEMP/asc/AuthKey_$ASC_KEY_ID.p8" >> "$GITHUB_ENV"
 
-      # ort copies its DLLs into the target dir when Windows won't let it
-      # symlink (no Developer Mode), and panics on a fresh runner where those
-      # directories don't exist yet.
-      - name: Windows target dirs for ort's DLL copy
+      - name: Windows cross-compile tools
         if: matrix.name == 'windows'
-        shell: bash
-        run: mkdir -p ui/desktop/target/release/deps ui/desktop/target/release/examples
+        run: |
+          brew install nsis llvm
+          rustup target add x86_64-pc-windows-msvc
+          cargo install cargo-xwin --locked
+          echo "$(brew --prefix llvm)/bin" >> "$GITHUB_PATH"
 
       - name: tauri build
         shell: bash
         working-directory: ui/desktop
         env:
-          # macOS only (the other platforms ignore APPLE_*): tauri imports the
-          # certificate into a temporary keychain itself.
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          # The macOS job only (tauri imports the certificate into a temporary
+          # keychain itself); the Windows job runs on a Mac too and must not sign.
+          APPLE_CERTIFICATE: ${{ matrix.name == 'macos' && secrets.APPLE_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ matrix.name == 'macos' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
           APPLE_SIGNING_IDENTITY: "Developer ID Application: Waseem Sadiq (KF53B4S5HD)"
           APPLE_API_KEY: ${{ secrets.ASC_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.ASC_ISSUER_ID }}
@@ -129,7 +135,9 @@ jobs:
           # Linux: the .deb is signed for the updater below, not by tauri.
           extra='{"version":"'"$V"'"}'
           [ "${{ matrix.name }}" = linux ] && extra='{"version":"'"$V"'","bundle":{"createUpdaterArtifacts":false}}'
-          node_modules/.bin/tauri build -c src-tauri/tauri.release.conf.json --config "$extra" --bundles ${{ matrix.bundles }}
+          xwin=()
+          [ "${{ matrix.name }}" = windows ] && xwin=(--runner cargo-xwin --target x86_64-pc-windows-msvc)
+          node_modules/.bin/tauri build -c src-tauri/tauri.release.conf.json --config "$extra" "${xwin[@]}" --bundles ${{ matrix.bundles }}
 
       - name: Collect artifacts
         shell: bash
@@ -138,7 +146,8 @@ jobs:
           mkdir -p out
           case "${{ matrix.name }}" in
             macos)   cp "$T"/macos/*.app.tar.gz "$T"/macos/*.app.tar.gz.sig "$T"/dmg/*.dmg out/ ;;
-            windows) cp "$T"/nsis/*-setup.exe "$T"/nsis/*-setup.exe.sig out/ ;;
+            windows) W=ui/desktop/target/x86_64-pc-windows-msvc/release/bundle/nsis
+                     cp "$W"/*-setup.exe "$W"/*-setup.exe.sig out/ ;;
             linux)
               cp "$T"/deb/*.deb out/
               for f in out/*.deb; do (cd ui/desktop && node_modules/.bin/tauri signer sign "../../$f" >/dev/null); done ;;
