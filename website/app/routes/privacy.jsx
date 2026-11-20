@@ -34,15 +34,15 @@ export default function Privacy() {
   return (
     <Legal
       title="Privacy policy"
-      updated="9 November 2026"
+      updated="20 November 2026"
       sections={SECTIONS}
       lede="Most privacy policies are written to make a company look harmless. This one is written to tell you where your mail is, because for most of what inbox2 does the answer is that it sits on your own machine and we cannot read it."
     >
       <h2 id="who">Who we are</h2>
       <p>
-        inbox2 is a trade name of <strong>Sadiq Beheer B.V.</strong>, a company registered
-        in the Netherlands under KVK number <Fill>KVK number</Fill>, at{" "}
-        <Fill>registered address</Fill>. We are the data controller for everything
+        inbox2 is a product of <strong>Kunba Labs B.V.</strong>, a company registered
+        in the Netherlands under KvK number 42223995, at Coolhaven 238 A,
+        3024 AP Rotterdam. We are the data controller for everything
         described on this page, and you can reach us at{" "}
         <a href="mailto:privacy@inbox2.com">privacy@inbox2.com</a>.
       </p>
@@ -369,7 +369,7 @@ export default function Privacy() {
 
       <h2 id="contact">Contact</h2>
       <p>
-        Sadiq Beheer B.V., <Fill>registered address</Fill>, the Netherlands.{" "}
+        Kunba Labs B.V., Coolhaven 238 A, 3024 AP Rotterdam, the Netherlands.{" "}
         <a href="mailto:privacy@inbox2.com">privacy@inbox2.com</a> for anything on this page,{" "}
         <a href="mailto:hello@inbox2.com">hello@inbox2.com</a> for everything else.
       </p>

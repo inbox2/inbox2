@@ -6,7 +6,7 @@ export function meta() {
     {
       name: "description",
       content:
-        "The agreement between you and Sadiq Beheer B.V. for using inbox2: the apps, the hosted MX service, and the source code.",
+        "The agreement between you and Kunba Labs B.V. for using inbox2: the apps, the hosted MX service, and the source code.",
     },
   ];
 }
@@ -30,16 +30,16 @@ export default function Terms() {
   return (
     <Legal
       title="Terms of service"
-      updated="9 November 2026"
+      updated="20 November 2026"
       sections={SECTIONS}
       lede="You own your mail, we run a service around it, and if we ever stop being worth it you can take everything and go. The rest of this page is that idea written carefully enough to hold up."
     >
       <h2 id="parties">Who this is between</h2>
       <p>
         These terms are an agreement between you, or the organisation you sign up on behalf
-        of, and <strong>Sadiq Beheer B.V.</strong>, trading as inbox2, registered in the
-        Netherlands under KVK number <Fill>KVK number</Fill> at{" "}
-        <Fill>registered address</Fill>. Creating an account, connecting a mailbox or
+        of, and <strong>Kunba Labs B.V.</strong>, the maker of inbox2, registered in the
+        Netherlands under KvK number 42223995 at Coolhaven 238 A, 3024 AP Rotterdam.
+        Creating an account, connecting a mailbox or
         pointing a domain at us means you accept them. If you are signing up for a company,
         you are confirming you are allowed to bind it.
       </p>

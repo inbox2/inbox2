@@ -6,7 +6,7 @@ FSL-1.1-ALv2
 
 ## Notice
 
-Copyright 2026 Sadiq Beheer B.V.
+Copyright 2026 Kunba Labs B.V.
 
 ## Terms and Conditions
 

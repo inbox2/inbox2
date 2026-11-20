@@ -102,7 +102,7 @@ In short:
 
 Bundled third-party code and fonts are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); see also [NOTICE](NOTICE).
 
-"inbox2" is a trade name of Sadiq Beheer B.V. The licenses don't cover the name or the logo.
+inbox2 is a product of [Kunba Labs B.V.](https://inbox2.com) (KvK 42223995), Rotterdam. The licenses don't cover the name or the logo.
 
 ## Contributing
 
