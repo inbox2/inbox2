@@ -172,8 +172,9 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       V: ${{ needs.version.outputs.v }}
-      PL_VERSION: 0.1.0-a6ff5f3
-      PL_SHA256: 62aba640cdee25bd2129098758166123ea3db037f94088b8ee605a7e3ba39d7d
+      # `pl storage` needs a newer CLI than deploy.yml's pin.
+      PL_VERSION: 0.1.0-6e5dc8d
+      PL_SHA256: 5961f84d5bed6cacdbe4af41f36708a0ca0600e00ff4e0c6935c6ffadcfaa92a
       PUSHLEFT_TOKEN: ${{ secrets.PUSHLEFT_TOKEN }}
     steps:
       - uses: actions/checkout@v4
