@@ -34,7 +34,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-14,         asset: inbox2-cli-darwin-arm64 }
+          - { os: macos-15,         asset: inbox2-cli-darwin-arm64 }
           # glibc 2.39 floor: ort's prebuilt ONNX Runtime needs 2.38+ (__isoc23_strtoll).
           # No Intel Mac: ort ships no x86_64-apple-darwin binary.
           - { os: ubuntu-24.04,     asset: inbox2-cli-linux-x86_64 }
