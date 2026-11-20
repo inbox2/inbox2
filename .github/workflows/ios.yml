@@ -37,9 +37,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
+      # The newest installed Xcode, betas included: the app is developed on
+      # Xcode 27, and 26.x's type checker times out on some SwiftUI bodies.
+      - name: Newest Xcode
+        run: |
+          ls -d /Applications/Xcode*.app
+          X=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$X"
+          xcodebuild -version
 
       - uses: dtolnay/rust-toolchain@stable
         with:
