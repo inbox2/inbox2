@@ -56,7 +56,10 @@ if [ "$DO_XCFRAMEWORK" = 1 ]; then
   "$ROOT/ui/desktop/core/build-ios-xcframework.sh"
   GEN="$ROOT/ui/desktop/target/uniffi-swift/inbox2_core.swift"
   DST="$IOS_DIR/Sources/Generated/inbox2_core.swift"
-  [ -f "$GEN" ] && cp "$GEN" "$DST" && echo "▸ synced UniFFI binding → Sources/Generated"
+  # Sources/Generated is gitignored, so a fresh checkout has no such directory.
+  [ -f "$GEN" ] || { echo "✗ no Swift binding at $GEN" >&2; exit 1; }
+  mkdir -p "$(dirname "$DST")" && cp "$GEN" "$DST"
+  echo "▸ synced UniFFI binding → Sources/Generated"
 fi
 
 # ── Regenerate the (gitignored) Xcode project from project.yml ───────────────
