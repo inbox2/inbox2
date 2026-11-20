@@ -94,12 +94,13 @@ jobs:
       - name: Publish / update the cli-latest release
         uses: softprops/action-gh-release@v2
         with:
-          # The tag stays where it was first created: GITHUB_TOKEN may not move
-          # a tag onto a commit that changed workflow files, and the download
-          # URLs go through the tag *name* anyway. The body names the commit
-          # each build came from; the assets are replaced in place.
+          # The cli-latest tag and release were created once by a maintainer
+          # (2026-11-20) and are only updated here: GITHUB_TOKEN may not create
+          # or move a tag onto a commit that changed workflow files (that also
+          # rules out target_commitish). The download URLs go through the tag
+          # *name*; the body names the commit each build came from, and the
+          # assets are replaced in place.
           tag_name: cli-latest
-          target_commitish: ${{ github.sha }}
           overwrite_files: true
           name: inbox2 CLI ${{ steps.version.outputs.v }}
           body: |
