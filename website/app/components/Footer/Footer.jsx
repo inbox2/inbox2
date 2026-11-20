@@ -38,7 +38,7 @@ export default function Footer() {
         </div>
         <div className={styles.jumbo} aria-hidden="true">inbox2</div>
         <div className={styles.legal}>
-          <span>© {new Date().getFullYear()} Kunba Labs B.V. inbox2 is a product of Kunba Labs B.V., KvK 42223995. Made in the Netherlands, hosted wherever you choose.</span>
+          <span>inbox2 is a product of Kunba Labs B.V. · KvK 42223995 · © {new Date().getFullYear()}. Made in the Netherlands, hosted wherever you choose.</span>
           <div className={styles.social}>
             {FOOTER_LEGAL.map((it) =>
               it.to ? (
