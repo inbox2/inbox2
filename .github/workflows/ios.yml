@@ -32,13 +32,14 @@ concurrency:
 
 jobs:
   testflight:
-    runs-on: macos-26
+    # The xcode-27 image (macOS 27, Apple Silicon) carries the iOS 27 SDK.
+    # App Store Connect requires it from April 2027 (ITMS-90725, build 17 was
+    # built with iOS 26.5 on macos-26, which has Xcode 26.x only).
+    runs-on: xcode-27
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
-      # GitHub's macos-26 image carries Xcode 26.x only; the app builds with it
-      # (CalendarView's body is split so 26's type checker copes).
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
