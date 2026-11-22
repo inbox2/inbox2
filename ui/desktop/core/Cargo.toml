@@ -69,6 +69,8 @@ aes-gcm = "0.10"
 # for header + body. Audited RustCrypto crates; never hand-rolled.
 crypto_box = { version = "0.9", features = ["seal"] }
 chacha20poly1305 = "0.10"
+# Sealed Disk (disk/sealed.rs): libsodium crypto_generichash = BLAKE2b (keyed for KDF).
+blake2 = "0.10"
 crypto_secretbox = "0.1"
 # Argon2id KEK derivation for the cloud credential vault (docs/E2EE.md) + zeroing
 # of in-memory key material.

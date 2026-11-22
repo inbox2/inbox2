@@ -9,6 +9,7 @@
 
 pub mod ai_worker;
 pub mod bridge;
+pub mod disk;
 pub mod ontology;
 pub mod mcp_client;
 pub mod next_action;
