@@ -22,6 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import android.content.Context
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,22 +52,42 @@ fun AddressFolderTree(folders: List<CloudAddressFolder>, selection: String?, onS
     val yours = own.flatMap { o -> listOf(o) + folders.filter { it.kind == KIND_TAG && it.parent == o.key } }
     val shared = folders.filter { it.kind == KIND_SHARED }
     val other = folders.firstOrNull { it.kind == KIND_OTHER }
-    if (yours.isNotEmpty()) {
-        GroupHead("Yours", yours.sumOf { it.unread })
-        yours.forEach { AddressFolderRow(it, it.key == selection, indent = it.kind == KIND_TAG, onSelect = { onSelect(it.key) }, onSetPref = onSetPref) }
+    // Collapsed groups, kept across launches like the web's. Default: both closed.
+    val prefs = LocalContext.current.getSharedPreferences(TREE_PREFS, Context.MODE_PRIVATE)
+    var collapsed by remember { mutableStateOf(setOf(GROUP_YOURS, GROUP_SHARED).filter { prefs.getBoolean(it, true) }.toSet()) }
+    val toggle = { group: String ->
+        collapsed = if (group in collapsed) collapsed - group else collapsed + group
+        prefs.edit().putBoolean(group, group in collapsed).apply()
     }
-    if (shared.isNotEmpty()) {
-        GroupHead("Shared", shared.sumOf { it.unread })
-        shared.forEach { AddressFolderRow(it, it.key == selection, onSelect = { onSelect(it.key) }, onSetPref = onSetPref) }
+    @Composable
+    fun group(id: String, title: String, list: List<CloudAddressFolder>) {
+        if (list.isEmpty()) return
+        val open = id !in collapsed
+        GroupHead(title, list.sumOf { it.unread }, open) { toggle(id) }
+        // A collapsed group still shows the open folder, so the selection never hides.
+        list.filter { open || it.key == selection }.forEach {
+            AddressFolderRow(it, it.key == selection, indent = it.kind == KIND_TAG, onSelect = { onSelect(it.key) }, onSetPref = onSetPref)
+        }
     }
+    group(GROUP_YOURS, "Yours", yours)
+    group(GROUP_SHARED, "Shared", shared)
     other?.let { AddressFolderRow(it, it.key == selection, onSelect = { onSelect(it.key) }, onSetPref = onSetPref) }
 }
 
+private const val TREE_PREFS = "inbox2_address_tree"
+private const val GROUP_YOURS = "collapsed_yours"
+private const val GROUP_SHARED = "collapsed_shared"
+
 @Composable
-private fun GroupHead(title: String, unread: Int) {
+private fun GroupHead(title: String, unread: Int, open: Boolean, onToggle: () -> Unit) {
     val p = theme
-    Row(Modifier.fillMaxWidth().padding(start = Space.s5 + 40.dp, end = Space.s5, top = Space.s2, bottom = Space.s1),
+    Row(Modifier.fillMaxWidth()
+            .noRippleClickable(onClickLabel = if (open) "Collapse $title" else "Expand $title") { onToggle() }
+            .padding(start = Space.s5 + 20.dp, end = Space.s5, top = Space.s2, bottom = Space.s1),
         verticalAlignment = Alignment.CenterVertically) {
+        Icon(SfIcon.vector(if (open) "chevron.down" else "chevron.right"), null, tint = p.textTertiary,
+            modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(Space.s1))
         Text(title.uppercase(), color = p.textTertiary, style = AppFont.ui(12, FontWeight.SemiBold), modifier = Modifier.weight(1f))
         if (unread > 0) Text("$unread", color = p.textTertiary, style = AppFont.ui(12, FontWeight.SemiBold))
     }
