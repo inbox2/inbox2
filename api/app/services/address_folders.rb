@@ -93,6 +93,19 @@ class AddressFolders
     pref.nil? ? true : pref
   end
 
+  # Whether a new message in this thread rings the member's phone: it is in
+  # their Inbox with the Inbox bell on, or in a folder whose bell they turned on.
+  # `thread` is the member's visible scope narrowed to the one conversation.
+  def notify_for?(thread)
+    return true if inbox_notify? && scope(thread, INBOX).exists?
+
+    host = "@#{domain.name.downcase}"
+    rung = (membership.folder_prefs || {}).filter_map do |addr, p|
+      addr.delete_suffix(host) if p[PREF_NOTIFY] == true && addr.end_with?(host)
+    end
+    rung.any? { |local| scope(thread, local).exists? }
+  end
+
   # The scope for one folder, over threads the member can already see.
   def scope(visible, folder)
     base = visible.joins(:domain).where(domain_id: domain.id)
@@ -101,22 +114,22 @@ class AddressFolders
     when INBOX then inbox_scope(base)
     when OTHER
       base.where("conversations.personal_membership_id IS DISTINCT FROM ?", me)
-        .where("#{BASE_SQL} IS NULL OR #{BASE_SQL} NOT IN (?)", shared_locals.presence || [""])
+        .where("#{BASE_SQL} IS NULL OR #{BASE_SQL} NOT IN (?)", (shared_locals + own_locals).presence || [""])
     else
       local = folder.to_s.downcase
       b = Mailbox.base_local_part(local)
       tag = Mailbox.tag_of(local)
       if own_locals.include?(b)
-        mine = base.where(personal_membership_id: me)
+        own_threads = mine(base)
         if tag
-          mine.where("#{BASE_SQL} = ? AND #{TAG_SQL} = ?", b, tag)
+          own_threads.where("#{BASE_SQL} = ? AND #{TAG_SQL} = ?", b, tag)
         elsif b == own_locals.first
           # The first own address also takes your personal mail whose address is
           # not one of yours: sealed, stamped yours as a co-recipient, or sent
           # by you to a tagged address that is not yours (info+x@).
-          mine.where("(#{BASE_SQL} = ? AND #{TAG_SQL} IS NULL) OR #{BASE_SQL} IS NULL OR #{BASE_SQL} NOT IN (?)", b, own_locals)
+          own_threads.where("(#{BASE_SQL} = ? AND #{TAG_SQL} IS NULL) OR #{BASE_SQL} IS NULL OR #{BASE_SQL} NOT IN (?)", b, own_locals)
         else
-          mine.where("#{BASE_SQL} = ? AND #{TAG_SQL} IS NULL", b)
+          own_threads.where("#{BASE_SQL} = ? AND #{TAG_SQL} IS NULL", b)
         end
       elsif shared_locals.include?(b)
         base.where("conversations.personal_membership_id IS DISTINCT FROM ?", me).where("#{BASE_SQL} = ?", b)
@@ -130,9 +143,9 @@ class AddressFolders
   # granted to you, and the shared addresses you show in Inbox.
   def inbox_scope(base)
     me = membership.id
-    tags_in = tag_folders.select { |t| in_inbox?(t) }
+    tags_in = tag_folders(base).select { |t| in_inbox?(t) }
     shared_in = shared_locals.select { |l| in_inbox?(l) }
-    own = base.where(personal_membership_id: me)
+    own = mine(base)
     # Tags on your own addresses stay out unless chosen; anything else of yours is in.
     own = own.where("#{TAG_SQL} IS NULL OR #{BASE_SQL} NOT IN (?) OR #{LOCAL_SQL} IN (?)", own_locals, tags_in.presence || [""])
     granted = ConversationAccess.where(membership_id: me).select(:conversation_id)
@@ -143,10 +156,18 @@ class AddressFolders
     out
   end
 
+  # Your personal threads: stamped yours, or unstamped and addressed to one of
+  # your own addresses (older mail; visible_to matches it by address too).
+  def mine(base)
+    base.where(personal_membership_id: membership.id)
+      .or(base.where(personal_membership_id: nil).where("#{BASE_SQL} IN (?)", own_locals.presence || [""]))
+  end
+
   # Tag folders under the member's own addresses that hold mail: "waseem+receipts".
-  def tag_folders
-    @tag_folders ||= domain.conversations.where(personal_membership_id: membership.id)
-      .joins(:domain).where("#{TAG_SQL} IS NOT NULL")
+  def tag_folders(visible)
+    joined = visible.joins_values.include?(:domain) ? visible : visible.joins(:domain)
+    (@tag_folders ||= {})[visible.to_sql] ||= mine(joined.where(domain_id: domain.id)).reorder(nil)
+      .where("#{TAG_SQL} IS NOT NULL").where("#{BASE_SQL} IN (?)", own_locals.presence || [""])
       .distinct.pluck(Arel.sql("#{BASE_SQL} || '+' || #{TAG_SQL}")).compact.sort
   end
 
@@ -162,7 +183,7 @@ class AddressFolders
       next unless l == own_locals.first || can_reply?(l)
 
       folders << folder(l, KIND_OWN, nil, count)
-      tag_folders.select { |t| Mailbox.base_local_part(t) == l }.each { |t| folders << folder(t, KIND_TAG, l, count) }
+      tag_folders(visible).select { |t| Mailbox.base_local_part(t) == l }.each { |t| folders << folder(t, KIND_TAG, l, count) }
     end
     shared_locals.each do |l|
       next unless membership.all_domains_access? || can_reply?(l) || scope(visible, l).limit(1).exists?

@@ -153,6 +153,27 @@ RSpec.describe "Api::V1::Folders", type: :request do
   end
 
   describe "edges" do
+    it "lists a tag folder for older unstamped mail to a tagged own address" do
+      thread(to: "boss+news@husttle.com")
+      get "/api/v1/orgs/#{org.key}/folders", params: { domain: domain.key }, headers: auth_headers(boss_user)
+      expect(response.parsed_body["folders"].map { |f| f["key"] }).to include("boss+news")
+    end
+
+    it "shows a mailbox-only member their older unstamped tagged mail" do
+      ali.update!(all_domains: false, domains: [])
+      t = thread(to: "ali+news@husttle.com")
+      h = auth_headers(ali_user)
+      get "/api/v1/orgs/#{org.key}/folders", params: { domain: domain.key }, headers: h
+      expect(response.parsed_body["folders"].map { |f| f["key"] }).to include("ali+news")
+      expect(keys(h, folder: "ali+news", domain: domain.key)).to eq([t.key])
+    end
+
+    it "lists a tag folder whose mail is all read" do
+      thread(to: "boss+old@husttle.com", owner: boss, read: true)
+      get "/api/v1/orgs/#{org.key}/folders", params: { domain: domain.key }, headers: auth_headers(boss_user)
+      expect(response.parsed_body["folders"].map { |f| f["key"] }).to include("boss+old")
+    end
+
     it "keeps a multi-part tag whole" do
       t = thread(to: "boss+travel+2026@husttle.com", owner: boss)
       expect(keys(auth_headers(boss_user), folder: "boss+travel+2026", domain: domain.key)).to eq([t.key])
@@ -208,6 +229,22 @@ RSpec.describe "Api::V1::Folders", type: :request do
       h = auth_headers(ali_user)
       expect(keys(h, folder: "inbox")).not_to include(t.key)
       expect(keys(h, folder: "info", domain: domain.key)).to include(t.key)
+    end
+  end
+
+  describe "who gets a push (bells)" do
+    def rung(conv) = MobilePushSender.conversation_recipients(conv)
+
+    it "rings for Inbox mail by default, not for a shared folder outside Inbox" do
+      expect(rung(boss_mail)).to include(boss_user)
+      expect(rung(info_mail)).to include(ali_user)
+      expect(rung(info_mail)).not_to include(boss_user)
+    end
+
+    it "rings for a folder once its bell is on, and stops when the Inbox bell is off" do
+      boss.update!(folder_prefs: { "info@husttle.com" => { "notify" => true }, "inbox" => { "notify" => false } })
+      expect(rung(info_mail)).to include(boss_user)
+      expect(rung(boss_mail)).not_to include(boss_user)
     end
   end
 end
