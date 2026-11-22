@@ -40,6 +40,7 @@ class FakeDiskStorage
 
   def put_file(key, path) = put_bytes(key, File.binread(path))
   def read_into(key, io) = io.write(read_range(key, 0, size(key)))
+  def read_from(key, offset) = read_range(key, offset, size(key)).scan(/.{1,7}/mn).each { |c| yield c } # small chunks, split mid-line
 
   # Objects stored without a body read as "a" repeated.
   def read_range(key, offset, length)

@@ -136,6 +136,15 @@ module Disk
     # The whole object into io (a Tempfile), for copying to the mail store.
     def read_into(key, io) = @client.get_object(bucket: bucket, key: key, response_target: io)
 
+    # Everything from offset to the end, streamed chunk by chunk to the block: a
+    # mail import reads a large .mbox this way instead of staging it on the
+    # pods' RAM-backed /tmp (64 MiB).
+    def read_from(key, offset, &)
+      @client.get_object(bucket: bucket, key: key, range: "bytes=#{offset}-", &)
+    rescue Aws::S3::Errors::InvalidRange
+      nil # offset at or past the end: nothing left
+    end
+
     # length bytes from offset, for an agent reading a text file in pages.
     def read_range(key, offset, length)
       return "".b if length <= 0

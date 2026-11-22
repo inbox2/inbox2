@@ -1,5 +1,4 @@
 require "digest"
-require "tempfile"
 
 module MailImporter
   # A Google Takeout mail export (the "All mail Including Spam and Trash.mbox"
@@ -45,35 +44,59 @@ module MailImporter
 
       pinned, offset = cursor.to_s.split(":", 2)
       @prefix = "#{version.id}:"
-      Tempfile.create(["mail-import", ".mbox"], binmode: true) do |tmp|
-        Disk::Storage.current.read_into(version.storage_key, tmp)
-        tmp.flush
-        @prefix + read(tmp.path, pinned == version.id.to_s ? offset : 0, &)
-      end
+      @prefix + stream(version.storage_key, pinned == version.id.to_s ? offset.to_i : 0, &)
     end
 
     def raw(src) = src.payload
 
     private
 
-    def read(path, cursor)
+    def read(path, cursor, &)
       File.open(path, "rb") do |f|
         f.seek(cursor.to_i)
-        start = nil
-        lines = []
-        f.each_line do |line|
-          if line.start_with?(SEPARATOR)
-            yield source(lines.join, start) if start
-            start = f.pos - line.bytesize
-            lines = []
-          else
-            # mboxrd: Gmail quotes a body line starting "From " as ">From ".
-            lines << (line.match?(/\A>+From /n) ? line.byteslice(1..) : line)
-          end
-        end
-        yield source(lines.join, start) if start
-        f.pos.to_s
+        scan(f.each_line, cursor.to_i, &)
       end
+    end
+
+    # The Disk file straight from object storage, from the cursor on. Staging it
+    # in a temp file put a 600 MB export on the pods' 64 MiB tmpfs /tmp.
+    # ponytail: a thread + pipe turns S3's chunks into lines; one ranged GET per run.
+    def stream(key, offset, &)
+      reader, writer = IO.pipe.each(&:binmode)
+      fetch = Thread.new do
+        Thread.current.report_on_exception = false
+        Disk::Storage.current.read_from(key, offset) { |chunk| writer.write(chunk) }
+      rescue Errno::EPIPE, IOError
+        nil # the reader stopped early (a pause); nothing more to fetch
+      ensure
+        writer.close
+      end
+      # A failed download must not read as the end of the file: the last
+      # message is only complete once the GET finished.
+      scan(reader.each_line, offset, before_last: -> { fetch.value }, &)
+    ensure
+      reader&.close
+      fetch&.join(5) rescue nil # rubocop:disable Style/RescueModifier
+    end
+
+    # lines from offset on → each message, then the offset after the last one.
+    def scan(lines, pos, before_last: nil)
+      start = nil
+      body = []
+      lines.each do |line|
+        if line.start_with?(SEPARATOR)
+          yield source(body.join, start) if start
+          start = pos
+          body = []
+        else
+          # mboxrd: Gmail quotes a body line starting "From " as ">From ".
+          body << (line.match?(/\A>+From /n) ? line.byteslice(1..) : line)
+        end
+        pos += line.bytesize
+      end
+      before_last&.call
+      yield source(body.join, start) if start
+      pos.to_s
     end
 
     def source(raw, offset)
