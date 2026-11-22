@@ -36,6 +36,7 @@ import useAccountStatusStore from '../../stores/accountStatusStore';
 import styles from './settings.module.css';
 import { ALL_SECTIONS } from './settingsSections';
 import { isAdminRole } from '../../lib/orgRoles';
+import { accountErrorText } from '../../lib/accountError';
 
 
 // Tabs that render their own panel(s) internally (multi-section stacks), are
@@ -234,7 +235,7 @@ function ConnectedAccountsSection({ devMode }) {
                   <div className={styles.accountBanner} data-kind="error">
                     <Icon name="exclamationmark.triangle" size={12} />
                     <span className={styles.accountBannerText}>
-                      {acct.error_message || "Couldn't get new mail. We'll try again."}
+                      {accountErrorText(acct.error_message)}
                     </span>
                   </div>
                 )}

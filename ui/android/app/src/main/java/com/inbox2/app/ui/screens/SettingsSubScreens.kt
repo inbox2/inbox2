@@ -123,6 +123,8 @@ private fun AccountErrorBanner(a: com.inbox2.app.engine.AccountRow, onReconnect:
     val accent = if (a.needsReauth) p.accentAmber else p.accentDanger
     val headline = when {
         a.needsReauth -> "Your sign-in expired. Reconnect to get new mail."
+        // A rate limit (Gmail: 403 + JSON) clears by itself: one plain line, not the JSON.
+        a.errorMessage?.let(::isRateLimit) == true -> "The mail provider asked us to slow down. We'll try again when it lets us."
         a.errorMessage != null -> "Couldn't get mail: ${a.errorMessage}"
         else -> "Couldn't get mail for this account"
     }
@@ -404,4 +406,9 @@ private fun OpenTrackingRow(engine: EngineModel, cloud: com.inbox2.app.cloud.Clo
             }
         }
     }
+}
+
+private fun isRateLimit(message: String): Boolean {
+    val m = message.lowercase()
+    return listOf("quota exceeded", "quotaexceeded", "ratelimitexceeded", "rate limit", "http 429").any { it in m }
 }

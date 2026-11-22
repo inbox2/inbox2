@@ -16,7 +16,16 @@ struct AccountErrorBanner: View {
     /// surfaces the core's reason so the user can tell "offline" from "revoked".
     private var headline: String {
         if acct.needsReauth { return "Sign-in expired. Reconnect to get new mail." }
-        return acct.errorMessage.map { "Couldn't get new mail: \($0)" } ?? "Couldn't get new mail"
+        guard let message = acct.errorMessage else { return "Couldn't get new mail" }
+        // A rate limit (Gmail sends it as a 403 with a JSON body) clears by itself;
+        // show one plain line, not the JSON. The stored text keeps the retry time.
+        if Self.isRateLimit(message) { return "The mail provider asked us to slow down. We'll try again when it lets us." }
+        return "Couldn't get new mail: \(message)"
+    }
+
+    static func isRateLimit(_ message: String) -> Bool {
+        let m = message.lowercased()
+        return ["quota exceeded", "quotaexceeded", "ratelimitexceeded", "rate limit", "http 429"].contains { m.contains($0) }
     }
 
     var body: some View {
