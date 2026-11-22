@@ -214,7 +214,12 @@ namespace :e2e do
       out[:agent] = { id: agent.key, name: agent.name, token: agent.generate_credential! }
 
       # One MX mail with an attachment (spec F9), its bytes in the attachments store.
-      conv = Conversation.create!(organization: org, domain: Domain.find_by!(name: "e2e-disk.test"),
+      # team@ is a shared address the owner replies as, so the mail is in their
+      # Inbox (address folders: Inbox = mail for you).
+      mail_domain = Domain.find_by!(name: "e2e-disk.test")
+      mail_domain.update!(shared_addresses: [{ "local_part" => "team" }])
+      owner.update!(send_as_addresses: ["team@e2e-disk.test"])
+      conv = Conversation.create!(organization: org, domain: mail_domain,
                                   subject: "Quarterly figures", from_address: "Carol Client <carol@client.test>",
                                   to_address: "team@e2e-disk.test", status: Conversation::STATUS_OPEN, read: false,
                                   snippet: "Figures attached")
