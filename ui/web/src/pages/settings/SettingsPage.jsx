@@ -19,6 +19,7 @@ import McpConnectionsSettings from './McpConnectionsSettings';
 import IntegrationsSettings from './IntegrationsSettings';
 import SchedulingSettings from './SchedulingSettings';
 import MailClientsSettings from './MailClientsSettings';
+import DiskFinderSettings from './DiskFinderSettings';
 import PrivacySettings from './PrivacySettings';
 import AboutSettings from './AboutSettings';
 import AddAccountModal from '../../components/AddAccountModal/AddAccountModal';
@@ -30,7 +31,7 @@ import DotMatrix from '../../components/DotMatrix';
 import useDevMode from '../../hooks/useDevMode';
 import DevModeIndicator from '../../components/DevModeIndicator/DevModeIndicator';
 import log from '../../lib/log';
-import { isTauri } from '../../lib/tauri';
+import { isTauri, getOS } from '../../lib/tauri';
 import { providerIcon } from '../../lib/providerTypes';
 import useAccountStatusStore from '../../stores/accountStatusStore';
 import styles from './settings.module.css';
@@ -42,7 +43,7 @@ import { accountErrorText } from '../../lib/accountError';
 // Tabs that render their own panel(s) internally (multi-section stacks), are
 // full-bleed (logs), or need the full content width (theme grid) — everything
 // else gets wrapped in a single panel centrally.
-const SELF_PANELED = new Set(['preferences', 'accounts', 'theme', 'logs', 'ai-features', 'spam', 'triage', 'scheduling']);
+const SELF_PANELED = new Set(['preferences', 'accounts', 'theme', 'logs', 'ai-features', 'spam', 'triage', 'scheduling', 'disk']);
 // Sections that lay their panels out in a multi-column grid need the wider column.
 const WIDE_SECTIONS = new Set(['preferences', 'accounts', 'ai-features', 'theme', 'spam', 'triage', 'scheduling']);
 
@@ -308,7 +309,8 @@ export default function SettingsPage() {
   const mailClientsOn = !!settingsOrg?.mail_clients_enabled;
   const sections = useMemo(() =>
     ALL_SECTIONS.filter(s => (!s.desktop || isDesktop) && (!s.hideDesktop || !isDesktop) && (!s.inConsole || !isDesktop)
-      && (!s.org || !!orgId) && (!s.admin || orgIsAdmin) && (!s.mailClients || mailClientsOn)),
+      && (!s.org || !!orgId) && (!s.admin || orgIsAdmin) && (!s.mailClients || mailClientsOn)
+      && (!s.macOnly || getOS() === 'macos')),
     [isDesktop, orgId, orgIsAdmin, mailClientsOn]
   );
 
@@ -332,6 +334,7 @@ export default function SettingsPage() {
       case 'triage-labels': return <TriageLabelsSettings orgId={orgId} />;
       case 'rules': return <RulesSettings orgId={orgId} />;
       case 'scheduling': return <SchedulingSettings orgId={orgId} />;
+      case 'disk': return <DiskFinderSettings key={orgId} orgId={orgId} />;
       case 'mail-clients': return <MailClientsSettings key={orgId} orgId={orgId} />;
       // Channels
       case 'accounts': return <ConnectedAccountsSection devMode={devMode} />;

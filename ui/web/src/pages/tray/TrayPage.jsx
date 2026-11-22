@@ -28,6 +28,7 @@ import { formatMailTimeCompact } from '../../lib/relativeTime';
 import { applyTheme, DEFAULT_THEME_ID } from '../../lib/themes';
 import { THEME } from '../../lib/storageKeys';
 import { isStandaloneDesktop } from '../../lib/setupMode';
+import { diskFinder, statusLine } from '../../lib/diskFinder';
 import Avatar from '../../components/Avatar';
 import IconButton from '../../components/IconButton';
 import Button from '../../components/Button/Button';
@@ -223,6 +224,8 @@ export default function TrayPage() {
               </div>
             )}
 
+            <DiskRow opened={opened} />
+
             <div className={styles.section}>
               <MiniCalendar
                 selectedDate={viewDate}
@@ -239,6 +242,29 @@ export default function TrayPage() {
           </>
         )}
       </section>
+    </div>
+  );
+}
+
+/* Disk in Finder's state in one line, when it is on (docs/Disk-Sync.md). */
+function DiskRow({ opened }) {
+  const [status, setStatus] = useState(null);
+  useEffect(() => {
+    if (!diskFinder.available()) return undefined;
+    let alive = true;
+    diskFinder.status().then((s) => { if (alive) setStatus(s); }).catch(() => {});
+    return () => { alive = false; };
+  }, [opened]);
+  if (!status?.enabled) return null;
+  const line = statusLine(status);
+  return (
+    <div className={styles.section}>
+      <div className={styles.sectionLabel}>Disk</div>
+      <button type="button" className={styles.diskRow} onClick={() => { diskFinder.open().catch(() => {}); hide(); }}>
+        <span className={`${styles.diskDot} ${styles[`disk_${line.tone}`]}`} aria-hidden="true" />
+        <span className={styles.diskText}>{line.text}</span>
+        <span className={styles.diskOpen}>Open in Finder</span>
+      </button>
     </div>
   );
 }

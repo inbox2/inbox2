@@ -228,16 +228,40 @@ mod fp {
     }
 }
 
-/// The Finder location's name: the product, then the team.
+/// The Finder location's name: the product, then the team. An org named
+/// inbox2 is not named twice.
 fn display_name(org_name: &str) -> String {
-    format!("inbox2 ({org_name})")
+    let org = org_name.trim();
+    if org.is_empty() || org.eq_ignore_ascii_case("inbox2") { "inbox2".into() } else { format!("inbox2 ({org})") }
 }
+
+/// The location's size, walked at most once a minute: the settings screen polls
+/// status every 5 s and a large drive makes each walk slow.
+#[cfg(target_os = "macos")]
+fn cached_size(path: &str) -> u64 {
+    static CACHE: std::sync::Mutex<Option<(String, std::time::Instant, u64)>> = std::sync::Mutex::new(None);
+    let mut c = CACHE.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some((p, at, n)) = c.as_ref() {
+        if p == path && at.elapsed() < std::time::Duration::from_secs(60) {
+            return *n;
+        }
+    }
+    let n = dir_size(path);
+    *c = Some((path.to_string(), std::time::Instant::now(), n));
+    n
+}
+
+#[cfg(target_os = "macos")]
+static APPROVED_ORG: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
 
 #[cfg(target_os = "macos")]
 fn status_inner(app: &tauri::AppHandle) -> Result<DiskFinderStatus, String> {
     let dir = group_dir(&app_id(app));
     let mut s = DiskFinderStatus { supported: macos_15_or_later(), filevault: filevault_on(), ..Default::default() };
-    let Ok(cfg) = read_config(&dir) else { return Ok(s) };
+    let Ok(cfg) = read_config(&dir) else {
+        *APPROVED_ORG.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        return Ok(s);
+    };
     s.org = Some(cfg.org.clone());
     s.sealed_open = cfg.identity_secret.is_some();
     s.keep_downloaded = cfg.keep_downloaded;
@@ -247,9 +271,22 @@ fn status_inner(app: &tauri::AppHandle) -> Result<DiskFinderStatus, String> {
     if let Some(domain) = fp::find(&cfg.org)? {
         s.enabled = true;
         s.approved = fp::user_enabled(&domain);
+        // Allowed in System Settings just now: fetch at once, not at the next tick.
+        // The settings screen polls this every 5 s while the person allows it.
+        // Keyed on the org, so a new org's location gets its own first fetch.
+        let mut seen = APPROVED_ORG.lock().unwrap_or_else(|e| e.into_inner());
+        if s.approved && seen.as_deref() != Some(cfg.org.as_str()) {
+            *seen = Some(cfg.org.clone());
+            let _ = fp::signal(&domain);
+        } else if !s.approved {
+            *seen = None;
+        }
         s.paused = fp::disconnected(&domain);
         s.path = fp::root_path(&domain).ok();
-        s.local_bytes = s.path.as_deref().map(dir_size).unwrap_or(0);
+        s.local_bytes = s.path.as_deref().map(cached_size).unwrap_or(0);
+    } else {
+        // Removed: the same org added again needs its first fetch again.
+        *APPROVED_ORG.lock().unwrap_or_else(|e| e.into_inner()) = None;
     }
     if let Ok(engine) = DiskEngine::open(&dir) {
         let st = engine.status();
@@ -564,5 +601,6 @@ mod tests {
     #[test]
     fn location_name() {
         assert_eq!(display_name("Kunba Labs"), "inbox2 (Kunba Labs)");
+        assert_eq!(display_name("inbox2"), "inbox2");
     }
 }

@@ -24,7 +24,9 @@
   transition: all var(--duration-fast);
 }
 
-.pill:hover {
+.pill:disabled { cursor: default; opacity: 0.6; }
+
+.pill:hover:not(:disabled) {
   color: var(--text-secondary);
 }
 
@@ -48,4 +50,16 @@
   font-size: var(--text-3xs);
   opacity: 0.6;
   font-variant-numeric: tabular-nums;
+}
+
+/* Large: a main choice. Full width, equal segments, readable label + icon. */
+.lg { padding: var(--space-1); }
+.lg .pill {
+  flex: 1;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
 }

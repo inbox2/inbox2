@@ -6,6 +6,7 @@
 //   admin       — managed by org admins only (the API refuses members), so
 //                 hidden from members rather than shown as controls that 403
 //   mailClients — only when the org has mail clients switched on (docs/Mail-Clients.md)
+//   macOnly     — only in the Mac app
 //   inConsole   — has its page in the web console (the admin place, via the
 //                 avatar menu's Admin settings button), so not in the desktop app.
 //                 Other admin sections stay until the console has them.
@@ -31,6 +32,8 @@ export const ALL_SECTIONS = [
   // rather than in the console.
   { key: 'scheduling', label: 'Scheduling', icon: 'calendar', group: 'Workspace', org: true },
   // IMAP and SMTP for Outlook, Apple Mail, Thunderbird: the member's own app passwords.
+  // Disk in Finder (docs/Disk-Sync.md): the File Provider extension's switch and settings. Mac app only.
+  { key: 'disk', label: 'Disk', icon: 'externaldrive', group: 'Workspace', org: true, desktop: true, macOnly: true },
   { key: 'mail-clients', label: 'Mail clients', icon: 'envelope.open', group: 'Workspace', org: true, mailClients: true },
   { key: 'webhooks', label: 'Webhooks', icon: 'bolt.fill', group: 'Workspace', org: true, admin: true },
   // SSO is org sign-in config for admins — not a desktop-client concern.

@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import Icon from '../Icon'
 import styles from './SegmentedControl.module.css'
 
 /**
@@ -11,10 +12,12 @@ import styles from './SegmentedControl.module.css'
  * (never an inline style), so it survives the no-inline-styles lint.
  *
  * Props:
- *   options    — [{ value, label, count?, accent? }]
+ *   options    — [{ value, label, count?, accent?, icon? }] (icon: an SF Symbol name)
  *   value      — currently selected value
  *   onChange   — (value) => void
  *   aria-label — accessible label for the group (optional)
+ *   disabled   — no segment can be picked (a change is saving)
+ *   size       — 'sm' (default) or 'lg': full-width, equal segments for a main choice
  *   className  — extra class(es) merged onto the track
  */
 export default function SegmentedControl({
@@ -22,11 +25,13 @@ export default function SegmentedControl({
   value,
   onChange,
   'aria-label': ariaLabel,
+  size = 'sm',
+  disabled = false,
   className,
 }) {
   return (
     <div
-      className={[styles.group, className].filter(Boolean).join(' ')}
+      className={[styles.group, size === 'lg' ? styles.lg : '', className].filter(Boolean).join(' ')}
       role="radiogroup"
       aria-label={ariaLabel}
     >
@@ -35,6 +40,8 @@ export default function SegmentedControl({
           key={opt.value}
           option={opt}
           selected={opt.value === value}
+          large={size === 'lg'}
+          disabled={disabled}
           onSelect={() => onChange?.(opt.value)}
         />
       ))}
@@ -42,7 +49,7 @@ export default function SegmentedControl({
   )
 }
 
-function Segment({ option, selected, onSelect }) {
+function Segment({ option, selected, large, disabled, onSelect }) {
   const ref = useRef(null)
 
   useEffect(() => {
@@ -65,8 +72,10 @@ function Segment({ option, selected, onSelect }) {
       role="radio"
       aria-checked={selected}
       className={classes}
+      disabled={disabled}
       onClick={onSelect}
     >
+      {option.icon && <Icon name={option.icon} size={large ? 16 : 12} />}
       {option.label}
       {option.count != null && <span className={styles.count}>{option.count}</span>}
     </button>

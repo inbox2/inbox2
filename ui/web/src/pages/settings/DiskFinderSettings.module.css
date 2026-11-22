@@ -1,0 +1,26 @@
+/* Settings › Disk: only what settings.module.css does not cover. */
+.stateRow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.state { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); min-width: 0; }
+.actions { display: flex; gap: var(--space-2); }
+.meta { font-size: var(--text-xs); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+/* Status: a solid dot and plain text, never a tinted notice. */
+.status { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-primary); }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--text-tertiary); }
+.ok::before { background: var(--status-success-text); }
+.busy::before { background: var(--accent-warm-bright); }
+.warn::before { background: var(--status-warn-text); }
+.error::before { background: var(--status-danger-text); }
+p.error::before { content: none; }
+p.error { color: var(--status-danger-text); margin: var(--space-3) 0 0; font-size: var(--text-sm); }
+
+.step { margin: 0 0 var(--space-4); font-size: var(--text-sm); color: var(--text-primary); }
+
+.drive { display: inline-flex; align-items: center; gap: var(--space-2); }
+.logo { width: 20px; height: 20px; border-radius: 5px; object-fit: cover; }
+.drives { display: flex; flex-direction: column; gap: var(--space-2); }
+.sealed { display: inline-flex; align-items: center; gap: 4px; margin-left: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary); }
+.note { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-3) 0 0; font-size: var(--text-sm); color: var(--text-secondary); }
+
+.speedRow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
+.speedRow .meta { margin-left: var(--space-2); }
