@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_22_100001) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_22_100002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -928,6 +928,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_100001) do
     t.string "name", null: false
     t.boolean "open_tracking_enabled", default: false, null: false
     t.bigint "organization_id", null: false
+    t.jsonb "shared_addresses", default: [], null: false
     t.string "status", default: "pending_dns", null: false
     t.string "tracking_cf_hostname_id"
     t.string "tracking_domain"
@@ -1352,6 +1353,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_100001) do
     t.datetime "created_at", null: false
     t.string "drive_letter", limit: 1
     t.boolean "exclude_personal_mailboxes", default: false, null: false
+    t.jsonb "folder_prefs", default: {}, null: false
     t.string "invite_token_digest"
     t.string "key", null: false
     t.string "member_type", default: "human", null: false

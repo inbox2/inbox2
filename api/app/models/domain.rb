@@ -22,6 +22,9 @@ class Domain < ApplicationRecord
   has_many :domain_keys, dependent: :destroy
   # Threads attributed to this domain (org-wide pool, one domain each). Nullify on
   # domain removal so history survives as unattributed rather than being deleted.
+  # Shared addresses (info@, support@): each one is a folder for the people
+  # who can read it (AddressFolders). [{ "local_part", "display_name" }]
+  validate :shared_addresses_shape
   has_many :conversations, dependent: :nullify
   # Per-member access grants to this domain's pool slice.
   has_many :membership_domains, dependent: :destroy
@@ -91,6 +94,12 @@ class Domain < ApplicationRecord
     domain_keys.active.order(version: :desc).first
   end
 
+
+  # Whether a local part (tag dropped) is on this domain's shared list.
+  def shared_local?(local)
+    base = Mailbox.base_local_part(local.to_s.downcase)
+    Array(shared_addresses).any? { |a| a["local_part"] == base }
+  end
   private
 
   def broadcast_domain_changed
@@ -111,5 +120,20 @@ class Domain < ApplicationRecord
       errors.add(:e2ee_enabled, "requires a plan that includes E2EE message sealing")
     end
     errors.add(:e2ee_enabled, "requires a provisioned domain key") if current_e2ee_key.nil?
+  end
+
+  def shared_addresses_shape
+    list = Array(shared_addresses)
+    locals = list.map { |a| a.is_a?(Hash) ? a["local_part"].to_s : "" }
+    bad = locals.reject { |l| l.match?(Membership::LOCAL_PART_FORMAT) }
+    errors.add(:shared_addresses, "must be plain address names (#{bad.join(', ')})") if bad.any?
+    errors.add(:shared_addresses, "has a name twice") if locals.uniq.size != locals.size
+    reserved = locals & AddressFolders::RESERVED
+    errors.add(:shared_addresses, "can't use a folder name (#{reserved.join(', ')})") if reserved.any?
+    # A member's mailbox or username is their own address (personal_membership_id_for).
+    taken = locals & mailboxes.pluck(:local_part)
+    errors.add(:shared_addresses, "can't include a member's own mailbox (#{taken.join(', ')})") if taken.any?
+    retired = locals & mailbox_aliases.pluck(:local_part)
+    errors.add(:shared_addresses, "can't include a retired mailbox (#{retired.join(', ')})") if retired.any?
   end
 end

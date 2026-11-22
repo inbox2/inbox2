@@ -213,6 +213,9 @@ Rails.application.routes.draw do
         resources :spaces, controller: "spaces", only: %i[index create update destroy]
         # Jev triage action labels — built-ins + org custom (docs/Triage.md)
         resources :triage_labels, path: "triage-labels", controller: "triage_labels", only: %i[index create update destroy]
+        # Address folders — Inbox, own/tag/shared address folders (AddressFolders)
+        get "folders", to: "folders#index"
+        patch "folders/prefs", to: "folders#prefs"
         # Lore ontology — mined entities, facts and the entity graph (docs/Ontology.md)
         get "lore/entities", to: "lore#entities"
         get "lore/entities/:id", to: "lore#entity"
@@ -237,6 +240,9 @@ Rails.application.routes.draw do
         resources :domains, controller: "domains", only: %i[index show create destroy] do
           member do
             get "dns", to: "domains#dns"
+            # The domain's shared addresses (info@, support@): the address folders' list.
+            get "shared-addresses", to: "domains#shared_addresses"
+            put "shared-addresses", to: "domains#update_shared_addresses"
             post "dns/verify", to: "domains#verify"
             # One-click DNS setup: write the required records into the domain's
             # Cloudflare zone with a customer API token, then re-verify.

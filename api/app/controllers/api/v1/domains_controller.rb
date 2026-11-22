@@ -10,7 +10,8 @@ module Api
       before_action :require_organization!, except: :brand
       before_action -> { require_role!(*Membership::ADMIN_ROLES) }, except: %i[index show dns brand]
       before_action :set_domain, only: %i[show destroy dns verify upload_icon configure_cloudflare
-                                           tracking update_tracking verify_tracking]
+                                           tracking update_tracking verify_tracking
+                                           shared_addresses update_shared_addresses]
 
       def index
         domains = OrganizationSerializer.visible_domains(current_organization, current_membership)
@@ -176,7 +177,35 @@ module Api
         head :service_unavailable
       end
 
+      # GET /api/v1/orgs/:org_id/domains/:id/shared-addresses
+      def shared_addresses
+        render_shared_addresses
+      end
+
+      # PUT /api/v1/orgs/:org_id/domains/:id/shared-addresses
+      #   { shared_addresses: [{ local_part: "info", display_name: "Husttle" }] }
+      def update_shared_addresses
+        list = Array(params.permit(shared_addresses: %i[local_part display_name])[:shared_addresses]).map do |a|
+          { "local_part" => a[:local_part].to_s.strip.downcase, "display_name" => a[:display_name].to_s.strip.presence }.compact
+        end
+        @domain.update!(shared_addresses: list)
+        render_shared_addresses
+      end
+
       private
+
+      SharedAddress = Struct.new(:key, :local_part, :address, :display_name, :repliers, keyword_init: true)
+
+      def render_shared_addresses
+        members = current_organization.memberships.active.includes(:user).to_a
+        list = Array(@domain.shared_addresses).map do |a|
+          address = "#{a["local_part"]}@#{@domain.name}"
+          repliers = members.select { |m| m.send_as_addresses.include?(address) }.map { |m| m.user.display_name.presence || m.user.username }
+          SharedAddressSerializer.new(SharedAddress.new(key: address, local_part: a["local_part"], address: address,
+            display_name: a["display_name"], repliers: repliers)).to_h
+        end
+        render json: { shared_addresses: list }
+      end
 
       def set_domain
         @domain = current_organization.domains.find_by!(key: params[:id])

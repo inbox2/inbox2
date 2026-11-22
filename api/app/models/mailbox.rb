@@ -11,6 +11,7 @@ class Mailbox < ApplicationRecord
   validates :local_part, uniqueness: { scope: :domain_id, case_sensitive: false }
   validate :domain_belongs_to_membership_org
   validate :not_granted_to_another_member
+  validate :not_a_shared_address
 
   before_validation { self.local_part = local_part.downcase.strip if local_part.present? }
 
@@ -37,6 +38,11 @@ class Mailbox < ApplicationRecord
     taken = Membership.where(organization_id: domain.organization_id).where.not(id: membership.id)
       .exists?(["? = ANY(send_as_addresses)", email_address.downcase])
     errors.add(:local_part, "is already granted to someone as a send-as address") if taken
+  end
+
+  # info@ on the domain's shared list is the team's address, not one person's.
+  def not_a_shared_address
+    errors.add(:local_part, "is a shared address on this domain") if domain&.shared_local?(local_part)
   end
 
   # A mailbox must live on a domain owned by the same org as its membership.

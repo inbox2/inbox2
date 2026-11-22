@@ -177,8 +177,13 @@ class Organization < ApplicationRecord
     local = Mailbox.base_local_part(local)
     return if local.blank? || host.blank? || !domains.exists?(name: host)
 
-    Mailbox.joins(:domain).where(domains: { organization_id: id, name: host }, local_part: local).pick(:membership_id) ||
-      memberships.joins(:user).where("LOWER(users.username) = ?", local).pick(:id)
+    mailbox_owner = Mailbox.joins(:domain).where(domains: { organization_id: id, name: host }, local_part: local).pick(:membership_id)
+    return mailbox_owner if mailbox_owner
+    # An address on the domain's shared list (info@) is the team's, even when
+    # a member's username happens to match it.
+    return if domains.find_by(name: host)&.shared_local?(local)
+
+    memberships.joins(:user).where("LOWER(users.username) = ?", local).pick(:id)
   end
 
   # A new outbound thread's personal owner: its From's member, else its first

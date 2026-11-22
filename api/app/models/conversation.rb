@@ -86,6 +86,7 @@ class Conversation < ApplicationRecord
     SELECT LOWER(u.username || '@' || d.name) FROM memberships ms JOIN users u ON u.id = ms.user_id
     JOIN domains d ON d.organization_id = ms.organization_id
     WHERE ms.organization_id = conversations.organization_id AND u.username IS NOT NULL
+      AND NOT d.shared_addresses @> jsonb_build_array(jsonb_build_object('local_part', LOWER(u.username)))
   SQL
 
   # What an org-wide reader that is not a member may read (API keys, the

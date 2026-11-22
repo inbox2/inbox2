@@ -170,9 +170,11 @@ class Membership < ApplicationRecord
   # member's own — the exclusion set Conversation.visible_to hides.
   def teammate_mailbox_addresses
     mailboxes = teammate_mailbox_addresses_anywhere
-    hosts = organization.domains.where(id: accessible_domain_ids).pluck(:name).map(&:downcase)
+    doms = organization.domains.where(id: accessible_domain_ids).to_a
     usernames = organization.memberships.where.not(id: id).joins(:user).pluck(Arel.sql("LOWER(users.username)"))
-    (mailboxes + usernames.product(hosts).map { |u, h| "#{u}@#{h}" }).uniq
+    # A username that is also on a domain's shared list is the team's there.
+    by_username = usernames.product(doms).reject { |u, d| d.shared_local?(u) }.map { |u, d| "#{u}@#{d.name.downcase}" }
+    (mailboxes + by_username).uniq
   end
 
   # Disabled by a plan downgrade (over the collaborator seat limit) rather than
@@ -237,7 +239,7 @@ class Membership < ApplicationRecord
     return false if Mailbox.where(domain: domain).where.not(membership_id: id).exists?(["LOWER(local_part) = ?", local])
 
     send_as_addresses.include?(bare) ||
-      (accessible_domain_ids.include?(domain.id) && local == user.username.to_s.downcase)
+      (accessible_domain_ids.include?(domain.id) && local == user.username.to_s.downcase && !domain.shared_local?(local))
   end
 
   # ── Role predicates ──────────────────────────────────────────────────────

@@ -27,6 +27,7 @@ module Api
         conversations = conversations.where(sent_only: false) if inbox_listing?
 
         conversations = filter_by_space_and_domain(conversations)
+        conversations = filter_by_folder(conversations)
         conversations = conversations.where(to_address: params[:to]) if params[:to].present?
         conversations = conversations.where(from_address: params[:from]) if params[:from].present?
 
@@ -325,7 +326,7 @@ module Api
       # badge: counting unread rows out of a page of #index caps the number at
       # the page size (the web badge silently topped out at 25 for a year).
       def unread_count
-        count = filter_by_space_and_domain(visible_conversations)
+        count = filter_by_folder(filter_by_space_and_domain(visible_conversations))
           .where(status: Conversation::STATUS_OPEN, read: false)
           .count
         render json: { unread_count: count }
@@ -513,6 +514,32 @@ module Api
         end
 
         scope
+      end
+
+      # ?folder= (AddressFolders): "inbox", an address local part ("info",
+      # "waseem+receipts") or "other". With ?domain= it is that domain's folder;
+      # "inbox" without one is the Inbox across every domain the member works on.
+      # No ?folder= keeps the old listing (the whole pool), so clients opt in.
+      def filter_by_folder(scope)
+        folder = params[:folder].to_s.downcase
+        return scope if folder.blank? || current_membership.nil?
+
+        domains = if params[:domain].present?
+          current_organization.domains.where(key: params[:domain])
+        elsif folder == AddressFolders::INBOX
+          # Plus any domain holding a thread assigned or granted to the member:
+          # that thread is theirs to act on, whatever domain it is on.
+          direct = Conversation.where(id: ConversationAccess.where(membership_id: current_membership.id).select(:conversation_id))
+            .or(Conversation.where(id: ConversationAssignee.where(membership_id: current_membership.id).select(:conversation_id)))
+            .distinct.pluck(:domain_id).compact
+          current_organization.domains.where(id: current_membership.home_domain_ids + direct)
+        else
+          return scope.none
+        end
+        parts = domains.map { |d| AddressFolders.new(current_membership, d).scope(scope, folder) }
+        return scope.none if parts.empty?
+
+        parts.map { |p| scope.where(id: p.select(:id)) }.reduce(:or)
       end
 
       # Scope conversations by assignee: "me" → assigned to the caller; "none"/
