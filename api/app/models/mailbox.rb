@@ -12,6 +12,12 @@ class Mailbox < ApplicationRecord
   validate :domain_belongs_to_membership_org
   validate :not_granted_to_another_member
   validate :not_a_shared_address
+  # A new or removed mailbox moves its threads between Yours and Other.
+  # Their personal threads too: a stray one sits under their first address.
+  after_commit on: %i[create destroy] do
+    AddressFolders.restamp(domain, [local_part])
+    domain&.conversations&.where(personal_membership_id: membership_id)&.update_all("change_seq = change_seq")
+  end
 
   before_validation { self.local_part = local_part.downcase.strip if local_part.present? }
 

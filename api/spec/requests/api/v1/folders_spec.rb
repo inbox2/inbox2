@@ -75,6 +75,26 @@ RSpec.describe "Api::V1::Folders", type: :request do
       end
     end
 
+    it "re-stamps threads when a send-as grant or a mailbox changes" do
+      seq = -> { [info_mail, stray].map { |c| c.reload.change_seq } }
+      before = seq.()
+      boss.update!(send_as_addresses: ["info@husttle.com"])
+      expect(info_mail.reload.change_seq).to be > before[0]
+      expect(stray.reload.change_seq).to eq(before[1])
+      sent = thread(to: "info@husttle.com", from: "jobs@husttle.com")
+      sent_seq = sent.reload.change_seq
+      Mailbox.create!(membership: boss, domain: domain, local_part: "jobs")
+      expect(stray.reload.change_seq).to be > before[1]
+      expect(sent.reload.change_seq).to be > sent_seq
+    end
+
+    it "gives a teammate's thread to your address no folder, like the folder lists" do
+      theirs = thread(to: "boss@husttle.com", owner: ali)
+      ConversationAccess.create!(conversation: theirs, membership: boss)
+      row = synced(boss_user)[theirs.key]
+      expect(row).to include("folder" => nil, "direct" => true)
+    end
+
     it "marks a thread assigned to the member as direct" do
       ConversationAssignee.create!(conversation: stray, membership: ali)
       rows = synced(ali_user)

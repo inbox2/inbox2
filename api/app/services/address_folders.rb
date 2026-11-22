@@ -41,6 +41,21 @@ class AddressFolders
 
   attr_reader :membership, :domain
 
+  # Re-stamp the domain's threads at these addresses (local parts, any tag) so
+  # device mirrors re-pull them with fresh `folder` keys. Called when what a
+  # folder key depends on changes: send-as grants, mailboxes.
+  def self.restamp(domain, locals)
+    bases = Array(locals).map { |l| Mailbox.base_local_part(l).downcase }.uniq
+    return if domain.nil? || bases.empty?
+
+    # Either side: visibility and the folder both read to_address and from_address.
+    addrs = bases.map { |b| "#{b}@#{domain.name.downcase}" }
+    untag = ->(col) { "split_part(split_part(#{col}, '@', 1), '+', 1) || '@' || split_part(#{col}, '@', 2)" }
+    Conversation.where(domain_id: domain.id)
+      .where("#{untag.(TO_SQL)} IN (?) OR #{untag.(FROM_SQL)} IN (?)", addrs, addrs)
+      .update_all("change_seq = change_seq")
+  end
+
   # One folder across the member's domains, over `scope` (their visible
   # threads): one named domain, or for Inbox with no domain, their home domains
   # plus any domain holding a thread assigned or granted to them. The list, the
@@ -200,6 +215,7 @@ class AddressFolders
           else own_locals.first || OTHER
           end
         elsif shared_locals.include?(base) then base
+        elsif own_locals.include?(base) then nil # a teammate's thread to your address: no folder (scope agrees)
         else OTHER
         end
         [id, key]

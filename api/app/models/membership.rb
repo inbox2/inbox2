@@ -74,6 +74,8 @@ class Membership < ApplicationRecord
   # Disk::KeyGrant.freeze_holders! themselves.
   before_destroy :freeze_disk_keys
   after_update :freeze_disk_keys, if: -> { saved_change_to_status? && status != STATUS_ACTIVE }
+  # A send-as grant changes this member's address-folder keys on those threads.
+  after_update_commit :restamp_send_as_folders, if: :saved_change_to_send_as_addresses?
   # Each team gets a drive letter in the order the person joined: D:, E:, F: ...
   # (decided 2026-10-07). Stored, so leaving a team never shifts the others.
   before_create :assign_drive_letter
@@ -274,5 +276,14 @@ class Membership < ApplicationRecord
   def primary_email_address
     mbx = mailboxes.min_by { |m| m.domain&.created_at || Time.at(0) }
     mbx&.email_address
+  end
+
+  private
+
+  def restamp_send_as_folders
+    before, after = saved_change_to_send_as_addresses.map { |l| Array(l) }
+    ((before - after) | (after - before)).group_by { |a| a.to_s.split("@", 2)[1].to_s.downcase }.each do |host, addrs|
+      AddressFolders.restamp(organization.domains.find_by(name: host), addrs.map { |a| a.split("@", 2)[0] })
+    end
   end
 end
