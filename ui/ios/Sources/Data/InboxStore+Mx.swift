@@ -28,8 +28,11 @@ extension InboxStore {
     /// `{"conversations": [...]}` — the org pool, newest first. Same defaults as the
     /// API: no status hides trash / spam / archived.
     /// Callers don't page, so one page is as deep as the channel lists go (200).
-    func mxConversations(org: String, status: String?, read: Bool?, domain: String?, page: Int, perPage: Int = 200,
-                         labeledOnly: Bool = false) -> Data {
+    /// `folder` narrows by address folder: one folder's rows, or the Inbox (rows in a
+    /// folder shown in Inbox, or `direct` — assigned or granted to you). A domain whose
+    /// tree isn't loaded yet is left unfiltered: it shows what it showed before folders.
+    func mxConversations(org: String, status: String?, read: Bool?, domain: String?, folder: MxFolderFilter? = nil,
+                         page: Int, perPage: Int = 200, labeledOnly: Bool = false) -> Data {
         var conditions = ["organization_id = ?"]
         var binds = [org]
         // Lore: triage-labelled rows only, before the page limit (so unlabelled mail can't push them out).
@@ -48,6 +51,20 @@ extension InboxStore {
                    AND (json_extract(payload, '$.slug') = ? OR json_extract(payload, '$.name') = ?)))
                 """)
             binds += [domain, org, domain, domain]
+        }
+        switch folder {
+        case .address(let key):
+            conditions.append("json_extract(payload, '$.folder') = ?"); binds.append(key)
+        case .inbox(let keysByDomain) where !keysByDomain.isEmpty:
+            var any = ["COALESCE(json_extract(payload, '$.direct'), 0) = 1",
+                       "COALESCE(domain_key, '') NOT IN (\(Self.marks(keysByDomain.count)))"]
+            binds += keysByDomain.keys
+            for (dom, keys) in keysByDomain where !keys.isEmpty {
+                any.append("(domain_key = ? AND json_extract(payload, '$.folder') IN (\(Self.marks(keys.count))))")
+                binds += [dom] + keys
+            }
+            conditions.append("(\(any.joined(separator: " OR ")))")
+        default: break
         }
         binds += [String(perPage), String(max(page - 1, 0) * perPage)]
         let rows = queue.sync {
@@ -94,6 +111,8 @@ extension InboxStore {
         }
         return Self.wrap(type, rows)
     }
+
+    private static func marks(_ n: Int) -> String { Array(repeating: "?", count: n).joined(separator: ",") }
 
     private static func payload(_ stmt: OpaquePointer) -> String { String(cString: sqlite3_column_text(stmt, 0)) }
 

@@ -57,6 +57,32 @@ RSpec.describe "Api::V1::Folders", type: :request do
     end
   end
 
+  describe "sync payload folder keys" do
+    def synced(user)
+      get "/api/v1/orgs/#{org.key}/sync/pull", headers: auth_headers(user)
+      expect(response).to have_http_status(:ok)
+      response.parsed_body.dig("records", "conversations").index_by { |c| c["id"] }
+    end
+
+    it "stamps each thread with the member's folder, the same one ?folder= lists it in" do
+      rows = synced(boss_user)
+      expect(rows.transform_values { |c| c["folder"] }).to include(
+        boss_mail.key => "boss", boss_receipt.key => "boss+receipts", info_mail.key => "info",
+        support_mail.key => "support", stray.key => "other")
+      h = auth_headers(boss_user)
+      rows.values.group_by { |c| c["folder"] }.each do |folder, list|
+        expect(keys(h, folder: folder, domain: domain.key)).to match_array(list.map { |c| c["id"] })
+      end
+    end
+
+    it "marks a thread assigned to the member as direct" do
+      ConversationAssignee.create!(conversation: stray, membership: ali)
+      rows = synced(ali_user)
+      expect(rows[stray.key]).to include("direct" => true)
+      expect(rows[info_mail.key]).to include("folder" => "info", "direct" => false)
+    end
+  end
+
   describe "conversations ?folder=" do
     it "Inbox is only the owner's own untagged mail" do
       expect(keys(auth_headers(boss_user), folder: "inbox")).to eq([boss_mail.key])

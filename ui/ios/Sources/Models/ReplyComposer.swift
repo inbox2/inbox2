@@ -113,8 +113,11 @@ enum ReplyComposer {
     /// The send-from address override for a domain (MX) conversation — the own
     /// address on the latest message, else the address the thread arrived at; nil
     /// for offline channels (which send from the account itself).
-    static func fromEmailOverride(for convo: Conversation, latest: Message? = nil, own: Set<String> = []) -> String? {
+    /// `folderReplyAs`: the open address folder you can reply as wins (web parity).
+    static func fromEmailOverride(for convo: Conversation, latest: Message? = nil, own: Set<String> = [],
+                                  folderReplyAs: (orgId: String, address: String)? = nil) -> String? {
         guard convo.isDomain else { return nil }
+        if let r = folderReplyAs, r.orgId == convo.accountKey { return r.address }
         return replyFrom(latest, own: own) ?? MailAddress.parse(convo.toAddress).email
     }
 
@@ -155,7 +158,8 @@ enum ReplyComposer {
         }
         return ComposeDraft(
             fromAccountKey: convo.accountKey,
-            fromEmailOverride: fromEmailOverride(for: convo, latest: last, own: domainEmails(for: convo, cloud: cloud)),
+            fromEmailOverride: fromEmailOverride(for: convo, latest: last, own: domainEmails(for: convo, cloud: cloud),
+                                                 folderReplyAs: AddressFolderStore.shared.replyAs),
             subject: subjectPrefixed("Fwd:", convo.subject),
             body: forwardBody(quote: attributedQuote(last, fallbackSnippet: convo.snippet)),
             attachments: atts

@@ -63,6 +63,8 @@ class InboxState(
     var selected by mutableStateOf<Set<String>>(emptySet())
     var unreadCount by mutableIntStateOf(0)
     var domainView by mutableStateOf("All")   // mx pool views
+    /** The open address folder of a domain chip's Inbox; null = the Inbox (mail for you). */
+    var addressFolder: com.inbox2.app.cloud.CloudAddressFolder? = null
 
     val editing get() = selected.isNotEmpty()
     val isDomainChannel get() = AccountKey.isDomain(channel)
@@ -176,7 +178,8 @@ class InboxState(
             isDomainChannel ->
                 // The selected chip is a `dom_…` (per-domain) or `org_…` (legacy) key; the API
                 // path always uses the org id, with the domain passed as the `?domain=` filter.
-                cloud.activeOrg.value?.let { org -> runCatching { cloud.conversations(org, folder, effectiveQuery, domainView, AccountKey.domainFilter(channel)) }.getOrDefault(emptyList()) } ?: emptyList()
+                cloud.activeOrg.value?.let { org -> runCatching { cloud.conversations(org, folder, effectiveQuery, domainView, AccountKey.domainFilter(channel),
+                    addressFolder = addressFolder?.key?.takeIf { folder == MailFolder.INBOX }) }.getOrDefault(emptyList()) } ?: emptyList()
             channel != null ->
                 withContext(Dispatchers.IO) { engine.store.conversations(channel, folder, filter, effectiveQuery, labeledOnly) }
             else -> {
@@ -222,7 +225,9 @@ class InboxState(
                 channel == null -> withContext(Dispatchers.IO) { engine.store.unreadCount(null) } +
                     cloud.orgs.value.sumOf { cloud.unreadCount(it.id) }
                 !isDomainChannel -> withContext(Dispatchers.IO) { engine.store.unreadCount(channel) }
-                else -> 0
+                // A domain chip: the open folder's count from its tree (Inbox when none).
+                else -> AccountKey.domainFilter(channel)?.let { cloud.folderTrees.value[it] }
+                    ?.firstOrNull { it.key == (addressFolder?.key ?: com.inbox2.app.cloud.CloudAddressFolder.INBOX) }?.unread ?: 0
             }
         searching = false
     }

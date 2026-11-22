@@ -12,6 +12,8 @@ struct FolderDrawer: View {
     /// WhatsApp) show channel/kind sub-views instead of mailboxes + triage.
     var provider: String? = nil
     @State private var shown = false
+    /// An MX domain chip's address folders: its Inbox row becomes the folder tree.
+    @ObservedObject private var addressFolders = AddressFolderStore.shared
 
     private var metaFolders: [MailFolder]? { provider.flatMap { MailFolder.meta(for: $0) } }
 
@@ -51,21 +53,29 @@ struct FolderDrawer: View {
                     .padding(.top, geo.safeAreaInsets.top + Space.s4)
                     .padding(.bottom, Space.s5)
 
-                    if let metaFolders {
-                        // Meta account: channel/kind sub-views (no mail folders / triage).
-                        ForEach(metaFolders) { folderRow($0) }
-                    } else {
-                        ForEach(MailFolder.mailboxes) { folderRow($0) }
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            if let metaFolders {
+                                // Meta account: channel/kind sub-views (no mail folders / triage).
+                                ForEach(metaFolders) { folderRow($0) }
+                            } else {
+                                ForEach(MailFolder.mailboxes) { folder in
+                                    if folder == .inbox && !addressFolders.folders.isEmpty {
+                                        AddressFolderTree(selection: $selection, onPick: close)
+                                    } else {
+                                        folderRow(folder)
+                                    }
+                                }
 
-                        Text("TRIAGE")
-                            .font(AppFont.xs2(.semibold)).tracking(0.8)
-                            .foregroundStyle(p.textTertiary)
-                            .padding(.horizontal, Space.s5)
-                            .padding(.top, Space.s5).padding(.bottom, Space.s2)
-                        ForEach(MailFolder.triage) { folderRow($0) }
+                                Text("TRIAGE")
+                                    .font(AppFont.xs2(.semibold)).tracking(0.8)
+                                    .foregroundStyle(p.textTertiary)
+                                    .padding(.horizontal, Space.s5)
+                                    .padding(.top, Space.s5).padding(.bottom, Space.s2)
+                                ForEach(MailFolder.triage) { folderRow($0) }
+                            }
+                        }
                     }
-
-                    Spacer()
                 }
                 .frame(width: geo.size.width, alignment: .topLeading)
                 .background(.ultraThinMaterial)
@@ -78,13 +88,15 @@ struct FolderDrawer: View {
     }
 
     private func folderRow(_ folder: MailFolder) -> some View {
-        let active = folder == selection
+        // Inbox with a folder open is not this row's Inbox.
+        let active = folder == selection && addressFolders.openFolder == nil
         // Triage folders carry their own desktop quadrant tint (always coloured, like
         // the desktop matrix); standard mailboxes use the violet active treatment.
         let tint = folder.tintHex.map { Color(hex: $0) }
         let accent = tint ?? p.accentViolet
         return Button {
             selection = folder
+            addressFolders.selected = nil
             close()
         } label: {
             HStack(spacing: Space.s3) {

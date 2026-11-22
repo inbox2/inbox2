@@ -575,3 +575,54 @@ struct CloudBrand: Decodable {
     enum CodingKeys: String, CodingKey { case name; case iconURL = "icon_url"; case themeColor = "theme_color" }
 }
 struct CloudBrandResponse: Decodable { let brand: CloudBrand? }
+
+/// Address folders (API `GET orgs/:org/folders?domain=`): an MX domain's mail split
+/// by the address it came in to. Inbox is mail for you; under it your own address
+/// and its +tags, the shared addresses (info@, support@) and Other. Mirrors
+/// `ui/web/src/lib/addressFolders.js` + `hooks/useAddressFolders.js`.
+struct AddressFolder: Decodable, Identifiable, Equatable, Sendable {
+    enum Kind: String, Decodable, Sendable { case inbox, own, tag, shared, other }
+
+    let id: String
+    /// "inbox", "vince", "vince+receipts", "info" or "other" — also the mirror row's `folder`.
+    let key: String
+    let kind: Kind
+    let address: String?
+    let parent: String?
+    var unread: Int
+    let canReply: Bool
+    var inInbox: Bool
+    var notify: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id, key, kind, address, parent, unread, notify
+        case canReply = "can_reply", inInbox = "in_inbox"
+    }
+
+    static let inboxKey = "inbox"
+
+    /// Header name: "info@", "vince+receipts@", "Other", "Inbox".
+    var label: String {
+        switch kind {
+        case .inbox: return "Inbox"
+        case .other: return "Other"
+        default: return "\(key)@"
+        }
+    }
+
+    /// Tree name, the address implied: "info", a tag as "+receipts" under its owner.
+    var treeLabel: String {
+        if kind == .tag, let parent, key.hasPrefix(parent) { return String(key.dropFirst(parent.count)) }
+        return kind == .own || kind == .shared ? key : label
+    }
+
+    var icon: String { kind == .other ? "tray.2.fill" : kind == .inbox ? "tray.fill" : "at" }
+    /// Other has no address to keep a pref under: no bell, no menu.
+    var hasPrefs: Bool { kind != .other }
+    /// Show in Inbox is a choice for shared and tag folders only.
+    var hasInboxToggle: Bool { kind == .shared || kind == .tag }
+    /// The pref key the API takes: the full address, or "inbox".
+    var prefKey: String { kind == .inbox ? Self.inboxKey : (address ?? key) }
+}
+
+struct AddressFoldersResponse: Decodable { let folders: [AddressFolder] }

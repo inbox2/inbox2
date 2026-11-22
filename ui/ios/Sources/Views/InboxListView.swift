@@ -37,6 +37,9 @@ struct InboxListView: View {
     @EnvironmentObject private var readAloud: ReadAloudController
     // Notification taps: holds the tapped conversation key until consumed below.
     @ObservedObject private var notifications = NotificationManager.shared
+    /// An MX domain chip's address folders: which one is open, and the trees that
+    /// decide what its Inbox shows.
+    @ObservedObject private var addressFolders = AddressFolderStore.shared
     /// Bumped to force a domain (API) re-query — domain mail has no engine event.
     @State private var cloudRefresh = 0
     /// Live text in the search field (every keystroke).
@@ -157,7 +160,7 @@ struct InboxListView: View {
     /// Re-query whenever the channel, filter, search term, or engine data version
     /// changes (the latter fires on sync / new-message events). Keyed on the debounced
     /// `effectiveQuery`, not the live `query`, so each keystroke doesn't re-read.
-    private var reloadKey: String { "\(selectedChannel)|\(selectedFolder.rawValue)|\(filter)|\(effectiveQuery)|\(engine.dataVersion)|\(cloud.currentOrgId ?? "-")|\(cloudRefresh)|\(cloud.revision)" }
+    private var reloadKey: String { "\(selectedChannel)|\(selectedFolder.rawValue)|\(filter)|\(effectiveQuery)|\(engine.dataVersion)|\(cloud.currentOrgId ?? "-")|\(cloudRefresh)|\(cloud.revision)|\(addressFolders.selected ?? "")|\(addressFolders.version)" }
 
     /// Unified first, then one channel per connected account (email-labeled, with
     /// the provider's brand icon). With no accounts and no signed-in domain the
@@ -213,6 +216,10 @@ struct InboxListView: View {
     private func syncActiveProvider() {
         let provider = activeAccountKey.flatMap { k in engine.accounts.first { $0.id == k }?.provider }
         activeProvider = provider
+        // An MX domain chip shows its address folders (drawer / iPad sidebar).
+        addressFolders.show(AccountKey.domainFilter(activeAccountKey).flatMap { dom in
+            cloud.currentOrg.map { AddressFolderStore.Scope(orgId: $0.id, domain: dom) }
+        })
         let metaFolders = provider.flatMap { MailFolder.meta(for: $0) }
         if let metaFolders {
             if !selectedFolder.isMeta { selectedFolder = metaFolders.first ?? .metaAll }
@@ -342,8 +349,17 @@ struct InboxListView: View {
     /// What the loader reads for — the view's channel/folder/filter/query, resolved once.
     private var scope: InboxLoader.Scope {
         .init(accountKey: activeAccountKey, selectedChannel: selectedChannel, isDomainChannel: isDomainChannel,
-              folder: selectedFolder, filterRaw: filter, filter: activeFilter, query: effectiveQuery)
+              folder: selectedFolder, filterRaw: filter, filter: activeFilter, query: effectiveQuery,
+              addressFolder: openAddressFolder?.key)
     }
+
+    /// The address folder the list shows (Inbox of an MX domain chip with one picked).
+    private var openAddressFolder: AddressFolder? {
+        isDomainChannel && selectedFolder == .inbox ? addressFolders.openFolder : nil
+    }
+
+    /// "info@" in an address folder, else the mailbox's name.
+    private var listTitle: String { openAddressFolder?.label ?? selectedFolder.title }
 
     /// Re-read the list for the current scope (input change + engine data events).
     private func reload() async { await loader.reload(scope, engine: engine, cloud: cloud) }
@@ -578,7 +594,7 @@ struct InboxListView: View {
                 }
             }
             .refreshable {
-                if isDomainChannel { cloudRefresh += 1 }
+                if isDomainChannel { cloudRefresh += 1; addressFolders.reloadActive() }
                 else { engine.sync(accountKey: activeAccountKey) }
                 try? await Task.sleep(nanoseconds: 600_000_000)
             }
@@ -655,7 +671,7 @@ struct InboxListView: View {
     /// Sync button — spins continuously while a sync is in flight.
     private var syncButton: some View {
         IconButton("arrow.triangle.2.circlepath", glyph: AppFont.md(.semibold), tint: p.textSecondary, rotation: syncSpin) {
-            if isDomainChannel { cloudRefresh += 1 } else { engine.sync(accountKey: activeAccountKey) }
+            if isDomainChannel { cloudRefresh += 1; addressFolders.reloadActive() } else { engine.sync(accountKey: activeAccountKey) }
         }
         .onChange(of: engine.syncing) { _, on in
             if on {
@@ -676,7 +692,7 @@ struct InboxListView: View {
     private var collapsedBar: some View {
         HStack(spacing: Space.s2 + 2) {
             leadingControl(18)
-            Text(selectedFolder.title)
+            Text(listTitle)
                 .font(AppFont.title3.smallCaps())
                 .foregroundStyle(p.textSecondary)
             if unreadCount > 0 {
@@ -877,7 +893,7 @@ struct InboxListView: View {
                 // No leading control in edit mode — cancelling lives on the bulk bar's
                 // trailing ✕ (next to the floating-nav slot it occupies).
                 if !bulk.editing { leadingControl(20) }
-                Text(bulk.editing ? "\(bulk.selection.count) Selected" : selectedFolder.title)
+                Text(bulk.editing ? "\(bulk.selection.count) Selected" : listTitle)
                     .font(AppFont.title.smallCaps())
                     .foregroundStyle(p.textSecondary)
                 if !bulk.editing && unreadCount > 0 {
@@ -919,6 +935,13 @@ struct InboxListView: View {
             ChannelsRow(channels: channels, selection: $selectedChannel)
                 .padding(.bottom, Space.s4)
                 .plainListRow()
+
+            if let f = openAddressFolder, f.kind == .shared, !f.canReply {
+                ReadOnlyFolderNotice(folder: f)
+                    .padding(.horizontal, Space.s4)
+                    .padding(.bottom, Space.s3)
+                    .plainListRow()
+            }
 
             // Flush against the top of the well — the filter tabs are part of the
             // list now, not a row of pills floating on the page above it.
@@ -977,7 +1000,7 @@ struct InboxListView: View {
                     systemImage: effectiveQuery.isEmpty ? "tray" : "magnifyingglass",
                     title: effectiveQuery.isEmpty ? "All clear" : "No results",
                     message: effectiveQuery.isEmpty
-                        ? "Nothing in \(filter == "All" ? selectedFolder.title : filter.lowercased()) right now."
+                        ? "Nothing in \(filter == "All" ? listTitle : filter.lowercased()) right now."
                         : "No conversations match \u{201C}\(effectiveQuery)\u{201D}."
                 )
                 .frame(maxWidth: .infinity)

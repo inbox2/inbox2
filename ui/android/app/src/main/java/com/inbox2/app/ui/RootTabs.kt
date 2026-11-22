@@ -60,6 +60,14 @@ fun RootTabs(engine: EngineModel, cloud: com.inbox2.app.cloud.CloudSession, them
     // Active inbox channel (account key), lifted from InboxScreen so the folder
     // drawer can show Meta channel sub-views vs mailboxes.
     var activeChannel by remember { mutableStateOf<String?>(null) }
+    // The open address folder (its key) of the selected MX domain's Inbox; null = Inbox.
+    var addressFolder by remember { mutableStateOf<String?>(null) }
+    val folderTrees by cloud.folderTrees.collectAsState()
+    val activeDomain = com.inbox2.app.model.AccountKey.domainFilter(activeChannel)
+    val domainFolders = activeDomain?.let { folderTrees[it] }.orEmpty()
+    val openAddressFolder = addressFolder?.let { k -> domainFolders.firstOrNull { it.key == k } }
+    // Compose from an address folder you can reply as defaults From to that address.
+    val composeFrom = openAddressFolder?.takeIf { it.canReply }?.address
     val readerState = remember { mutableStateOf<Conversation?>(null) }
     var reader by readerState
     val composeState = remember { mutableStateOf<ComposePrefill?>(null) }
@@ -182,11 +190,12 @@ fun RootTabs(engine: EngineModel, cloud: com.inbox2.app.cloud.CloudSession, them
             if (signedIn != null) com.inbox2.app.ui.screens.ActiveZoneCard(cloud, onOpenCalendar = { reader = null; tab = 2 })
             Box(Modifier.weight(1f)) {
                 when (tab) {
-                    0 -> InboxScreen(engine, cloud, folder, onOpenFolders = { showFolders = true }, onOpenConversation = { reader = it }, onEditingChange = { inboxEditing = it }, onOpenActivity = { activity = true },
-                        onCompose = { key -> compose = ComposePrefill(accountKey = key) },
+                    0 -> InboxScreen(engine, cloud, folder, addressFolder = openAddressFolder, onOpenFolders = { showFolders = true }, onOpenConversation = { reader = it }, onEditingChange = { inboxEditing = it }, onOpenActivity = { activity = true },
+                        onCompose = { key -> compose = ComposePrefill(accountKey = key, fromEmailOverride = composeFrom) },
                         onOpenDraft = { d -> compose = ComposePrefill(accountKey = d.accountKey, to = d.to, cc = d.cc, bcc = d.bcc, subject = d.subject, body = d.body, savedDraftId = d.id) },
                         searchRequest = inboxSearch, onSearchConsumed = { inboxSearch = null },
                         onChannelChange = { key ->
+                            if (key != activeChannel) addressFolder = null
                             activeChannel = key
                             // Keep the folder valid across the email↔Meta boundary: entering
                             // a Meta account from a mail folder selects its first sub-view;
@@ -222,13 +231,20 @@ fun RootTabs(engine: EngineModel, cloud: com.inbox2.app.cloud.CloudSession, them
             FloatingNavBar(tab, navItems, onSelect = { tab = it }, onCompose = {
                 // Seeded with the inbox's filtered account, like the inbox's own compose
                 // button (a domain chip resolves to its org — the domain identity's key).
-                compose = ComposePrefill(accountKey = if (com.inbox2.app.model.AccountKey.isDomain(activeChannel)) cloud.activeOrg.value else activeChannel)
+                compose = ComposePrefill(accountKey = if (com.inbox2.app.model.AccountKey.isDomain(activeChannel)) cloud.activeOrg.value else activeChannel,
+                    fromEmailOverride = composeFrom)
             })
         }
 
         // Folder drawer overlay
-        FolderDrawer(showFolders, folder, channelLabel = "", onSelect = { folder = it; showFolders = false }, onDismiss = { showFolders = false },
-            provider = accounts.firstOrNull { it.id == activeChannel }?.provider)
+        FolderDrawer(showFolders, folder, channelLabel = "", onSelect = { folder = it; addressFolder = null; showFolders = false }, onDismiss = { showFolders = false },
+            provider = accounts.firstOrNull { it.id == activeChannel }?.provider,
+            addressFolders = domainFolders, addressSelection = addressFolder,
+            onSelectAddress = { folder = MailFolder.INBOX; addressFolder = it; showFolders = false },
+            onSetFolderPref = { f, inbox, notify ->
+                val org = cloud.activeOrg.value
+                if (org != null && activeDomain != null) scope.launch { cloud.setFolderPref(org, activeDomain, f, inbox, notify) }
+            })
 
         // The Bridge over Lore (sheet-like); compose / reader / the game draw above it.
         AnimatedVisibility(bridge, enter = slideInVertically { it } + fadeIn(), exit = slideOutVertically { it } + fadeOut()) {

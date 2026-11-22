@@ -57,7 +57,8 @@ class CloudClient {
     }
 
     /** `labeled` narrows to threads with any label but resolved (custom ones too) before paging. */
-    suspend fun conversations(orgId: String, status: String?, read: Boolean?, direction: String? = null, assignee: String? = null, search: String?, domain: String? = null, page: Int = 1, labeled: Boolean = false): List<CloudConversation> {
+    /** `folder` = an address folder key or "inbox" (mail for you); null = the whole pool. */
+    suspend fun conversations(orgId: String, status: String?, read: Boolean?, direction: String? = null, assignee: String? = null, search: String?, domain: String? = null, page: Int = 1, labeled: Boolean = false, folder: String? = null): List<CloudConversation> {
         if (!search.isNullOrBlank()) {
             val resp: CloudConversationsResponse = decode(request("GET", "/orgs/$orgId/search?q=${enc(search)}", authed = true))
             return resp.conversations
@@ -69,13 +70,27 @@ class CloudClient {
         if (assignee != null) path += "&assignee=$assignee"
         if (domain != null) path += "&domain=$domain"
         if (labeled) path += "&labeled=true"
+        if (folder != null) path += "&folder=${enc(folder)}"
         val resp: CloudConversationsResponse = decode(request("GET", path, authed = true))
         return resp.conversations
     }
 
-    /** Combined domain-pool unread count for the org (mirrors iOS client.unreadCount). */
+    /** Unread in your Inbox across the org's domains (folder=inbox: mail for you, not
+     *  every address on the domain) — mirrors iOS client.unreadCount. */
     suspend fun unreadCount(orgId: String): Int =
-        decode<CloudUnreadCountResponse>(request("GET", "/orgs/$orgId/conversations/unread-count", authed = true)).unreadCount
+        decode<CloudUnreadCountResponse>(request("GET", "/orgs/$orgId/conversations/unread-count?folder=inbox", authed = true)).unreadCount
+
+    /** One MX domain's address folders, in display order. */
+    suspend fun folders(orgId: String, domain: String): List<CloudAddressFolder> =
+        decode<CloudAddressFoldersResponse>(request("GET", "/orgs/$orgId/folders?domain=${enc(domain)}", authed = true)).folders
+
+    /** Show in Inbox / the bell for one folder (`address` = its full address, or "inbox"). */
+    suspend fun setFolderPrefs(orgId: String, address: String, inbox: Boolean? = null, notify: Boolean? = null) {
+        val body = JSONObject().put("address", address)
+        inbox?.let { body.put("inbox", it) }
+        notify?.let { body.put("notify", it) }
+        request("PATCH", "/orgs/$orgId/folders/prefs", body.toString(), authed = true)
+    }
 
     suspend fun conversationDetail(orgId: String, id: String): CloudConversationDetail {
         val resp: CloudConversationDetailResponse = decode(request("GET", "/orgs/$orgId/conversations/$id", authed = true))

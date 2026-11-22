@@ -99,12 +99,13 @@ final class MxMirror {
 
     /// Only what the mirror can evaluate: `direction`, `assignee` and search are the
     /// server's (see the callers), so they never reach here.
-    func conversations(orgId: String, status: String?, read: Bool?, domain: String?, page: Int = 1, perPage: Int = 200, labeledOnly: Bool = false) async -> [CloudConversation]? {
+    func conversations(orgId: String, status: String?, read: Bool?, domain: String?, folder: MxFolderFilter? = nil,
+                       page: Int = 1, perPage: Int = 200, labeledOnly: Bool = false) async -> [CloudConversation]? {
         guard let userKey else { return nil }
         let store = self.store
         return await store.read { store in
             guard let org = store.mxOrg(orgId, userKey: userKey) else { return nil }
-            let data = store.mxConversations(org: org, status: status, read: read, domain: domain, page: page, perPage: perPage, labeledOnly: labeledOnly)
+            let data = store.mxConversations(org: org, status: status, read: read, domain: domain, folder: folder, page: page, perPage: perPage, labeledOnly: labeledOnly)
             return (try? Self.decoder.decode(CloudConversationsResponse.self, from: data))?.conversations
         }
     }

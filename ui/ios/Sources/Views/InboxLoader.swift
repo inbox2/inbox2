@@ -24,6 +24,8 @@ final class InboxLoader: ObservableObject {
         /// Lore: the local half reads only triage-labelled threads (up to 1000), not
         /// the newest 200 of everything.
         var labeledOnly: Bool = false
+        /// The open address folder's key on an MX domain chip (nil = its Inbox).
+        var addressFolder: String? = nil
     }
 
     @Published var conversations: [Conversation] = []
@@ -72,7 +74,8 @@ final class InboxLoader: ObservableObject {
         if s.isDomainChannel {
             outbox = []; loadError = nil
             let result = await cloud.conversations(folder: folder, view: s.filterRaw, query: q,
-                                                   domain: AccountKey.domainFilter(s.selectedChannel))
+                                                   domain: AccountKey.domainFilter(s.selectedChannel),
+                                                   addressFolder: s.addressFolder)
             guard !Task.isCancelled else { return }
             conversations = applyPendingRemoval(result)
             return

@@ -30,6 +30,7 @@ struct IPadShell: View {
     @Binding var activeProvider: String?
     var onCompose: () -> Void
     @StateObject private var split = SplitReader()
+    @ObservedObject private var addressFolders = AddressFolderStore.shared
     // A tapped new-mail notification needs the list mounted (portrait: pushed).
     @ObservedObject private var notifications = NotificationManager.shared
     /// Landscape: the folder column hidden (list + reader only). Remembered.
@@ -132,6 +133,7 @@ struct IPadShell: View {
             .navigationSplitViewStyle(.balanced)
             // A folder or account switch leaves the open thread behind.
             .onChange(of: selectedFolder) { _, _ in split.convo = nil }
+            .onChange(of: addressFolders.selected) { _, _ in split.convo = nil }
         } else {
             NavigationSplitView(columnVisibility: .constant(.all)) {
                 sidebar
@@ -336,7 +338,16 @@ struct IPadShell: View {
                 if let meta = activeProvider.flatMap({ MailFolder.meta(for: $0) }) {
                     navGroup(split.channelLabel, icon: "tray.fill") { ForEach(meta) { folderItem($0) } }
                 } else {
-                    navGroup(split.channelLabel, icon: "tray.fill") { ForEach(MailFolder.mailboxes) { folderItem($0) } }
+                    navGroup(split.channelLabel, icon: "tray.fill") {
+                        ForEach(MailFolder.mailboxes) { folder in
+                            // An MX domain chip: its Inbox row becomes the address-folder tree.
+                            if folder == .inbox && !addressFolders.folders.isEmpty {
+                                AddressFolderTree(selection: $selectedFolder, dense: true) { if !wide { sidebarPath = inboxPath } }
+                            } else {
+                                folderItem(folder)
+                            }
+                        }
+                    }
                     navGroup("Triage", icon: "square.grid.2x2.fill") { ForEach(MailFolder.triage) { folderItem($0) } }
                 }
             }
@@ -399,9 +410,10 @@ struct IPadShell: View {
     }
 
     private func folderItem(_ folder: MailFolder) -> some View {
-        navItem(folder.title, icon: folder.icon, active: folder == selectedFolder,
+        navItem(folder.title, icon: folder.icon, active: folder == selectedFolder && addressFolders.openFolder == nil,
                 tint: folder.tintHex.map { Color(hex: $0) }) {
             selectedFolder = folder
+            addressFolders.selected = nil
             if !wide { sidebarPath = inboxPath }
         }
     }

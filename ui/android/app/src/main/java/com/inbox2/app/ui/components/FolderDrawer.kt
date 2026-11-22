@@ -41,7 +41,15 @@ import com.inbox2.app.theme.theme
  * rows carry the desktop Eisenhower quadrant tints. Tap the dim scrim or close to dismiss.
  */
 @Composable
-fun FolderDrawer(visible: Boolean, selection: MailFolder, channelLabel: String, onSelect: (MailFolder) -> Unit, onDismiss: () -> Unit, provider: String? = null) {
+/*  An MX domain chip adds its address folders under Inbox ([addressFolders], the
+ *  selected one in [addressSelection]); empty until the tree loads, then a plain drawer. */
+fun FolderDrawer(
+    visible: Boolean, selection: MailFolder, channelLabel: String, onSelect: (MailFolder) -> Unit, onDismiss: () -> Unit, provider: String? = null,
+    addressFolders: List<com.inbox2.app.cloud.CloudAddressFolder> = emptyList(),
+    addressSelection: String? = null,
+    onSelectAddress: (String) -> Unit = {},
+    onSetFolderPref: FolderPrefChange = { _, _, _ -> },
+) {
     val p = theme
     // Meta accounts (Instagram/Messenger/WhatsApp) show channel/kind sub-views
     // instead of mailboxes + triage. See docs/Cloud-Push.md (Meta).
@@ -85,7 +93,14 @@ fun FolderDrawer(visible: Boolean, selection: MailFolder, channelLabel: String, 
             if (metaFolders != null) {
                 metaFolders.forEach { FolderRow(it, selection, onSelect) }
             } else {
-                MailFolder.mailboxes.forEach { FolderRow(it, selection, onSelect) }
+                val inbox = addressFolders.firstOrNull { it.kind == com.inbox2.app.cloud.CloudAddressFolder.KIND_INBOX }
+                MailFolder.mailboxes.forEach { f ->
+                    if (f == MailFolder.INBOX && inbox != null) {
+                        AddressFolderRow(inbox, selection == MailFolder.INBOX && addressSelection == null,
+                            onSelect = { onSelect(MailFolder.INBOX) }, onSetPref = onSetFolderPref)
+                        AddressFolderTree(addressFolders, addressSelection.takeIf { selection == MailFolder.INBOX }, onSelectAddress, onSetFolderPref)
+                    } else FolderRow(f, selection, onSelect)
+                }
 
                 Text(
                     "TRIAGE", color = p.textTertiary, style = AppFont.ui(12, FontWeight.SemiBold),

@@ -193,7 +193,8 @@ struct MessageView: View {
     /// thread (`convo.toAddress`); the send attaches to the thread via its id.
     private var domainFromEmail: String? {
         ReplyComposer.fromEmailOverride(for: convo, latest: messages.last,
-                                        own: ReplyComposer.domainEmails(for: convo, cloud: cloud))
+                                        own: ReplyComposer.domainEmails(for: convo, cloud: cloud),
+                                        folderReplyAs: AddressFolderStore.shared.replyAs)
     }
 
     private func replyDraft(all: Bool) -> ComposeDraft {

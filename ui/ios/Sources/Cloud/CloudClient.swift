@@ -63,7 +63,7 @@ actor CloudClient {
 
     /// List the org pool. `status` filters lifecycle (open/archived/trash/spam);
     /// `direction:"outbound"` is the Sent folder; `search` runs the server FTS.
-    func conversations(orgId: String, status: String?, read: Bool?, direction: String? = nil, assignee: String? = nil, search: String?, domain: String? = nil, page: Int = 1, labeled: Bool = false) async throws -> [CloudConversation] {
+    func conversations(orgId: String, status: String?, read: Bool?, direction: String? = nil, assignee: String? = nil, search: String?, domain: String? = nil, folder: String? = nil, page: Int = 1, labeled: Bool = false) async throws -> [CloudConversation] {
         if let search, !search.isEmpty {
             let q = search.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? search
             let resp: CloudConversationsResponse = try await request("GET", "/orgs/\(orgId)/search?q=\(q)", authed: true)
@@ -75,15 +75,38 @@ actor CloudClient {
         if let direction { path += "&direction=\(direction)" }
         if let assignee { path += "&assignee=\(assignee)" }
         if let domain { path += "&domain=\(domain)" }
+        if let folder { path += "&folder=\(Self.query(folder))" }
         if labeled { path += "&labeled=true" }   // any label but resolved, custom ones included
         let resp: CloudConversationsResponse = try await request("GET", path, authed: true)
         return resp.conversations
     }
 
-    /// Unread count for the org's open pool — the domain/MX half of the app badge.
+    /// Unread count for the org's Inbox (mail for you, across your domains) — the
+    /// domain/MX half of the app badge.
     func unreadCount(orgId: String) async throws -> Int {
-        let resp: CloudUnreadCountResponse = try await request("GET", "/orgs/\(orgId)/conversations/unread-count", authed: true)
+        let resp: CloudUnreadCountResponse = try await request("GET", "/orgs/\(orgId)/conversations/unread-count?folder=inbox", authed: true)
         return resp.unreadCount
+    }
+
+    // MARK: Address folders
+
+    /// The domain's folder tree, in display order.
+    func addressFolders(orgId: String, domain: String) async throws -> [AddressFolder] {
+        let resp: AddressFoldersResponse = try await request("GET", "/orgs/\(orgId)/folders?domain=\(Self.query(domain))", authed: true)
+        return resp.folders
+    }
+
+    /// Show in Inbox / the bell for one folder (`address` = full address or "inbox").
+    func setAddressFolderPref(orgId: String, address: String, inbox: Bool?, notify: Bool?) async throws {
+        var body: [String: Any] = ["address": address]
+        if let inbox { body["inbox"] = inbox }
+        if let notify { body["notify"] = notify }
+        try await requestVoid("PATCH", "/orgs/\(orgId)/folders/prefs", body: body, authed: true)
+    }
+
+    /// A query value: `+` escaped too (a form decoder reads it as a space), so "vince+receipts" survives.
+    private static func query(_ v: String) -> String {
+        (v.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? v)
     }
 
     /// Draft messages (the Drafts folder). Each now carries its `conversation_id`.

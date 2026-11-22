@@ -185,6 +185,27 @@ class AddressFolders
       .or(base.where(personal_membership_id: nil).where("#{BASE_SQL} IN (?)", own_locals.presence || [""]))
   end
 
+  # Each thread's folder key for this member, as `scope` places it: own
+  # address, own+tag, shared address, or other. For the sync payload, so a
+  # device can build Inbox and the folders from its local mirror.
+  # `convs` must all be on this domain.
+  def folder_keys(convs)
+    me = membership.id
+    Conversation.joins(:domain).where(id: convs.map(&:id)).reorder(nil)
+      .pluck(:id, :personal_membership_id, Arel.sql(BASE_SQL), Arel.sql(TAG_SQL))
+      .to_h do |id, owner, base, tag|
+        mine = owner == me || (owner.nil? && own_locals.include?(base))
+        key = if mine
+          if own_locals.include?(base) then tag ? "#{base}+#{tag}" : base
+          else own_locals.first || OTHER
+          end
+        elsif shared_locals.include?(base) then base
+        else OTHER
+        end
+        [id, key]
+      end
+  end
+
   # Tag folders under the member's own addresses that hold mail: "waseem+receipts".
   def tag_folders(visible)
     joined = visible.joins_values.include?(:domain) ? visible : visible.joins(:domain)

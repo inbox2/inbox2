@@ -90,8 +90,9 @@ class MxMirror(private val engine: EngineModel) {
 
     /** Only what the mirror can evaluate: search, Sent (`direction`) and the assignee
      *  views are the server's, so callers never send those here. */
-    suspend fun conversations(orgId: String, status: String?, read: Boolean?, domain: String?, page: Int = 1, labeledOnly: Boolean = false): List<CloudConversation>? =
-        local(orgId) { org -> json.decodeFromString<CloudConversationsResponse>(engine.store.mxConversationsJson(org, status, read, domain, page, perPage = if (labeledOnly) 50 else 200, labeledOnly = labeledOnly)).conversations }
+    suspend fun conversations(orgId: String, status: String?, read: Boolean?, domain: String?, page: Int = 1, labeledOnly: Boolean = false,
+                              folder: String? = null, inboxFolders: Map<String, Set<String>> = emptyMap()): List<CloudConversation>? =
+        local(orgId) { org -> json.decodeFromString<CloudConversationsResponse>(engine.store.mxConversationsJson(org, status, read, domain, page, perPage = if (labeledOnly) 50 else 200, labeledOnly = labeledOnly, folder = folder, inboxFolders = inboxFolders)).conversations }
 
     suspend fun conversationDetail(orgId: String, id: String): CloudConversationDetail? =
         local(orgId) { org -> engine.store.mxConversationDetailJson(org, id)?.let { json.decodeFromString<CloudConversationDetailResponse>(it).conversation } }

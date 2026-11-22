@@ -74,6 +74,8 @@ fun InboxScreen(
     engine: EngineModel,
     cloud: com.inbox2.app.cloud.CloudSession,
     folder: MailFolder,
+    /** The open address folder of a domain chip's Inbox (null = Inbox). */
+    addressFolder: com.inbox2.app.cloud.CloudAddressFolder? = null,
     onOpenFolders: () -> Unit,
     onOpenConversation: (Conversation) -> Unit,
     onEditingChange: (Boolean) -> Unit = {},
@@ -177,7 +179,8 @@ fun InboxScreen(
     val cloudRevision by cloud.revision.collectAsState()
     // `activeOrg` is a key so the unified merge re-fires once orgs populate after
     // sign-in/restore (the MX half is empty until then).
-    LaunchedEffect(dataVersion, cloudRevision, folder, state.channel, state.filter, state.effectiveQuery, state.domainView, activeOrg) {
+    state.addressFolder = addressFolder
+    LaunchedEffect(dataVersion, cloudRevision, folder, state.channel, state.filter, state.effectiveQuery, state.domainView, activeOrg, addressFolder?.key) {
         state.reload(folder)
     }
     // A triage result landed: patch the visible row in place — no store requery,
@@ -191,6 +194,8 @@ fun InboxScreen(
     LaunchedEffect(pendingUndo) { pendingUndo?.let { state.undo = it; onUndoConsumed() } }
 
     if (folder == MailFolder.OUTBOX) { OutboxView(engine); return }
+    // An address folder titles the list "info@" / "Other".
+    val title = addressFolder?.takeIf { folder == MailFolder.INBOX && isDomainChannel }?.label ?: folder.title
 
     val restoreAction = folderRestoreAction(folder)
     val syncing by engine.syncing.collectAsState()
@@ -258,7 +263,7 @@ fun InboxScreen(
                         Icon(SfIcon.vector("line.3.horizontal"), "Mailboxes", tint = p.textSecondary,
                             modifier = Modifier.size(24.dp).noRippleClickable { onOpenFolders() })
                         Spacer(Modifier.width(Space.s3))
-                        Text(folder.title.uppercase(), color = p.textSecondary, style = AppFont.title,
+                        Text(title.uppercase(), color = p.textSecondary, style = AppFont.title,
                             letterSpacing = androidx.compose.ui.unit.TextUnit(0.5f, androidx.compose.ui.unit.TextUnitType.Sp))
                         if (state.unreadCount > 0) Text(" (${state.unreadCount})", color = p.accentViolet, style = AppFont.title3,
                             modifier = Modifier.padding(start = Space.s1))
@@ -329,6 +334,9 @@ fun InboxScreen(
                         }
                     }
                 }
+                if (isDomainChannel && folder == MailFolder.INBOX) item {
+                    com.inbox2.app.ui.components.ReadOnlyFolderNotice(addressFolder, Modifier.grooveBar())
+                }
                 // The well's header strip: the filter tabs flush on top of the rows, with a
                 // one-line count of what's loaded on the right (iOS columnHeader). No card
                 // of rows follows it when a page-level state renders instead, so it closes
@@ -390,7 +398,7 @@ fun InboxScreen(
                                 if (state.effectiveQuery.isNotEmpty()) "magnifyingglass" else "tray",
                                 if (state.effectiveQuery.isNotEmpty()) "No results" else "All clear",
                                 if (state.effectiveQuery.isNotEmpty()) "No conversations match “${state.effectiveQuery}”."
-                                else "Nothing in ${if (!isDomainChannel && state.filter != InboxFilter.ALL) state.filter.label.lowercase() else folder.title} right now.",
+                                else "Nothing in ${if (!isDomainChannel && state.filter != InboxFilter.ALL) state.filter.label.lowercase() else title} right now.",
                             )
                         }
                     }
@@ -451,7 +459,7 @@ fun InboxScreen(
                     Icon(SfIcon.vector("line.3.horizontal"), "Mailboxes", tint = p.textSecondary,
                         modifier = Modifier.size(20.dp).noRippleClickable { onOpenFolders() })
                     Spacer(Modifier.width(Space.s2 + 2.dp))
-                    Text(folder.title.uppercase(), color = p.textSecondary, style = AppFont.title3,
+                    Text(title.uppercase(), color = p.textSecondary, style = AppFont.title3,
                         letterSpacing = androidx.compose.ui.unit.TextUnit(0.5f, androidx.compose.ui.unit.TextUnitType.Sp))
                     if (state.unreadCount > 0) Text(" (${state.unreadCount})", color = p.textSecondary.copy(alpha = 0.7f),
                         style = AppFont.ui(15, androidx.compose.ui.text.font.FontWeight.SemiBold))

@@ -26,7 +26,9 @@ use crate::sync::error::Result;
 
 /// Bump when any `mx_*` table, index or trigger in the schema file changes shape.
 /// An older database then drops the mirror and re-syncs it — see the schema file.
-const MX_SCHEMA_VERSION: &str = "2";
+/// Also bump when held payloads need fields the server added (3: address-folder
+/// `folder` and `direct` on conversations), so old rows are pulled again.
+const MX_SCHEMA_VERSION: &str = "3";
 
 /// Drop a mirror built by an older schema — atomically, so another connection to
 /// the same file (the webview, a second instance, the CLI) sees the old tables or

@@ -219,11 +219,26 @@ module Api
                     { membership: membership_preload }, { reactions: { membership: membership_preload } })
           .order(:created_at)
 
+        folders, direct = address_folders(convs)
         {
-          conversations: convs.map { |c| Sync::ConversationSerializer.new(c, params: { with_attachments: with_attachments }).to_h },
+          conversations: convs.map do |c|
+            Sync::ConversationSerializer.new(c, params: { with_attachments: with_attachments, folders: folders, direct: direct }).to_h
+          end,
           messages: messages.map { |m| Sync::MessageSerializer.new(m).to_h },
           notes: notes.map { |n| Sync::NoteSerializer.new(n).to_h }
         }
+      end
+
+      # Address folders: each thread's folder key for this member, and the
+      # threads given or assigned to them (always in their Inbox).
+      def address_folders(convs)
+        ids = convs.map(&:id)
+        folders = convs.select(&:domain).group_by(&:domain).each_with_object({}) do |(domain, list), out|
+          out.merge!(AddressFolders.new(current_membership, domain).folder_keys(list))
+        end
+        direct = (ConversationAccess.where(membership_id: current_membership.id, conversation_id: ids).pluck(:conversation_id) +
+          ConversationAssignee.where(membership_id: current_membership.id, conversation_id: ids).pluck(:conversation_id)).to_set
+        [folders, direct]
       end
 
       # Whole threads only: a backfilled conversation always arrives with all of

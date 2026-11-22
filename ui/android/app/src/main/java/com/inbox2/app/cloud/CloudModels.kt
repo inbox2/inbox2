@@ -111,6 +111,49 @@ data class CloudSpacesResponse(val spaces: List<CloudSpace> = emptyList())
 @Serializable
 data class CloudConversationsResponse(val conversations: List<CloudConversation> = emptyList())
 
+/** One address folder of an MX domain (`GET orgs/:org/folders?domain=`): Inbox, your
+ *  own addresses and their +tags, shared addresses, and Other (docs: address folders). */
+@Serializable
+data class CloudAddressFolder(
+    val id: String? = null,
+    val key: String,
+    val kind: String,
+    val address: String? = null,
+    val parent: String? = null,
+    val unread: Int = 0,
+    @SerialName("can_reply") val canReply: Boolean = false,
+    @SerialName("in_inbox") val inInbox: Boolean = false,
+    val notify: Boolean = false,
+) {
+    /** Tree label: the address is implied — "info", a tag as "+receipts" under its owner. */
+    val treeLabel: String get() = when (kind) {
+        KIND_INBOX -> "Inbox"
+        KIND_OTHER -> "Other"
+        KIND_TAG -> if (parent != null && key.startsWith(parent)) key.removePrefix(parent) else key
+        else -> key
+    }
+    /** Header/notice name: "info@", "vince+receipts@", "Other". */
+    val label: String get() = when (kind) { KIND_INBOX -> "Inbox"; KIND_OTHER -> "Other"; else -> "$key@" }
+    /** The key PATCH folders/prefs takes: the full address, or "inbox". Other has none. */
+    val prefKey: String? get() = when (kind) { KIND_INBOX -> INBOX; KIND_OTHER -> null; else -> address }
+    /** Shared and tag folders can be shown in the Inbox; your own address always is. */
+    val hasInboxToggle: Boolean get() = kind == KIND_SHARED || kind == KIND_TAG
+    /** A shared address you may read but not send as. */
+    val readOnly: Boolean get() = kind == KIND_SHARED && !canReply
+
+    companion object {
+        const val INBOX = "inbox"
+        const val KIND_INBOX = "inbox"
+        const val KIND_OWN = "own"
+        const val KIND_TAG = "tag"
+        const val KIND_SHARED = "shared"
+        const val KIND_OTHER = "other"
+    }
+}
+
+@Serializable
+data class CloudAddressFoldersResponse(val folders: List<CloudAddressFolder> = emptyList())
+
 @Serializable
 data class CloudUnreadCountResponse(@SerialName("unread_count") val unreadCount: Int = 0)
 

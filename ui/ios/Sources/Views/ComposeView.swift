@@ -92,9 +92,11 @@ struct ComposeView: View {
     @EnvironmentObject private var draftStore: DraftStore
 
     init(draft: ComposeDraft = ComposeDraft()) {
-        _fromAccountKey = State(initialValue: draft.fromAccountKey)
+        // A new message from an address folder you can reply as starts From that address.
+        let folderFrom = draft.fromAccountKey == nil && draft.fromEmailOverride == nil ? AddressFolderStore.shared.replyAs : nil
+        _fromAccountKey = State(initialValue: draft.fromAccountKey ?? folderFrom?.orgId)
         _conversationId = State(initialValue: draft.conversationId)
-        _fromEmailOverride = State(initialValue: draft.fromEmailOverride)
+        _fromEmailOverride = State(initialValue: draft.fromEmailOverride ?? folderFrom?.address)
         _replyToMessageKey = State(initialValue: draft.replyToMessageKey)
         _to = State(initialValue: draft.to)
         _cc = State(initialValue: draft.cc)

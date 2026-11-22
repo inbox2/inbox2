@@ -114,6 +114,8 @@ object SfIcon {
         "ellipsis.circle" -> Icons.Outlined.MoreHoriz
         "note.text" -> Icons.AutoMirrored.Outlined.Notes
         "pencil" -> Icons.Outlined.Edit
+        "eye" -> Icons.Outlined.Visibility
+        "tray.2.fill" -> Icons.Outlined.AllInbox
         "tag" -> Icons.Outlined.Sell
         "mappin.and.ellipse" -> Icons.Outlined.LocationOn
         "mic.fill" -> Icons.Filled.Mic

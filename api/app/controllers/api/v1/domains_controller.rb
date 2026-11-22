@@ -188,7 +188,13 @@ module Api
         list = Array(params.permit(shared_addresses: %i[local_part display_name])[:shared_addresses]).map do |a|
           { "local_part" => a[:local_part].to_s.strip.downcase, "display_name" => a[:display_name].to_s.strip.presence }.compact
         end
+        changed = list != Array(@domain.shared_addresses)
         @domain.update!(shared_addresses: list)
+        # Re-stamp the domain's threads so device mirrors re-pull them with the
+        # new folder keys (the sync payload's `folder`).
+        # ponytail: one UPDATE over the domain; a send-as grant change is not
+        # re-stamped (its threads catch up on their next change).
+        @domain.conversations.update_all("change_seq = change_seq") if changed
         render_shared_addresses
       end
 

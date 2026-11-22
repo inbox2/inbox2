@@ -599,7 +599,12 @@ class InboxStore(private val dbPath: String) {
      *  trash / spam / archived, like the API. `domain` is a `dom_…` key, slug or name
      *  (iOS `mxConversations`). */
     /*  Callers don't page, so one page is as deep as the channel lists go (200). */
-    fun mxConversationsJson(org: String, status: String?, read: Boolean?, domain: String?, page: Int = 1, perPage: Int = 200, labeledOnly: Boolean = false): String = synchronized(lock) {
+    /*  `folder` (address folders): a folder key → threads that came in to that address;
+     *  "inbox" → mail for you: threads in a folder whose `in_inbox` is on, per domain
+     *  (`inboxFolders`: domain key → those keys), or assigned/granted to you (`direct`).
+     *  A domain whose tree isn't loaded yet is not filtered. */
+    fun mxConversationsJson(org: String, status: String?, read: Boolean?, domain: String?, page: Int = 1, perPage: Int = 200, labeledOnly: Boolean = false,
+                            folder: String? = null, inboxFolders: Map<String, Set<String>> = emptyMap()): String = synchronized(lock) {
         val d = db ?: return "{\"conversations\":[]}"
         val conditions = mutableListOf("organization_id = ?")
         val binds = mutableListOf(org)
@@ -615,6 +620,18 @@ class InboxStore(private val dbPath: String) {
         if (domain != null) {
             val keys = listOf(domain) + mxDirectoryKeysMatching(d, org, "domains", domain, listOf("slug", "name"))
             conditions.add("domain_key IN (${keys.joinToString(", ") { "?" }})"); binds.addAll(keys)
+        }
+        if (folder != null && folder != INBOX_FOLDER) {
+            conditions.add("json_extract(payload, '$.folder') = ?"); binds.add(folder)
+        } else if (folder == INBOX_FOLDER && inboxFolders.isNotEmpty()) {
+            val any = mutableListOf("COALESCE(json_extract(payload, '$.direct'), 0) = 1")
+            inboxFolders.forEach { (dom, keys) ->
+                if (keys.isEmpty()) return@forEach
+                any.add("(domain_key = ? AND json_extract(payload, '$.folder') IN (${keys.joinToString(", ") { "?" }}))")
+                binds.add(dom); binds.addAll(keys)
+            }
+            any.add("domain_key NOT IN (${inboxFolders.keys.joinToString(", ") { "?" }})"); binds.addAll(inboxFolders.keys)
+            conditions.add(any.joinToString(" OR ", "(", ")"))
         }
         val sql = """
             SELECT payload FROM mx_conversations WHERE ${conditions.joinToString(" AND ")}
@@ -691,6 +708,7 @@ class InboxStore(private val dbPath: String) {
 
     companion object {
         private const val TAG = "com.inbox2.store"
+        private const val INBOX_FOLDER = "inbox"
         private const val CONV_COLS =
             "key, organization_id, subject, from_address, to_address, status, snippet, " +
             "read, has_attachment, priority_urgent, priority_important, ai_summary, " +

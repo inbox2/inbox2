@@ -9,6 +9,7 @@ import com.inbox2.app.model.Message
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 /** A file to attach to a domain (mx) send/schedule (iOS OutgoingAttachment). */
 data class OutgoingAttachment(val filename: String, val mimeType: String, val data: ByteArray)
@@ -142,6 +143,7 @@ class CloudSession(context: Context) {
         com.inbox2.app.fcm.FcmTokenManager.forget(appCtx)
         client.setToken(null)
         _user.value = null; _orgs.value = emptyList(); _activeOrg.value = null
+        _folderTrees.value = emptyMap(); folderLoadedAt.clear()
         // Zones are the account's: drop them and disarm their alarms.
         _upcomingZones.value = emptyList(); _zoneCategories.value = emptyList()
         com.inbox2.app.notify.ZoneAlerts.reconcile(appCtx, emptyList(), emptyList())
@@ -152,7 +154,9 @@ class CloudSession(context: Context) {
     /** `domain` (a `dom_…` key) narrows the org pool to one workspace domain; null
      *  lists the whole org (the legacy single-domain chip). */
     /** `page` (1-based) pages both the mirror (its own page size) and the API (50 rows). */
-    suspend fun conversations(orgId: String, folder: MailFolder, query: String, view: String = "All", domain: String? = null, page: Int = 1, labeledOnly: Boolean = false): List<Conversation> {
+    /** `addressFolder` lists one address folder (its key); without it the Inbox is
+     *  "mail for you" (folder=inbox). Lore (`labeledOnly`) keeps the whole pool. */
+    suspend fun conversations(orgId: String, folder: MailFolder, query: String, view: String = "All", domain: String? = null, page: Int = 1, labeledOnly: Boolean = false, addressFolder: String? = null): List<Conversation> {
         // Drafts come from the drafts endpoint; Sent uses direction=outbound.
         if (folder == MailFolder.DRAFTS) {
             return client.drafts(orgId).mapNotNull { m ->
@@ -171,12 +175,67 @@ class CloudSession(context: Context) {
         }
         // The local mirror answers what it can evaluate — instantly, and offline.
         // Search, Sent (direction) and the assignee views are the server's.
+        val addr = when {
+            labeledOnly -> null
+            addressFolder != null -> addressFolder
+            folder == MailFolder.INBOX -> CloudAddressFolder.INBOX
+            else -> null
+        }
         if (query.isBlank() && direction == null && assignee == null) {
-            mirror.conversations(orgId, folderStatus(folder), read, domain, page, labeledOnly)?.let { rows -> return rows.map { it.toConversation(orgId) } }
+            // Any folder read keeps the trees (drawer counts) fresh; only Inbox filters by them.
+            val inboxKeys = if (addr != null) inboxFolderKeys(orgId, domain) else emptyMap()
+            mirror.conversations(orgId, folderStatus(folder), read, domain, page, labeledOnly, addr, inboxKeys)?.let { rows -> return rows.map { it.toConversation(orgId) } }
         }
         // Lore (labeledOnly): the server keeps any label but resolved, before paging.
-        return client.conversations(orgId, folderStatus(folder), read, direction, assignee, query.ifBlank { null }, domain, page, labeledOnly)
+        return client.conversations(orgId, folderStatus(folder), read, direction, assignee, query.ifBlank { null }, domain, page, labeledOnly, addr)
             .map { it.toConversation(orgId) }
+    }
+
+    // ── address folders (per MX domain: Inbox, Yours, Shared, Other) ─────────
+
+    private val _folderTrees = MutableStateFlow<Map<String, List<CloudAddressFolder>>>(emptyMap())
+    /** Domain key (`dom_…`) → its folder tree, in display order. */
+    val folderTrees: StateFlow<Map<String, List<CloudAddressFolder>>> = _folderTrees.asStateFlow()
+    private val folderLoadedAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
+    private val bg = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
+
+    /** Fetch one domain's tree now. Failures keep what was loaded. */
+    suspend fun loadFolders(orgId: String, domain: String) {
+        runCatching { client.folders(orgId, domain) }.onSuccess { tree ->
+            folderLoadedAt[domain] = System.currentTimeMillis()
+            _folderTrees.value = _folderTrees.value + (domain to tree)
+        }
+    }
+
+    /** Domain → keys of its folders shown in the Inbox, for the mirror's Inbox filter.
+     *  A missing tree is fetched (briefly awaited, so offline stays instant); a loaded
+     *  one refreshes in the background. */
+    // ponytail: 15 s throttle per domain, a push-driven refresh if unread counts lag.
+    private suspend fun inboxFolderKeys(orgId: String, domain: String?): Map<String, Set<String>> {
+        val domains = domain?.let { listOf(it) } ?: _orgs.value.firstOrNull { it.id == orgId }?.domains?.map { it.id }.orEmpty()
+        val now = System.currentTimeMillis()
+        domains.forEach { d ->
+            val at = folderLoadedAt[d]
+            if (at == null) kotlinx.coroutines.withTimeoutOrNull(1500) { loadFolders(orgId, d) }
+            else if (now - at > 15_000) { folderLoadedAt[d] = now; bg.launch { loadFolders(orgId, d) } }
+        }
+        val trees = _folderTrees.value
+        return domains.mapNotNull { d -> trees[d]?.let { t -> d to t.filter { it.inInbox }.mapTo(HashSet()) { it.key } } }.toMap()
+    }
+
+    /** Bell / Show in Inbox: flip it here at once, save, then reload the tree (Show in
+     *  Inbox changes what the Inbox counts) and the lists. */
+    suspend fun setFolderPref(orgId: String, domain: String, folder: CloudAddressFolder, inbox: Boolean? = null, notify: Boolean? = null) {
+        val address = folder.prefKey ?: return
+        _folderTrees.value[domain]?.let { tree ->
+            _folderTrees.value = _folderTrees.value + (domain to tree.map {
+                if (it.key != folder.key) it else it.copy(inInbox = inbox ?: it.inInbox, notify = notify ?: it.notify)
+            })
+        }
+        runCatching { client.setFolderPrefs(orgId, address, inbox, notify) }
+            .onFailure { android.util.Log.w("com.inbox2.folders", "Saving the setting failed: ${it.message}") }
+        loadFolders(orgId, domain)
+        bump()
     }
 
     /** Combined domain-pool unread count for the org — one of the two numbers the
