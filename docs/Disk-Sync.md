@@ -11,12 +11,13 @@ Decided 2026-11-22 (design and research: `inbox2-internal/docs/plans/disk-design
 | Server feed | `api/app/controllers/api/v1/disk/sync_controller.rb` | Changes to Disk nodes since a cursor (below) |
 | Engine | `ui/desktop/core/src/disk/` | Pulls the feed into `disk.db`, lists, downloads, uploads, conflicts, sealed crypto |
 | Extension | `ui/desktop/fileprovider/` (Swift, xcodegen) | `NSFileProviderReplicatedExtension` over the engine's UniFFI `DiskSession` |
-| App side | `ui/desktop/src-tauri/src/disk_finder.rs` | Writes the config, registers the Finder location, FileVault check, 30 s signal |
+| Live updates | `ui/desktop/core/src/disk/live.rs` | ActionCable client on `OrganizationChannel`: each Disk write on the API means "pull now" |
+| App side | `ui/desktop/src-tauri/src/disk_finder.rs` | Writes the config, registers the Finder location, FileVault check, the live socket, 30 s signal |
 | Settings | `ui/web/src/pages/settings/DiskFinderSettings.jsx`, `lib/diskFinder.js` | The switch, state, drives, speeds; the tray row in `pages/tray/TrayPage.jsx` |
 
 ## How a change travels
 
-- **Server to Mac.** macOS calls `enumerateChanges` when the app signals the working set (every 30 s) or Finder looks. The extension pulls the feed first (at most every 20 s), then answers from the engine's change log (`changes`, one row per store write). The sync anchor is that log's newest rev; an anchor older than the trimmed log answers `syncAnchorExpired` and macOS lists again.
+- **Server to Mac.** Every successful Disk write on the API broadcasts `{ type: "sync", scope: "disk" }` on `organization_<key>` (`BaseController#broadcast_sync_hint`, debounced to one per second per org). The app's Rust process holds that socket (`disk/live.rs`, a thread started by `disk_finder::start`), so it works with every window closed. On a hint, on each (re)subscribe, and on the approval in System Settings, the app touches `Disk/pull-requested` and signals the working set; the 30 s signal stays as the fallback. macOS then calls `enumerateChanges`, also when Finder looks. The extension pulls the feed first (when `pull-requested` is newer than its last pull, else at most every 20 s), then answers from the engine's change log (`changes`, one row per store write). The sync anchor is that log's newest rev; an anchor older than the trimmed log answers `syncAnchorExpired` and macOS lists again.
 - **Mac to server.** macOS calls `createItem`, `modifyItem`, `deleteItem`. A retryable failure is returned as `serverUnreachable`: macOS keeps the change and calls again. So the engine keeps no queue of its own, only the upload in flight (`uploads` table: reservation id, source fingerprint, sealed record) so the retry sends the parts storage lacks.
 - **Merge base.** macOS hands back the content version an edit started from. That is `base_version` on completion; a 409 `version_conflict` keeps the server's file and uploads the Mac's copy beside it as `Offer (Waseem's conflicted copy 2026-11-22).docx`. Renames and moves are last writer wins.
 - **Delete** moves to the inbox2 trash, never purges.
@@ -46,6 +47,10 @@ The engine opens sealed scopes with the member's X25519 identity key: key grant,
 - **Pause** disconnects the domain; macOS shows it paused in Finder.
 - One org at a time: turning it on in another org replaces the location.
 
+**Thumbnails.** Finder asks the extension (`NSFileProviderThumbnailing`); the engine fetches the server's thumbnail (`versions/:id/download?variant=thumbnail`) only for the types `Disk::Thumbnailer` makes (`has_server_thumbnail`). Sealed files show their icon: their thumbnails are sealed.
+
+**Copy inbox2 Link.** A Finder action on one item (`NSExtensionFileProviderActions` in the extension's `Info.plist`). The engine asks `GET nodes/:id/link`, the item's web link as this member reaches it (`Disk::WebPath`), and the extension puts it on the clipboard.
+
 Pages appear as `<name>.page`, a small JSON file with the page's link. The app is registered for `.page` (`com.inbox2.page`) and opens the link in the browser, where Disk lives.
 
 ## Build and release
@@ -54,15 +59,16 @@ Pages appear as `<name>.page`, a small JSON file with the page's link. The app i
 
 ## Tests
 
-- `cd ui/desktop/core && cargo test --lib disk::`: store, API error mapping, backoff, throttle, the engine against a mock API (pull, list, fetch, upload, conflict copy, resume of a dropped upload, hidden drives, keep downloaded), the sealed round trip (names open, downloads decrypt, uploads seal, locked without the key) and the sealed vectors.
+- `cd ui/desktop/core && cargo test --lib disk::`: the live socket's URL and frame parsing, thumbnails and links against a mock API, store, API error mapping, backoff, throttle, the engine against a mock API (pull, list, fetch, upload, conflict copy, resume of a dropped upload, hidden drives, keep downloaded), the sealed round trip (names open, downloads decrypt, uploads seal, locked without the key) and the sealed vectors.
 - `cd ui/web && npx vitest run --project unit src/lib/__tests__/diskFinder.test.js`: the status wording.
-- The server side: `spec/requests/api/v1/disk/sync_spec.rb`, `spec/services/disk_sync_triggers_spec.rb`.
+- Against production: `DISK_LIVE_DIR=<group container>/Disk cargo test --lib -- --ignored live_subscribes` subscribes with the app's own config.
+- The server side: `spec/requests/api/v1/disk/sync_spec.rb` (the feed, the link endpoint, the disk hint), `spec/services/disk_sync_triggers_spec.rb`.
 
 ## Not built yet
 
 - Windows (Cloud Files API). The engine is host-agnostic; it needs a cfapi adapter and an MSIX build.
-- Push instead of the 30 s signal: the extension pulls when signalled or when Finder looks.
-- Several orgs at once (one location per org), thumbnails from the server, Finder sharing menu items ("Copy inbox2 link").
+- Several orgs at once (one location per org).
+- Disk changes made by background jobs (cloud imports) send no live hint; they arrive with the 30 s signal.
 - Sealed page content (pages open in the browser).
 
 

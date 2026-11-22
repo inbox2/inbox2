@@ -32,6 +32,17 @@
 		<string>$(PRODUCT_MODULE_NAME).FileProviderExtension</string>
 		<key>NSExtensionFileProviderSupportsEnumeration</key>
 		<true/>
+		<key>NSExtensionFileProviderActions</key>
+		<array>
+			<dict>
+				<key>NSExtensionFileProviderActionIdentifier</key>
+				<string>com.inbox2.disk.copy-link</string>
+				<key>NSExtensionFileProviderActionName</key>
+				<string>Copy inbox2 Link</string>
+				<key>NSExtensionFileProviderActionActivationRule</key>
+				<string>fileproviderItems.@count == 1</string>
+			</dict>
+		</array>
 		<key>NSExtensionFileProviderDocumentGroup</key>
 		<string>KF53B4S5HD.$(INBOX2_APP_ID)</string>
 	</dict>

@@ -78,7 +78,12 @@ module Api
       def broadcast_sync_hint
         return if request.get? || request.head? || !response.successful? || @current_organization.nil?
 
-        scope = SYNC_MAIL_CONTROLLERS.include?(controller_name) ? "mail" : "directory"
+        # "disk": Disk in Finder pulls on it (docs/Disk-Sync.md); mail and directory clients ignore it.
+        scope =
+          if self.class.name.start_with?("Api::V1::Disk::") then "disk"
+          elsif SYNC_MAIL_CONTROLLERS.include?(controller_name) then "mail"
+          else "directory"
+          end
         now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         slot = "#{@current_organization.id}:#{scope}"
         last = SYNC_HINT_SENT[slot]

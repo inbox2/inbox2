@@ -92,6 +92,8 @@ thiserror = "2"
 parking_lot = "0.12"
 base64 = "0.22"
 reqwest = { version = "0.12", features = ["rustls-tls", "blocking", "json", "stream", "multipart"], default-features = false }
+# Disk in Finder: the ActionCable socket that tells the engine to pull (disk/live.rs).
+tungstenite = { version = "=0.27.0", default-features = false, features = ["handshake", "rustls-tls-webpki-roots"] }
 url = "2"
 regex = "1"
 # HTML sanitization for quote/subject normalization in threading.

@@ -139,6 +139,35 @@ impl DiskApi {
         v["download"]["url"].as_str().map(str::to_string).ok_or_else(|| DiskError::Other("no download url".into()))
     }
 
+    /// A presigned GET for the version's server thumbnail. `NotFound` when it has none.
+    pub fn thumbnail_url(&self, version_id: &str) -> DiskResult<String> {
+        let v: Value = self.get(&format!("versions/{version_id}/download"), &[("variant", "thumbnail".into())])?;
+        v["download"]["url"].as_str().map(str::to_string).ok_or_else(|| DiskError::Other("no thumbnail url".into()))
+    }
+
+    /// A small object (a thumbnail), at most `max` bytes. A short timeout, unlike
+    /// file downloads: Finder waits on it.
+    pub fn get_small(&self, url: &str, max: u64) -> DiskResult<Vec<u8>> {
+        use std::io::Read;
+        let r = self.send(|| self.http.get(url).timeout(Duration::from_secs(15)))?;
+        match r.status().as_u16() {
+            200..=299 => {
+                let mut buf = Vec::new();
+                r.take(max).read_to_end(&mut buf).map_err(|e| DiskError::Offline(e.to_string()))?;
+                Ok(buf)
+            }
+            404 => Err(DiskError::NotFound),
+            403 => Err(DiskError::Offline("thumbnail URL expired".into())),
+            s => Err(DiskError::Other(format!("storage answered {s}"))),
+        }
+    }
+
+    /// The item's link in the inbox2 web app, as the signed-in member sees it.
+    pub fn link(&self, node_id: &str) -> DiskResult<String> {
+        let v: Value = self.get(&format!("nodes/{node_id}/link"), &[])?;
+        v["link"]["url"].as_str().map(str::to_string).ok_or_else(|| DiskError::Other("no link".into()))
+    }
+
     pub fn reserve(&self, body: &Value) -> DiskResult<ApiUpload> {
         let v: Value = self.post("uploads", body)?;
         serde_json::from_value(v["upload"].clone()).map_err(|e| DiskError::Other(format!("upload: {e}")))

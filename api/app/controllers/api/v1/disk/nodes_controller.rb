@@ -102,6 +102,14 @@ module Api
           head :no_content
         end
 
+        # GET /nodes/:id/link — the item's web app link as this member reaches it,
+        # for "Copy inbox2 link" in Finder. Only people with access can open it.
+        def link
+          node = find_node!(params[:id])
+          url = ::Disk::WebPath.url(::Disk::WebPath.for(node, viewer: membership))
+          render json: { link: ::Disk::WebLinkSerializer.new(::Disk::WebLinkSerializer::Link.new(url: url)).to_h }
+        end
+
         # GET /nodes/:id/download — a short-lived presigned GET for the current version.
         def download
           node = find_node!(params[:id])

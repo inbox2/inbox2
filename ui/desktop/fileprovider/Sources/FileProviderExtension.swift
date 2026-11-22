@@ -38,9 +38,15 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
         return s
     }
 
+    /// The app touches this file before it signals: a change on the server it
+    /// heard about, or approval just given. Then a pull is due at once.
+    static var pullRequestFile: URL? { groupDir?.appendingPathComponent("pull-requested") }
+
     func pullIfDue(_ session: DiskSession) {
+        let asked = Self.pullRequestFile
+            .flatMap { try? FileManager.default.attributesOfItem(atPath: $0.path)[.modificationDate] as? Date }
         lock.lock()
-        let due = Date().timeIntervalSince(lastPull) > pullEvery
+        let due = Date().timeIntervalSince(lastPull) > pullEvery || (asked.map { $0 > lastPull } ?? false)
         if due { lastPull = Date() }
         lock.unlock()
         guard due else { return }

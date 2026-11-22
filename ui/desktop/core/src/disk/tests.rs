@@ -335,3 +335,42 @@ async fn a_lost_completion_answer_finishes_on_retry() {
         assert_eq!(e.status().uploading, 0);
     }).await.unwrap();
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn thumbnails_and_links() {
+    let s = MockServer::start().await;
+    let uri = s.uri();
+    let root = node("dnd_root", None, "folder", "", None, 1);
+    let photo = node("dnd_p", Some("dnd_root"), "file", "Logo.png", Some(("dvr_p", 9)), 2);
+    let doc = node("dnd_d", Some("dnd_root"), "file", "Offer.docx", Some(("dvr_d", 5)), 3);
+    let blank = node("dnd_b", Some("dnd_root"), "file", "Scan.pdf", Some(("dvr_b", 5)), 4);
+    Mock::given(method("GET")).and(path(format!("{BASE}/sync/pull")))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "cursor": "10.0", "has_more": false, "nodes": [root, photo, doc, blank], "deleted": []
+        }))).mount(&s).await;
+    Mock::given(method("GET")).and(path(format!("{BASE}/versions/dvr_p/download"))).and(query_param("variant", "thumbnail"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({"download": {"url": format!("{uri}/thumb/p")}})))
+        .mount(&s).await;
+    Mock::given(method("GET")).and(path("/thumb/p")).respond_with(ResponseTemplate::new(200).set_body_bytes(b"jpeg".to_vec())).mount(&s).await;
+    Mock::given(method("GET")).and(path(format!("{BASE}/versions/dvr_d/download")))
+        .respond_with(ResponseTemplate::new(500)).expect(0).mount(&s).await;
+    // A PDF the server could not render has no thumbnail.
+    Mock::given(method("GET")).and(path(format!("{BASE}/versions/dvr_b/download")))
+        .respond_with(ResponseTemplate::new(404).set_body_json(json!({"errors": [{"message": "This version has no thumbnail"}]})))
+        .mount(&s).await;
+    Mock::given(method("GET")).and(path(format!("{BASE}/nodes/dnd_p/link")))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({"link": {"url": "https://mail.inbox2.com/disk/c/Logo.png-p"}})))
+        .mount(&s).await;
+    tokio::task::spawn_blocking(move || {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg = DiskConfig { api_base: format!("{uri}/api/v1"), org: "org_a".into(), token: "t".into(), ..Default::default() };
+        let e = DiskEngine::with_config(dir.path(), cfg).unwrap();
+        e.sync().unwrap();
+        assert_eq!(e.thumbnail("dnd_p").unwrap().as_deref(), Some(&b"jpeg"[..]));
+        assert_eq!(e.thumbnail("dnd_d").unwrap(), None, "no request for a type without thumbnails");
+        assert_eq!(e.thumbnail("dnd_b").unwrap(), None);
+        assert_eq!(e.thumbnail("dnd_root").unwrap(), None);
+        assert_eq!(e.link("dnd_p").unwrap(), "https://mail.inbox2.com/disk/c/Logo.png-p");
+        assert_eq!(e.link("dnd_missing"), Err(DiskError::NotFound));
+    }).await.unwrap();
+}

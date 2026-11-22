@@ -355,4 +355,40 @@ RSpec.describe "Api::V1::Disk::Sync", type: :request do
       expect(file.reload.versions.count).to eq(3)
     end
   end
+
+  # Finder's "Copy inbox2 link" (docs/Disk-Sync.md).
+  describe "GET disk/nodes/:id/link" do
+    it "gives the web app link as the member reaches the item" do
+      join("view")
+      file = make_file(make_folder(root, "Brand"), "Logo.png", mime: "image/png")
+      get disk_path("/nodes/#{file.key}/link"), headers: member_h
+      expect(response).to have_http_status(:ok)
+      url = response.parsed_body.dig("link", "url")
+      expect(url).to end_with("/disk/d/#{share.slug}/Brand/Logo.png-#{file.short_id}")
+    end
+
+    it "is not found for an item the member cannot see (E3)" do
+      file = make_file(root, "Plan.pdf", mime: "application/pdf")
+      get disk_path("/nodes/#{file.key}/link"), headers: member_h
+      expect(response).to have_http_status(:not_found)
+      get disk_path("/nodes/#{foreign_node.key}/link"), headers: owner_h
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  # Disk writes tell the org's devices to pull, so Finder updates within seconds.
+  describe "the disk change signal" do
+    before { Api::V1::BaseController::SYNC_HINT_SENT.clear }
+
+    it "broadcasts scope disk after a Disk write" do
+      expect {
+        post disk_path("/nodes"), params: { parent_id: root.key, name: "New" }, headers: owner_h, as: :json
+      }.to have_broadcasted_to("organization_#{org.key}").with(type: "sync", scope: "disk")
+      expect(response).to have_http_status(:created)
+    end
+
+    it "sends nothing for a read" do
+      expect { pull(headers: owner_h) }.not_to have_broadcasted_to("organization_#{org.key}")
+    end
+  end
 end

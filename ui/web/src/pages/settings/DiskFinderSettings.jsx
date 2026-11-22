@@ -30,6 +30,7 @@ export default function DiskFinderSettings({ orgId }) {
   const org = (organizations || []).find((o) => o.slug === orgId || o.id === orgId);
   const [status, setStatus] = useState(null);
   const [drives, setDrives] = useState(null);
+  const [drivesError, setDrivesError] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [loadError, setLoadError] = useState('');
@@ -47,10 +48,15 @@ export default function DiskFinderSettings({ orgId }) {
     return () => clearInterval(t);
   }, [load]);
 
-  useEffect(() => {
+  const loadDrives = useCallback(() => {
     if (!org) return;
-    diskApi.drives(org.id).then(setDrives).catch((e) => log.warn('DiskFinder', `drives: ${errText(e)}`));
+    diskApi.drives(org.id).then(setDrives).catch((e) => {
+      log.warn('DiskFinder', `drives: ${errText(e)}`);
+      setDrivesError(errText(e));
+    });
   }, [org]);
+
+  useEffect(() => { loadDrives(); }, [loadDrives]);
 
   // An unlock in this window reaches the extension straight away.
   useEffect(() => {
@@ -195,6 +201,13 @@ export default function DiskFinderSettings({ orgId }) {
           <hr className={styles.settingsGroupDivider} />
           <div className={styles.settingsSectionTitle}>Drives in Finder</div>
           <div className={own.drives}>
+            {!drives && !drivesError && <Spinner size="sm" label="Loading" />}
+            {drivesError && (
+              <>
+                <p className={own.error} role="alert">{drivesError}</p>
+                <Button variant="secondary" onClick={() => { setDrivesError(''); loadDrives(); }}>Try again</Button>
+              </>
+            )}
             {drives && (
               <Checkbox checked={!status.hidden_drives.includes(C_DRIVE)} disabled={busy} onChange={(e) => toggleDrive(C_DRIVE, e.target.checked)}>
                 <span className={own.drive}><FileTypeIcon kind="drive" drive="C" size={20} />My files</span>

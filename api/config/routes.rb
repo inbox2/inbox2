@@ -466,6 +466,7 @@ Rails.application.routes.draw do
               delete :purge
               get :events
               get :download
+              get :link
               get :tree
               get :versions, to: "versions#index"
               post "preview-failures", action: :preview_failures

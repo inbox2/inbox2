@@ -478,6 +478,37 @@ impl DiskEngine {
     /// Downloads the item's current content to a file macOS takes over, and
     /// returns its path. A dropped connection keeps the partial file, so the
     /// next call continues with a Range request from where it stopped.
+    /// The server's thumbnail for a file Finder shows, without downloading the
+    /// file. `None` for folders, sealed files (their thumbnails are sealed too)
+    /// and types the server does not thumbnail.
+    pub fn thumbnail(&self, id: &str) -> DiskResult<Option<Vec<u8>>> {
+        let node = self.store().node(id)?.ok_or(DiskError::NotFound)?;
+        if node.sealed || node.locked || node.is_folder() || node.kind == KIND_PAGE {
+            return Ok(None);
+        }
+        let Some(version) = node.version_id.as_deref() else { return Ok(None) };
+        if !has_server_thumbnail(node.name.as_deref().unwrap_or("")) {
+            return Ok(None);
+        }
+        let api = self.api();
+        let url = match api.thumbnail_url(version) {
+            Ok(u) => u,
+            Err(DiskError::NotFound) => return Ok(None),
+            Err(e) => return Err(e),
+        };
+        match api.get_small(&url, MAX_THUMBNAIL_BYTES) {
+            Ok(b) => Ok(Some(b)),
+            Err(DiskError::NotFound) => Ok(None),
+            Err(e) => Err(e),
+        }
+    }
+
+    /// The item's inbox2 link, for "Copy inbox2 link" in Finder.
+    pub fn link(&self, id: &str) -> DiskResult<String> {
+        self.store().node(id)?.ok_or(DiskError::NotFound)?;
+        self.api().link(id)
+    }
+
     pub fn fetch(&self, id: &str, progress: &dyn Progress) -> DiskResult<PathBuf> {
         let node = self.store().node(id)?.ok_or(DiskError::NotFound)?;
         if node.kind == KIND_PAGE {
@@ -1055,6 +1086,22 @@ fn hex(b: &[u8]) -> String {
 }
 
 /// "Offer.docx" → "Offer (Waseem's conflicted copy 2026-11-22).docx"
+/// Thumbnails are 480 px JPEGs; anything past this is not one.
+const MAX_THUMBNAIL_BYTES: u64 = 4 * 1024 * 1024;
+
+/// The types api/app/services/disk/thumbnailer.rb makes thumbnails for, so
+/// Finder never asks the server about a file that cannot have one.
+const THUMBNAIL_EXTENSIONS: &[&str] = &[
+    "jpg", "jpeg", "png", "gif", "webp", "avif", "heic", "heif", "bmp", "tif", "tiff", // images
+    "cr2", "cr3", "nef", "nrw", "arw", "dng", "raf", "orf", "rw2", "pef", "srw", // camera RAW
+    "mp4", "m4v", "mov", "mkv", "webm", "avi", // video
+    "pdf",
+];
+
+pub fn has_server_thumbnail(name: &str) -> bool {
+    name.rsplit_once('.').is_some_and(|(_, ext)| THUMBNAIL_EXTENSIONS.contains(&ext.to_ascii_lowercase().as_str()))
+}
+
 pub fn conflicted_name(name: &str, who: &str, day: chrono::NaiveDate) -> String {
     let who = if who.trim().is_empty() { "My".to_string() } else { format!("{}'s", who.trim()) };
     let (stem, ext) = match name.rfind('.') {
@@ -1074,6 +1121,15 @@ mod tests {
         assert_eq!(conflicted_name("Offer.docx", "Waseem", d), "Offer (Waseem's conflicted copy 2026-11-22).docx");
         assert_eq!(conflicted_name("README", "", d), "README (My conflicted copy 2026-11-22)");
         assert_eq!(conflicted_name(".env", "Ali", d), ".env (Ali's conflicted copy 2026-11-22)");
+    }
+
+    #[test]
+    fn thumbnails_only_for_types_the_server_makes() {
+        assert!(has_server_thumbnail("Logo.PNG"));
+        assert!(has_server_thumbnail("clip.mov"));
+        assert!(has_server_thumbnail("Offer.pdf"));
+        assert!(!has_server_thumbnail("Offer.docx"));
+        assert!(!has_server_thumbnail("png"));
     }
 
     #[test]

@@ -7,6 +7,7 @@ pub mod engine;
 #[cfg(feature = "mobile-ffi")]
 pub mod ffi;
 pub mod keys;
+pub mod live;
 pub mod model;
 pub mod sealed;
 pub mod store;

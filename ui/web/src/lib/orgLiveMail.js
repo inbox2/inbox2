@@ -102,6 +102,8 @@ class OrgLiveMail {
   }
 
   _onSignal(orgKey, data) {
+    // Disk writes: the desktop app's Rust side pulls for Finder (docs/Disk-Sync.md). Not mail.
+    if (data?.scope === 'disk') return;
     if (data?.type === 'domain_changed') {
       log.info('OrgLiveMail', `◀ domain_changed org=${orgKey}`);
       for (const cb of this._domainListeners) {

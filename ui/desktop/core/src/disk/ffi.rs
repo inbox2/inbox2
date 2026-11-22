@@ -88,6 +88,16 @@ impl DiskSession {
         self.engine.delete(&id)
     }
 
+    /// The server's thumbnail bytes, or none (folder, sealed, no thumbnail).
+    pub fn thumbnail(&self, id: String) -> DiskResult<Option<Vec<u8>>> {
+        self.engine.thumbnail(&id)
+    }
+
+    /// The item's inbox2 web link.
+    pub fn link(&self, id: String) -> DiskResult<String> {
+        self.engine.link(&id)
+    }
+
     pub fn status(&self) -> DiskStatus {
         self.engine.status()
     }

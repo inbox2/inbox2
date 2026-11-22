@@ -277,6 +277,7 @@ fn status_inner(app: &tauri::AppHandle) -> Result<DiskFinderStatus, String> {
         let mut seen = APPROVED_ORG.lock().unwrap_or_else(|e| e.into_inner());
         if s.approved && seen.as_deref() != Some(cfg.org.as_str()) {
             *seen = Some(cfg.org.clone());
+            request_pull(&dir);
             let _ = fp::signal(&domain);
         } else if !s.approved {
             *seen = None;
@@ -407,11 +408,55 @@ fn tick(app_id: &str) {
     let _ = fp::signal(&domain);
 }
 
-/// Starts the 30-second tick. Cheap when Disk in Finder is off.
+/// Tells the extension a pull is due now: its pulls are otherwise spaced out,
+/// and macOS calls it several times per signal. The extension compares this
+/// file's time with its last pull (FileProviderExtension.pullIfDue).
+#[cfg(target_os = "macos")]
+fn request_pull(dir: &std::path::Path) {
+    let _ = std::fs::write(dir.join("pull-requested"), b"");
+}
+
+/// Holds the server's "Disk changed" socket while Disk in Finder is on, and
+/// signals the extension on each change. Lives in the app's Rust process, so
+/// it runs with every window closed. Reconnects with backoff; a config change
+/// (another org, a new token, Disk turned off) ends the connection.
+#[cfg(target_os = "macos")]
+fn live(app_id: &str) {
+    use inbox2_core::disk::live::{listen, Signal};
+    let dir = group_dir(app_id);
+    let mut failures: u32 = 0;
+    loop {
+        let cfg = read_config(&dir).ok().filter(|c| !c.token.is_empty());
+        let domain = cfg.as_ref().and_then(|c| fp::find(&c.org).ok().flatten());
+        let (Some(cfg), Some(_)) = (cfg, domain) else {
+            std::thread::sleep(std::time::Duration::from_secs(TICK_SECS));
+            continue;
+        };
+        let same = || read_config(&dir).is_ok_and(|c| c.org == cfg.org && c.token == cfg.token);
+        let mut on_signal = |sig: Signal| {
+            if matches!(sig, Signal::Subscribed | Signal::DiskChanged) {
+                failures = 0;
+                request_pull(&dir);
+                if let Ok(Some(d)) = fp::find(&cfg.org) {
+                    let _ = fp::signal(&d);
+                }
+            }
+        };
+        if let Err(e) = listen(&cfg.api_base, &cfg.web_base, &cfg.org, &cfg.token, &same, &mut on_signal) {
+            log::info!("disk: live updates stopped: {e:?}");
+        }
+        failures = failures.saturating_add(1);
+        // 2, 4, 8 ... up to 60 s between attempts; the 30 s tick covers the gap.
+        std::thread::sleep(std::time::Duration::from_secs((1u64 << failures.min(6)).min(60)));
+    }
+}
+
+/// Starts the 30-second tick and the live-update socket. Cheap when Disk in Finder is off.
 pub fn start(app: &tauri::AppHandle) {
     #[cfg(target_os = "macos")]
     {
         let id = app_id(app);
+        let live_id = id.clone();
         std::thread::Builder::new()
             .name("disk-finder".into())
             .spawn(move || loop {
@@ -419,6 +464,7 @@ pub fn start(app: &tauri::AppHandle) {
                 std::thread::sleep(std::time::Duration::from_secs(TICK_SECS));
             })
             .ok();
+        std::thread::Builder::new().name("disk-finder-live".into()).spawn(move || live(&live_id)).ok();
     }
     #[cfg(not(target_os = "macos"))]
     let _ = app;
