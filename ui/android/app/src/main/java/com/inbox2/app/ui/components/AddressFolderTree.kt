@@ -100,17 +100,19 @@ fun AddressFolderRow(
                 tint = if (active) p.accentViolet else p.textSecondary,
                 modifier = Modifier.width(28.dp).size(if (isInbox) 20.dp else 17.dp))
             Spacer(Modifier.width(Space.s3))
-            Text(folder.treeLabel, color = if (active) p.textPrimary else p.textSecondary, maxLines = 1,
-                style = AppFont.ui(if (isInbox) 17 else 15, if (active) FontWeight.SemiBold else FontWeight.Normal),
-                modifier = Modifier.weight(1f, fill = false))
-            if (folder.kind == KIND_OWN || folder.kind == KIND_SHARED) {
-                Spacer(Modifier.width(Space.s2))
-                // Green pen: you can reply as it. Amber eye: read only.
-                Icon(SfIcon.vector(if (folder.canReply) "pencil" else "eye"),
-                    if (folder.canReply) "You can reply as this address" else "Read only",
-                    tint = if (folder.canReply) p.accentSuccess else p.accentAmber, modifier = Modifier.size(13.dp))
+            // Label + mark take the free width, so counts and bells line up on the right.
+            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                Text(folder.treeLabel, color = if (active) p.textPrimary else p.textSecondary, maxLines = 1,
+                    style = AppFont.ui(if (isInbox) 17 else 15, if (active) FontWeight.SemiBold else FontWeight.Normal),
+                    modifier = Modifier.weight(1f, fill = false))
+                if (folder.kind == KIND_OWN || folder.kind == KIND_SHARED) {
+                    Spacer(Modifier.width(Space.s2))
+                    // Green pen: you can reply as it. Amber eye: read only.
+                    Icon(SfIcon.vector(if (folder.canReply) "pencil" else "eye"),
+                        if (folder.canReply) "You can reply as this address" else "Read only",
+                        tint = if (folder.canReply) p.accentSuccess else p.accentAmber, modifier = Modifier.size(13.dp))
+                }
             }
-            Spacer(Modifier.weight(1f))
             if (folder.unread > 0) Text("${folder.unread}", color = if (active) p.accentViolet else p.textTertiary,
                 style = AppFont.ui(13, FontWeight.SemiBold), modifier = Modifier.padding(end = Space.s3))
             if (hasPrefs) Box(
