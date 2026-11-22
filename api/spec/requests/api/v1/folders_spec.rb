@@ -92,6 +92,15 @@ RSpec.describe "Api::V1::Folders", type: :request do
       expect(boss.reload.folder_prefs["boss+receipts@husttle.com"]).to eq("inbox" => true, "notify" => true)
     end
 
+    it "refreshes the app badge when Show in Inbox changes, not for a bell" do
+      allow(MobilePushSender).to receive(:refresh_badge)
+      h = auth_headers(boss_user)
+      patch "/api/v1/orgs/#{org.key}/folders/prefs", params: { address: "boss+receipts@husttle.com", notify: true }, headers: h
+      expect(MobilePushSender).not_to have_received(:refresh_badge)
+      patch "/api/v1/orgs/#{org.key}/folders/prefs", params: { address: "boss+receipts@husttle.com", inbox: true }, headers: h
+      expect(MobilePushSender).to have_received(:refresh_badge).with(boss_user)
+    end
+
     it "turns the Inbox bell off" do
       patch "/api/v1/orgs/#{org.key}/folders/prefs", params: { address: "inbox", notify: false }, headers: auth_headers(boss_user)
       expect(boss.reload.folder_prefs.dig("inbox", "notify")).to be(false)

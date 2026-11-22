@@ -27,6 +27,8 @@ module Api
         entry[AddressFolders::PREF_NOTIFY] = cast(params[:notify]) if params.key?(:notify)
         prefs[key] = entry
         current_membership.update!(folder_prefs: prefs)
+        # Show in Inbox changes what the app badge counts.
+        MobilePushSender.refresh_badge(current_user) if params.key?(:inbox)
         render json: { folder_prefs: prefs }
       end
 

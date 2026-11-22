@@ -370,11 +370,13 @@ class MobilePushSender
     # pool here instead meant a member without all-domains access saw a too-high
     # badge while the app was closed, which then dropped the moment they opened
     # it (the app recomputes from the endpoint and wins).
+    # Only the Inbox counts (address folders): a shared address you do not show
+    # in Inbox is a folder, and its mail does not raise the badge.
     mx_unread = memberships.sum do |membership|
-      membership.organization.conversations
+      open = membership.organization.conversations
         .visible_to(membership)
         .where(status: Conversation::STATUS_OPEN, read: false)
-        .count
+      AddressFolders.across(membership, open, AddressFolders::INBOX).count
     end
     mx_unread + device.channel_unread.to_i
   end

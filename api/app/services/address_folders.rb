@@ -41,6 +41,28 @@ class AddressFolders
 
   attr_reader :membership, :domain
 
+  # One folder across the member's domains, over `scope` (their visible
+  # threads): one named domain, or for Inbox with no domain, their home domains
+  # plus any domain holding a thread assigned or granted to them. The list, the
+  # unread count and the app badge all count through here.
+  def self.across(membership, scope, folder, domain_key: nil)
+    org = membership.organization
+    domains = if domain_key.present?
+      org.domains.where(key: domain_key)
+    elsif folder == INBOX
+      direct = Conversation.where(id: ConversationAccess.where(membership_id: membership.id).select(:conversation_id))
+        .or(Conversation.where(id: ConversationAssignee.where(membership_id: membership.id).select(:conversation_id)))
+        .distinct.pluck(:domain_id).compact
+      org.domains.where(id: membership.home_domain_ids + direct)
+    else
+      return scope.none
+    end
+    parts = domains.map { |d| new(membership, d).scope(scope, folder) }
+    return scope.none if parts.empty?
+
+    parts.map { |p| scope.where(id: p.select(:id)) }.reduce(:or)
+  end
+
   def initialize(membership, domain)
     @membership = membership
     @domain = domain

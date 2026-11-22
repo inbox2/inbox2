@@ -524,22 +524,7 @@ module Api
         folder = params[:folder].to_s.downcase
         return scope if folder.blank? || current_membership.nil?
 
-        domains = if params[:domain].present?
-          current_organization.domains.where(key: params[:domain])
-        elsif folder == AddressFolders::INBOX
-          # Plus any domain holding a thread assigned or granted to the member:
-          # that thread is theirs to act on, whatever domain it is on.
-          direct = Conversation.where(id: ConversationAccess.where(membership_id: current_membership.id).select(:conversation_id))
-            .or(Conversation.where(id: ConversationAssignee.where(membership_id: current_membership.id).select(:conversation_id)))
-            .distinct.pluck(:domain_id).compact
-          current_organization.domains.where(id: current_membership.home_domain_ids + direct)
-        else
-          return scope.none
-        end
-        parts = domains.map { |d| AddressFolders.new(current_membership, d).scope(scope, folder) }
-        return scope.none if parts.empty?
-
-        parts.map { |p| scope.where(id: p.select(:id)) }.reduce(:or)
+        AddressFolders.across(current_membership, scope, folder, domain_key: params[:domain])
       end
 
       # Scope conversations by assignee: "me" → assigned to the caller; "none"/

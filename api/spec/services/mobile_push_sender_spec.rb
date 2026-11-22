@@ -338,12 +338,14 @@ RSpec.describe MobilePushSender do
   describe ".badge_count" do
     it "sums the user's domain (open+unread) mail and the device's reported channel unread" do
       org = create(:organization)
+      dom = create(:domain, organization: org, name: "badge.example")
       create(:membership, organization: org, user: user,
         status: Membership::STATUS_ACTIVE, member_type: Membership::TYPE_HUMAN)
-      create(:conversation, organization: org, status: Conversation::STATUS_OPEN, read: false)
-      create(:conversation, organization: org, status: Conversation::STATUS_OPEN, read: false)
-      create(:conversation, organization: org, status: Conversation::STATUS_OPEN, read: true)
-      create(:conversation, organization: org, status: Conversation::STATUS_TRASH, read: false)
+      mail = { organization: org, domain: dom, to_address: "senderuser@badge.example" }
+      create(:conversation, **mail, status: Conversation::STATUS_OPEN, read: false)
+      create(:conversation, **mail, status: Conversation::STATUS_OPEN, read: false)
+      create(:conversation, **mail, status: Conversation::STATUS_OPEN, read: true)
+      create(:conversation, **mail, status: Conversation::STATUS_TRASH, read: false)
       device = create(:push_device, user: user, channel_unread: 5)
 
       expect(described_class.badge_count(device)).to eq(7) # 2 domain unread + 5 channel
@@ -359,13 +361,32 @@ RSpec.describe MobilePushSender do
         status: Membership::STATUS_ACTIVE, member_type: Membership::TYPE_HUMAN,
         role: Membership::ROLE_MEMBER, all_domains: false)
       membership.domains = [mine]
-      create(:conversation, organization: org, domain: mine,
+      create(:conversation, organization: org, domain: mine, to_address: "senderuser@mine.example",
         status: Conversation::STATUS_OPEN, read: false)
-      create(:conversation, organization: org, domain: theirs,
+      create(:conversation, organization: org, domain: theirs, to_address: "senderuser@theirs.example",
         status: Conversation::STATUS_OPEN, read: false)
       device = create(:push_device, user: user, channel_unread: 0)
 
       expect(described_class.badge_count(device)).to eq(1)
+    end
+
+    it "counts the Inbox only: a shared address out of Inbox is a folder, off the badge" do
+      org = create(:organization)
+      dom = create(:domain, organization: org, name: "team.example",
+        shared_addresses: [{ "local_part" => "info" }, { "local_part" => "sales" }])
+      membership = create(:membership, organization: org, user: user,
+        status: Membership::STATUS_ACTIVE, member_type: Membership::TYPE_HUMAN,
+        send_as_addresses: ["sales@team.example"])
+      unread = { organization: org, domain: dom, status: Conversation::STATUS_OPEN, read: false }
+      create(:conversation, **unread, to_address: "senderuser@team.example") # mine
+      create(:conversation, **unread, to_address: "sales@team.example")      # reply-as → in Inbox
+      create(:conversation, **unread, to_address: "info@team.example")       # read only → folder
+      device = create(:push_device, user: user, channel_unread: 0)
+
+      expect(described_class.badge_count(device)).to eq(2)
+
+      membership.update!(folder_prefs: { "info@team.example" => { "inbox" => true } })
+      expect(described_class.badge_count(device)).to eq(3)
     end
   end
 
