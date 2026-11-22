@@ -133,8 +133,11 @@ class Conversation < ApplicationRecord
     end
     own = membership.email_addresses.map(&:downcase)
     if own.any?
+      # name+tag@domain is name@domain's mail (plus addressing).
+      untag = ->(col) { "split_part(split_part(LOWER(#{col}), '@', 1), '+', 1) || '@' || split_part(LOWER(#{col}), '@', 2)" }
       pool = pool.or(where(private: false).where(
-        "LOWER(conversations.to_address) IN (:own) OR LOWER(conversations.from_address) IN (:own)", own: own
+        "LOWER(conversations.to_address) IN (:own) OR LOWER(conversations.from_address) IN (:own) OR " \
+        "#{untag.('conversations.to_address')} IN (:own)", own: own
       ))
     end
     pool

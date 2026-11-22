@@ -564,7 +564,9 @@ RSpec.describe InboundMailProcessor do
     end
 
     context "mobile push (docs/Cloud-Push.md)" do
-      it "sends a visible push to every active human member" do
+      # Pushes follow the folder bells (AddressFolders): mail in a member's
+      # Inbox rings them; shared mail outside their Inbox does not.
+      it "sends a visible push to every active human member whose Inbox it is in" do
         second = create(:user, username: "second_member")
         create(:membership, user: second, organization: org,
           role: Membership::ROLE_MEMBER, status: Membership::STATUS_ACTIVE)
@@ -572,9 +574,18 @@ RSpec.describe InboundMailProcessor do
         notified = []
         allow(MobilePushSender).to receive(:new_message) { |user, **| notified << user }
 
-        described_class.new(build_payload).process
+        described_class.new(build_payload("envelope" => { "rcpt_to" => ["inbound_owner@acme.com", "second_member@acme.com"] })).process
 
         expect(notified).to match_array([ owner, second ])
+      end
+
+      it "does not ring for shared mail outside the member's Inbox" do
+        notified = []
+        allow(MobilePushSender).to receive(:new_message) { |user, **| notified << user }
+
+        described_class.new(build_payload).process
+
+        expect(notified).to be_empty
       end
 
       it "skips inactive memberships and agents" do
@@ -587,7 +598,7 @@ RSpec.describe InboundMailProcessor do
         notified = []
         allow(MobilePushSender).to receive(:new_message) { |user, **| notified << user }
 
-        described_class.new(build_payload).process
+        described_class.new(build_payload("envelope" => { "rcpt_to" => ["inbound_owner@acme.com"] })).process
 
         expect(notified).to eq([ owner ])
       end

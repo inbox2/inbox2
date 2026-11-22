@@ -166,6 +166,8 @@ RSpec.describe "E2EE leak audit (Phase H)", type: :request do
   it "notification preview (default ON) leaks exactly from+subject to push args — never the body" do
     create(:push_device, user: owner)
     allow_any_instance_of(User).to receive(:push_enabled?).and_return(true)
+    # Who rings is the folder bells' business (AddressFolders); this is about what the push carries.
+    allow(MobilePushSender).to receive(:conversation_recipients).and_return([owner])
 
     payload = sealed_inbound_payload
     payload["sealed"]["notification_preview"] = { "from" => "Sender S-#{MARKER}", "subject" => "Subject S-#{MARKER}" }

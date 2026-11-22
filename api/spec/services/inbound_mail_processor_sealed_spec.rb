@@ -208,7 +208,7 @@ RSpec.describe InboundMailProcessor, "sealed mail" do
   it "passes the MX notification preview to the push sender (default-on domains)" do
     payload = sealed_payload
     payload["sealed"]["notification_preview"] = { "from" => "Bob <bob@ext.example>", "subject" => "Preview subject" }
-    allow(MobilePushSender).to receive(:org_recipients).and_return([owner])
+    allow(MobilePushSender).to receive(:conversation_recipients).and_return([owner])
     expect(MobilePushSender).to receive(:new_message)
       .with(owner, hash_including(sealed_preview: { "from" => "Bob <bob@ext.example>", "subject" => "Preview subject" }))
 
@@ -216,7 +216,7 @@ RSpec.describe InboundMailProcessor, "sealed mail" do
   end
 
   it "passes no preview when the MX did not ship one (default)" do
-    allow(MobilePushSender).to receive(:org_recipients).and_return([owner])
+    allow(MobilePushSender).to receive(:conversation_recipients).and_return([owner])
     expect(MobilePushSender).to receive(:new_message).with(owner, hash_including(sealed_preview: nil))
 
     described_class.new(sealed_payload).process

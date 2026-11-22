@@ -212,7 +212,12 @@ RSpec.describe MobilePushSender do
 
       expect(described_class.conversation_recipients(personal)).not_to include(restricted.user)
       expect(described_class.conversation_recipients(personal)).to include(owner.user)
-      expect(described_class.conversation_recipients(shared)).to include(restricted.user, owner.user)
+      # A shared address rings the people who can reply as it (in their Inbox
+      # by default), never a read-only member (folder bells, AddressFolders).
+      dom.update!(shared_addresses: [{ "local_part" => "info" }])
+      owner.update!(send_as_addresses: ["info@pers.test"])
+      expect(described_class.conversation_recipients(shared)).to include(owner.user)
+      expect(described_class.conversation_recipients(shared)).not_to include(restricted.user)
     end
 
     it "swallows a push failure so the caller never breaks" do

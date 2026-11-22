@@ -331,8 +331,19 @@ class MobilePushSender
     conversation.organization.memberships
       .where(status: Membership::STATUS_ACTIVE, member_type: Membership::TYPE_HUMAN)
       .includes(:user)
-      .select { |m| thread.visible_to(m).exists? }
+      .select { |m| rings?(m, thread, conversation.domain) }
       .map(&:user).compact.uniq
+  end
+
+  # Visible to the member, and in a folder whose bell is on (AddressFolders:
+  # Inbox on by default, every other folder off until the member turns it on).
+  # A thread with no domain has no folders, so visibility alone decides.
+  def self.rings?(membership, thread, domain)
+    visible = thread.visible_to(membership)
+    return false unless visible.exists?
+    return true unless domain
+
+    AddressFolders.new(membership, domain).notify_for?(visible)
   end
 
   # Fan a removal push to every org member for one or more conversation keys.
