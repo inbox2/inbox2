@@ -3,5 +3,6 @@ class SyncTombstonePruneJob < ApplicationJob
 
   def perform
     SyncTombstone.prune!
+    Disk::SyncEvent.prune!
   end
 end

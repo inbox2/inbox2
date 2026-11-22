@@ -10,6 +10,7 @@ ActiveSupport.on_load(:active_record) do
       # schema.rb was just `load`ed over this same connection.
       conn = ActiveRecord::Base.lease_connection
       SyncTriggers.ensure!(conn) if conn.table_exists?("sync_tombstones")
+      Disk::SyncTriggers.ensure!(conn) if conn.table_exists?("disk_sync_events")
     end
   end)
 end

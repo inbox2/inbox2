@@ -670,6 +670,8 @@ class CreateInitialSchema < ActiveRecord::Migration[8.1]
     end
 
     create_table "disk_nodes", force: :cascade do |t|
+      t.bigint "change_seq"
+      t.bigint "change_xid"
       t.datetime "content_modified_at"
       t.datetime "created_at", null: false
       t.bigint "created_by_membership_id"
@@ -709,6 +711,7 @@ class CreateInitialSchema < ActiveRecord::Migration[8.1]
       t.index ["custodian_membership_id"], name: "index_disk_nodes_on_custodian_membership_id"
       t.index ["custodian_membership_id"], name: "index_disk_nodes_one_root_per_custodian", unique: true, where: "((parent_id IS NULL) AND (custodian_membership_id IS NOT NULL))"
       t.index ["key"], name: "index_disk_nodes_on_key", unique: true
+      t.index ["organization_id", "change_xid", "change_seq"], name: "index_disk_nodes_on_sync_cursor"
       t.index ["organization_id", "parent_id", "content_modified_at"], name: "index_disk_nodes_on_org_parent_modified"
       t.index ["organization_id", "parent_id", "size_bytes"], name: "index_disk_nodes_on_org_parent_size"
       t.index ["organization_id", "trashed_at"], name: "index_disk_nodes_on_org_trash", where: "trash_root"
@@ -829,6 +832,19 @@ class CreateInitialSchema < ActiveRecord::Migration[8.1]
       t.index ["node_id", "membership_id"], name: "index_disk_stars_on_node_id_and_membership_id", unique: true
     end
 
+    # Disk sync feed (docs/Disk-Sync.md). Filled by Disk::SyncTriggers, installed by
+    # 20261122130001 — a roll-up must keep a `Disk::SyncTriggers.ensure!` call.
+    create_table "disk_sync_events", force: :cascade do |t|
+      t.bigint "change_seq", null: false
+      t.bigint "change_xid", null: false
+      t.datetime "created_at", null: false
+      t.string "kind", null: false
+      t.string "node_key"
+      t.bigint "organization_id", null: false
+      t.index ["organization_id", "change_xid", "change_seq"], name: "index_disk_sync_events_on_sync_cursor"
+      t.index ["organization_id", "created_at"], name: "index_disk_sync_events_on_organization_id_and_created_at"
+    end
+
     create_table "disk_upload_parts", force: :cascade do |t|
       t.datetime "issued_at", null: false
       t.integer "number", null: false
@@ -838,6 +854,7 @@ class CreateInitialSchema < ActiveRecord::Migration[8.1]
     end
 
     create_table "disk_uploads", force: :cascade do |t|
+      t.string "base_version_key"
       t.integer "chunk_bytes"
       t.datetime "created_at", null: false
       t.bigint "declared_bytes", null: false

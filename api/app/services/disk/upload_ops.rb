@@ -21,9 +21,11 @@ module Disk
     # Sealed (build guide 6.5, 6.6): size is the ciphertext size, and a new
     # file's id is proposed by the client (id) with its metadata_ciphertext.
     # staged: the new file stays invisible until switched in (6.8).
+    # base_version: the dvr_ id the client's edit started from (docs/Disk-Sync.md);
+    # completion refuses with version_conflict when the file has moved on since.
     def reserve(size:, parent_key: nil, node_key: nil, name: nil, on_conflict: nil, idempotency_key: nil,
                 sealed: false, chunk_bytes: nil, key_epoch: nil, metadata_ciphertext: nil, multipart: true,
-                id: nil, staged: false)
+                id: nil, staged: false, base_version: nil)
       if idempotency_key.present?
         existing = Disk::Upload.find_by(membership_id: membership.id, idempotency_key: idempotency_key.to_s)
         return [existing, false] if existing
@@ -36,7 +38,8 @@ module Disk
       attrs = sealed ? sealed_attrs(parent, node, chunk_bytes, key_epoch, metadata_ciphertext, size, id) : { intended_name: name.to_s.strip.presence }
       raise Disk::Refused, "This folder is sealed; upload through the sealing client" if !sealed && parent.sealed?
 
-      [start!(size, parent, node, idempotency_key.presence&.to_s, attrs.merge(staged: staged), multipart: multipart), true]
+      attrs = attrs.merge(staged: staged, base_version_key: base_version.presence&.to_s)
+      [start!(size, parent, node, idempotency_key.presence&.to_s, attrs, multipart: multipart), true]
     rescue ActiveRecord::RecordNotUnique => e
       raise unless e.message.include?("idempotency_key")
 
@@ -70,13 +73,16 @@ module Disk
 
     # Step 3. Returns [node, version]. A repeat call on a finished upload returns the same pair.
     # metadata_ciphertext completes a sealed copy (reserve_copy), whose new node
-    # id the client learnt from the reservation.
-    def complete(upload, sha256: nil, wrapped_key: nil, manifest_ciphertext: nil, metadata_ciphertext: nil)
+    # id the client learnt from the reservation. base_version, when given,
+    # replaces the one from the reservation (after a version_conflict the
+    # client overwrites by sending the current_version_id it was given).
+    def complete(upload, sha256: nil, wrapped_key: nil, manifest_ciphertext: nil, metadata_ciphertext: nil, base_version: nil)
       return [upload.node, upload.version] if upload.done?
       raise self.class.closed(upload, "This upload was cancelled") if upload.aborted?
 
       if upload.reserved?
         attrs = { state: Disk::Upload::STATE_COMPLETING }
+        attrs[:base_version_key] = base_version.to_s if base_version.present?
         if upload.sealed?
           attrs[:wrapped_key] = Disk::Sealing.bytes!(wrapped_key, "wrapped_key")
           attrs[:manifest_ciphertext] = Disk::Sealing.bytes!(manifest_ciphertext, "manifest_ciphertext")
@@ -149,6 +155,14 @@ module Disk
         refusal = target_refusal(upload) || seal_refusal(upload)
         next refusal if refusal
 
+        conflict = version_conflict(upload)
+        if conflict
+          # Not aborted: the bytes stay, so the client can cancel, or complete
+          # again with the current version as its base to overwrite.
+          upload.update!(state: Disk::Upload::STATE_RESERVED)
+          next conflict
+        end
+
         if parts == :empty
           storage.put_empty(upload.storage_key)
         elsif parts
@@ -158,6 +172,7 @@ module Disk
       end
       return [upload.node, upload.version] if outcome == :done
       return outcome unless outcome.is_a?(Disk::Refused)
+      raise outcome if outcome.extra[:code] == Disk::Upload::VERSION_CONFLICT
 
       abort!(upload, states: [Disk::Upload::STATE_COMPLETING])
       raise outcome
@@ -205,6 +220,19 @@ module Disk
       return if Disk::Access.allows?(upload.membership, target, Disk::ROLE_EDIT)
 
       Disk::Refused.new("You need edit access for this", status: 403)
+    end
+
+    # A new version whose base is no longer the file's current version, checked
+    # under the node lock inside the committing transaction. nil when it may go ahead.
+    def self.version_conflict(upload)
+      return if upload.base_version_key.blank? || upload.node_id.nil?
+
+      node = upload.node.lock!
+      current = Disk::Version.where(id: node.current_version_id).pick(:key)
+      return if (current || Disk::Upload::NO_VERSION) == upload.base_version_key
+
+      Disk::Refused.new("This file changed since you started editing it", status: 409,
+                        code: Disk::Upload::VERSION_CONFLICT, current_version_id: current)
     end
 
     # The epoch rule at the commit point (6.7): an upload reserved under an

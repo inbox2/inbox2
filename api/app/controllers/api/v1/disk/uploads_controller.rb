@@ -5,12 +5,12 @@ module Api
       # from the browser straight to storage through presigned part URLs.
       class UploadsController < BaseController
         # POST /uploads { parent_id | node_id, name, size_bytes, on_conflict, idempotency_key, staged,
-        #                 sealed, chunk_bytes, key_epoch, id, metadata_ciphertext }
+        #                 sealed, chunk_bytes, key_epoch, id, metadata_ciphertext, base_version }
         # Sealed (build guide 6.5, 6.6): size_bytes is the ciphertext size; a new
         # file brings its proposed id and metadata_ciphertext.
         def create
           p = params.permit(:parent_id, :node_id, :name, :size_bytes, :on_conflict, :idempotency_key, :sealed,
-                            :chunk_bytes, :key_epoch, :metadata_ciphertext, :id, :staged)
+                            :chunk_bytes, :key_epoch, :metadata_ciphertext, :id, :staged, :base_version)
           raise ActionController::ParameterMissing, :parent_id if p[:parent_id].blank? && p[:node_id].blank?
 
           upload, created = uploads.reserve(
@@ -18,7 +18,7 @@ module Api
             on_conflict: p[:on_conflict], idempotency_key: p[:idempotency_key],
             sealed: ActiveModel::Type::Boolean.new.cast(p[:sealed]) || false, chunk_bytes: p[:chunk_bytes],
             key_epoch: p[:key_epoch], metadata_ciphertext: p[:metadata_ciphertext], id: p[:id],
-            staged: ActiveModel::Type::Boolean.new.cast(p[:staged]) || false
+            staged: ActiveModel::Type::Boolean.new.cast(p[:staged]) || false, base_version: p[:base_version]
           )
           render json: { upload: upload_json(upload) }, status: created ? :created : :ok
         end
@@ -39,12 +39,15 @@ module Api
         end
 
         # POST /uploads/:id/complete { sha256 } or, sealed, { wrapped_key, manifest_ciphertext },
-        # plus metadata_ciphertext when completing a sealed copy.
+        # plus metadata_ciphertext when completing a sealed copy, and base_version
+        # (409 version_conflict + current_version_id when the file moved on).
+        # Repeating it on a finished upload answers the same node and version.
         def complete
           node, version = uploads.complete(uploads.find!(params[:id]), sha256: params[:sha256],
                                                                        wrapped_key: params[:wrapped_key],
                                                                        manifest_ciphertext: params[:manifest_ciphertext],
-                                                                       metadata_ciphertext: params[:metadata_ciphertext])
+                                                                       metadata_ciphertext: params[:metadata_ciphertext],
+                                                                       base_version: params[:base_version])
           render json: { node: node_json(node.reload), version: ::Disk::VersionSerializer.new(version).to_h }
         end
 

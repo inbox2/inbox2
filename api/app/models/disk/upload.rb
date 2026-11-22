@@ -13,6 +13,10 @@ module Disk
     ACTIVE_STATES = [STATE_RESERVED, STATE_COMPLETING].freeze
     # The code on a 409 for parts or completion of an upload no longer reserved.
     CLOSED = "upload_closed".freeze
+    # The code on a 409 for a new version whose base_version is no longer current.
+    # base_version for an edit of a file that had no version yet (Disk in Finder).
+    NO_VERSION = "none".freeze
+    VERSION_CONFLICT = "version_conflict".freeze
 
     # Every part URL lasts minutes, so a live upload keeps asking for more and
     # each ask pushes this out; an abandoned one is released within a day (spec F2).

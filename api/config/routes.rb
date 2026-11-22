@@ -500,6 +500,11 @@ Rails.application.routes.draw do
               put :rendition
             end
           end
+          # Sync feed for a local mirror (docs/Disk-Sync.md)
+          get "sync/head", to: "sync#head"
+          get "sync/pull", to: "sync#pull"
+          get "sync/keys", to: "sync#keys"
+          get "sync/nodes", to: "sync#nodes"
           get "search", to: "search#index"
           get "views/shared-with-me", to: "views#shared_with_me"
           get "views/recent", to: "views#recent"

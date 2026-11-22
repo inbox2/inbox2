@@ -17,6 +17,8 @@ module Api
     # Read-only. Writes go through the normal endpoints, which own validation,
     # activity events and broadcasts.
     class SyncController < BaseController
+      include SyncCursor
+
       before_action :require_organization!
 
       DEFAULT_LIMIT = 200
@@ -60,11 +62,7 @@ module Api
         has_more ||= page[:truncated]
         last = page[:last]
 
-        # Drained: jump to the horizon so the next pull skips the scan. (`last` can
-        # sit past the horizon only for rows written by this very transaction.)
-        cursor = if has_more then encode_cursor(last[:xid], last[:seq])
-        else encode_cursor(*[[hi, 0], last ? [last[:xid], last[:seq]] : [xid, seq]].max)
-        end
+        cursor = next_cursor(has_more, last, hi, xid, seq)
 
         render json: {
           cursor: cursor,
@@ -131,16 +129,6 @@ module Api
       end
 
       private
-
-      # Everything below this xid is committed or rolled back — a stable set.
-      def horizon
-        ActiveRecord::Base.connection.select_value("SELECT pg_snapshot_xmin(pg_current_snapshot())::text::bigint").to_i
-      end
-
-      # The next xid to be assigned: no real cursor can be past it.
-      def next_xid
-        ActiveRecord::Base.connection.select_value("SELECT pg_snapshot_xmax(pg_current_snapshot())::text::bigint").to_i
-      end
 
       # One ordered walk across every synced table. `own` lets a transaction see
       # its own writes (only ever non-null under transactional tests; a pull is
@@ -266,21 +254,6 @@ module Api
         watermark.present? && xid < watermark
       end
 
-      def clamp(value, default, max)
-        n = value.to_i
-        n.positive? ? [n, max].min : default
-      end
-
-      # Opaque to clients. Blank = from the beginning.
-      def encode_cursor(xid, seq) = "#{xid}.#{seq}"
-
-      def decode_cursor(raw)
-        return [0, 0] if raw.blank?
-
-        m = /\A(\d+)\.(\d+)\z/.match(raw.to_s)
-        m && [m[1].to_i, m[2].to_i]
-      end
-
       def encode_backfill(conv) = "#{conv.updated_at.utc.iso8601(6)}~#{conv.key}"
 
       def decode_backfill(raw)
@@ -288,10 +261,6 @@ module Api
         m && [Time.iso8601(m[1]), m[2]]
       rescue ArgumentError
         nil
-      end
-
-      def render_bad_cursor
-        render json: ErrorSerializer.serialize("Invalid cursor", status: 422), status: :unprocessable_content
       end
     end
   end

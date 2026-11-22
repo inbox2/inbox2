@@ -72,8 +72,9 @@ module Disk
     end
 
     # Where this member's access to node comes from. `path` is node's chain
-    # from its root (Disk::Node.paths_for), passed in when already loaded.
-    def self.sources(membership, node, path: nil)
+    # from its root (Disk::Node.paths_for), passed in when already loaded;
+    # `preload` is what roles_for loaded for a whole page of nodes.
+    def self.sources(membership, node, path: nil, preload: nil)
       return agent_sources(membership, node, path: path) if membership.agent?
 
       out = []
@@ -85,24 +86,37 @@ module Disk
         if membership.admin? && (!node.sealed? || node.root?)
           out << Source.new(kind: SOURCE_ADMIN, role: Disk::ROLE_MANAGE, share: share)
         end
-        sm = share.share_memberships.find_by(membership_id: membership.id)
+        sm = preload ? preload[:share_memberships][share.id] : share.share_memberships.find_by(membership_id: membership.id)
         out << Source.new(kind: SOURCE_SHARE_MEMBER, role: sm.role, share: share) if sm
-        out << Source.new(kind: SOURCE_SHARE_DEFAULT, role: share.org_role, share: share) if share.open_to?(membership)
+        open = preload ? share.open_to_org? && (share.domain_id.nil? || preload[:domain_ids].include?(share.domain_id)) : share.open_to?(membership)
+        out << Source.new(kind: SOURCE_SHARE_DEFAULT, role: share.org_role, share: share) if open
       end
       ids = (path || node.path).map(&:id)
       ids &= [node.seal_scope_node_id] if node.sealed? # sealed: only a grant on the scope root counts
-      Disk::Grant.where(membership_id: membership.disk_ids, node_id: ids).includes(:node).find_each do |g|
-        out << Source.new(kind: SOURCE_GRANT, role: g.role, node: g.node)
-      end
+      grants = preload ? preload[:grants].values_at(*ids).flatten.compact : Disk::Grant.where(membership_id: membership.disk_ids, node_id: ids).includes(:node)
+      grants.each { |g| out << Source.new(kind: SOURCE_GRANT, role: g.role, node: g.node) }
       out
     end
 
     # The member's effective role on node, or nil when it does not exist for them.
-    def self.role(membership, node, path: nil)
-      role = sources(membership, node, path: path).map(&:role).max_by { |r| Disk.role_rank(r) }
+    def self.role(membership, node, path: nil, preload: nil)
+      role = sources(membership, node, path: path, preload: preload).map(&:role).max_by { |r| Disk.role_rank(r) }
       return role unless role && node.share&.archived? && !membership.admin?
 
       Disk::ROLE_VIEW
+    end
+
+    # { node id => role } for a page of nodes, in a fixed number of queries.
+    def self.roles_for(membership, nodes)
+      paths = Disk::Node.paths_for(nodes)
+      preload = unless membership.agent?
+        { share_memberships: Disk::ShareMembership.where(membership_id: membership.id, share_id: nodes.filter_map(&:share_id).uniq)
+            .index_by(&:share_id),
+          domain_ids: membership.accessible_domain_ids.to_set,
+          grants: Disk::Grant.where(membership_id: membership.disk_ids, node_id: paths.values.flatten.map(&:id).uniq)
+            .includes(:node).group_by(&:node_id) }
+      end
+      nodes.to_h { |n| [n.id, role(membership, n, path: paths[n.id], preload: preload)] }
     end
 
     def self.allows?(membership, node, needed, path: nil)
