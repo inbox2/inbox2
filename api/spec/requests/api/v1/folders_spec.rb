@@ -175,7 +175,7 @@ RSpec.describe "Api::V1::Folders", type: :request do
       ConversationAssignee.create!(conversation: t, membership: ali)
       expect(keys(auth_headers(ali_user), folder: "inbox")).to include(t.key)
     end
-  
+
     it "files a thread you started by its From when the recipient's host only contains the domain" do
       t = org.conversations.create!(domain: domain, subject: "x", status: Conversation::STATUS_OPEN, read: false,
         to_address: "client@nothusttle.com.au", from_address: "info@husttle.com")
@@ -190,7 +190,7 @@ RSpec.describe "Api::V1::Folders", type: :request do
       expect(keys(h, folder: "inbox")).to include(boss_receipt.key)
       expect(keys(h, folder: "inbox")).not_to include(other_tag.key)
     end
-  
+
     it "keeps your mail to a tagged shared address in your own folder and Inbox" do
       t = thread(to: "info+press@husttle.com", owner: boss, from: "boss@husttle.com")
       h = auth_headers(boss_user)
@@ -202,7 +202,7 @@ RSpec.describe "Api::V1::Folders", type: :request do
       put "/api/v1/orgs/#{org.key}/domains/#{domain.key}/shared-addresses", params: { shared_addresses: [{ local_part: "inbox" }] }, headers: auth_headers(boss_user)
       expect(response).to have_http_status(:unprocessable_content)
     end
-  
+
     it "keeps tagged mail to a shared address out of Inbox, in the shared folder" do
       t = thread(to: "info+press@husttle.com")
       h = auth_headers(ali_user)

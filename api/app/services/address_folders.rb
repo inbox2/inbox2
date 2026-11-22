@@ -30,7 +30,7 @@ class AddressFolders
 
   # The thread's folder address, lowercase and bare: the first address-shaped
   # token, so "Name <a@b>" reads as a@b.
-  BARE = %q{'[^<>[:space:],"]+@[^<>[:space:],"]+'}.freeze
+  BARE = %q('[^<>[:space:],"]+@[^<>[:space:],"]+').freeze
   TO_SQL = "LOWER(substring(conversations.to_address FROM #{BARE}))".freeze
   FROM_SQL = "LOWER(substring(conversations.from_address FROM #{BARE}))".freeze
   ADDR_SQL = "(CASE WHEN split_part(#{TO_SQL}, '@', 2) = LOWER(domains.name) THEN #{TO_SQL} ELSE #{FROM_SQL} END)".freeze
