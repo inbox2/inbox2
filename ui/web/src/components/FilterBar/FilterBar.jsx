@@ -130,18 +130,24 @@ function FilterDropdown({ label, ariaLabel, active, children }) {
   const btnRef = useRef(null)
   const listRef = useRef(null)
   const [anchor, setAnchor] = useState(null)
-  const closedAt = useRef(0)
-  const close = () => { closedAt.current = Date.now(); setAnchor(null); btnRef.current?.focus() }
-  // The outside-mousedown close fires before the trigger's click; don't reopen on that click.
-  const toggle = () => {
+  // A press on the trigger while open lets the Popover's outside-mousedown close it before
+  // this click lands; remember that at pointerdown so the click doesn't reopen it.
+  const pressedOpen = useRef(false)
+  const close = () => { setAnchor(null); btnRef.current?.focus() }
+  // Keyboard clicks (detail 0) never follow a press, so a stale flag can't eat them;
+  // every pointerdown overwrites it.
+  const toggle = (e) => {
+    const wasOpen = e.detail > 0 && pressedOpen.current
+    pressedOpen.current = false
     if (anchor) close()
-    else if (Date.now() - closedAt.current > 250) setAnchor(btnRef.current.getBoundingClientRect())
+    else if (!wasOpen) setAnchor(btnRef.current.getBoundingClientRect())
   }
   useEffect(() => { if (anchor) listRef.current?.querySelector('input, button')?.focus() }, [anchor])
   return (
     <>
       <button ref={btnRef} type="button" className={`${styles.chip} ${styles.typeChip}`} aria-pressed={active}
-        aria-haspopup="true" aria-expanded={!!anchor} aria-label={ariaLabel} onClick={toggle}>
+        aria-haspopup="true" aria-expanded={!!anchor} aria-label={ariaLabel}
+        onPointerDown={() => { pressedOpen.current = !!anchor }} onClick={toggle}>
         {label}
         <ActionIcon name="chevronDown" size={12} />
       </button>
