@@ -228,6 +228,9 @@ class Membership < ApplicationRecord
     local, host = bare.to_s.split("@", 2)
     domain = host.present? && organization.domains.find_by(name: host)
     return false unless domain
+    # A tagged address (waseem+receipts@) is sent as whoever owns its base.
+    local = Mailbox.base_local_part(local)
+    bare = "#{local}@#{host}"
     return true if mailboxes.where(domain: domain).exists?(["LOWER(local_part) = ?", local])
     # A teammate's own mailbox is theirs alone — no username or grant reaches it,
     # even a grant made before the mailbox existed.

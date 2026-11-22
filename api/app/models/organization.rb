@@ -174,6 +174,7 @@ class Organization < ApplicationRecord
   # new thread as Conversation#personal_membership_id.
   def personal_membership_id_for(address)
     local, host = MailHeaderEncoding.bare_addresses(address.to_s).first.to_s.downcase.split("@", 2)
+    local = Mailbox.base_local_part(local)
     return if local.blank? || host.blank? || !domains.exists?(name: host)
 
     Mailbox.joins(:domain).where(domains: { organization_id: id, name: host }, local_part: local).pick(:membership_id) ||

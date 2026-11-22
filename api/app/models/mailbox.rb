@@ -16,6 +16,13 @@ class Mailbox < ApplicationRecord
 
   delegate :organization, :organization_id, to: :domain, allow_nil: true
 
+  # Plus addressing: waseem+receipts@ is waseem@'s mail. The part after the
+  # first "+" is a tag (a subfolder), never part of whose address it is.
+  TAG_SEPARATOR = "+".freeze
+
+  def self.base_local_part(local) = local.to_s.split(TAG_SEPARATOR, 2).first.to_s
+  def self.tag_of(local) = local.to_s.split(TAG_SEPARATOR, 2)[1].presence
+
   def email_address
     "#{local_part}@#{domain&.name}"
   end

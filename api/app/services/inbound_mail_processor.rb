@@ -91,6 +91,7 @@ class InboundMailProcessor
     conversation = find_or_create_conversation(organization)
     new_thread = conversation.previously_new_record?
     grant_reroute_access(conversation)
+    recipient_access_grants(conversation, organization)
     message =
       begin
         create_message(organization, conversation)
@@ -233,11 +234,17 @@ class InboundMailProcessor
     addr.to_s.split("@").first&.downcase&.strip
   end
 
+  # The recipient's mailbox local-part, without a +tag (waseem+receipts → waseem).
+  def recipient_base_local_part
+    local = extract_recipient_local_part
+    local && Mailbox.base_local_part(local)
+  end
+
   # True when mail to this recipient should be rejected because its mailbox was
   # retired with a bounce disposition (or a reroute whose target was removed).
   # A reroute disposition stashes the target membership for grant_reroute_access.
   def reject_for_mailbox_alias?(organization)
-    local = extract_recipient_local_part
+    local = recipient_base_local_part
     return false if local.blank?
 
     ma = @domain_record.mailbox_aliases.find_by(local_part: local)
@@ -384,7 +391,7 @@ class InboundMailProcessor
       host = @domain_record.name.downcase
       locals = Array(@envelope["rcpt_to"]).filter_map do |a|
         local, h = a.to_s.downcase.strip.split("@", 2)
-        local if h == host
+        Mailbox.base_local_part(local) if h == host
       end
       @domain_record.mailboxes.where(local_part: locals).to_a
     end
@@ -396,7 +403,7 @@ class InboundMailProcessor
     return true if copies.empty?
 
     covered = recipient_mailboxes.select { |mb| copies.key?(mb.membership_id) }.map { |mb| mb.local_part.downcase }
-    Array(@envelope["rcpt_to"]).any? { |a| !covered.include?(a.to_s.downcase.strip.split("@", 2).first) }
+    Array(@envelope["rcpt_to"]).any? { |a| !covered.include?(Mailbox.base_local_part(a.to_s.downcase.strip.split("@", 2).first)) }
   end
 
   # The same message appended to each private copy, as its owner's row. No
@@ -423,11 +430,11 @@ class InboundMailProcessor
     in_reply_to = @headers["in_reply_to"]
     if in_reply_to.present?
       existing = organization.messages.shared.find_by(message_id_header: in_reply_to)
-      return existing.conversation if existing
+      return existing.conversation if existing && joinable?(existing.conversation, organization)
       # Mixed-mode: the parent may be a SEALED row, findable only by HMAC.
       if (h = E2ee.threading_hmac(in_reply_to))
         existing = organization.messages.shared.find_by(msgid_hmac: h)
-        return existing.conversation if existing
+        return existing.conversation if existing && joinable?(existing.conversation, organization)
       end
     end
 
@@ -437,10 +444,10 @@ class InboundMailProcessor
       ref_ids = references.split(/\s+/).reverse
       ref_ids.each do |ref_id|
         existing = organization.messages.shared.find_by(message_id_header: ref_id.strip)
-        return existing.conversation if existing
+        return existing.conversation if existing && joinable?(existing.conversation, organization)
         if (h = E2ee.threading_hmac(ref_id.strip))
           existing = organization.messages.shared.find_by(msgid_hmac: h)
-          return existing.conversation if existing
+          return existing.conversation if existing && joinable?(existing.conversation, organization)
         end
       end
     end
@@ -464,7 +471,7 @@ class InboundMailProcessor
           .where("created_at > ?", 30.days.ago)
           .order(updated_at: :desc)
           .first
-        return candidate if candidate
+        return candidate if candidate && joinable?(candidate, organization)
         # Mixed-mode: a sealed thread exposes only subject_hmac. Plaintext
         # threads carry one too, so this is limited to sealed threads (no
         # stored addresses to check) on the recipient's domain — where every
@@ -476,7 +483,7 @@ class InboundMailProcessor
             .where("created_at > ?", 30.days.ago)
             .order(updated_at: :desc)
             .first
-          return candidate if candidate
+          return candidate if candidate && joinable?(candidate, organization)
         end
       end
     end
@@ -496,13 +503,67 @@ class InboundMailProcessor
     )
   end
 
-  # The member whose personal mailbox the first envelope recipient is (the
-  # address to_address keeps). A sealed thread stores no address, so this is
-  # what keeps it out of teammates' pools.
+  # Whether this mail may join a thread its headers point at.
+  # - A personal thread takes it only when every recipient on the domain
+  #   already sees that thread (its owner or a grant) and none is a shared
+  #   address. Else joining would hand the thread's history to someone new.
+  # - A shared thread never takes tagged mail (ali+receipts@ is private).
+  # Mail that may not join starts its own thread.
+  def joinable?(conversation, organization)
+    owners = recipient_owner_ids(organization)
+    if conversation.personal_membership_id.present?
+      return false if owners.include?(nil)
+
+      sees = [conversation.personal_membership_id] + conversation.conversation_accesses.pluck(:membership_id)
+      (owners - sees).empty?
+    else
+      domain_recipient_locals.none? { |l| Mailbox.tag_of(l) }
+    end
+  end
+
+  # Local parts of the envelope recipients on this domain, as sent (tags kept).
+  def domain_recipient_locals
+    @domain_recipient_locals ||= begin
+      host = @domain_record.name.downcase
+      Array(@envelope["rcpt_to"]).filter_map do |a|
+        local, h = a.to_s.downcase.strip.split("@", 2)
+        local if h == host && local.present?
+      end
+    end
+  end
+
+  # The owner of each recipient on this domain, nil for a shared address
+  # (info@). Tags are dropped (personal_membership_id_for).
+  def recipient_owner_ids(organization)
+    @recipient_owner_ids ||= domain_recipient_locals.map do |l|
+      organization.personal_membership_id_for("#{l}@#{@domain_record.name}")
+    end
+  end
+
+  # Whose personal mail this delivery is. Only when every recipient on the
+  # domain is someone's own address: the first such owner holds the thread and
+  # the others get an access grant (recipient_access_grants). One shared
+  # address in the envelope (info@) makes the thread the team's — the sender
+  # wrote to the team. A sealed thread stores no address, so this stamp is what
+  # keeps it out of teammates' pools.
   def personal_recipient_id(organization)
     return @personal_recipient_id if defined?(@personal_recipient_id)
 
-    @personal_recipient_id = organization.personal_membership_id_for(Array(@envelope["rcpt_to"]).first)
+    owners = recipient_owner_ids(organization)
+    @personal_recipient_id = owners.empty? || owners.include?(nil) ? nil : owners.first
+  end
+
+  # Every other recipient who owns an address in this envelope sees a NEW
+  # thread too: a grant, not a copy, so the message is stored once (ali@ +
+  # waseem@ → Ali's thread, granted to Waseem). Only new threads: a joined
+  # thread already has every recipient (joinable?), and a grant there would
+  # show its earlier messages.
+  def recipient_access_grants(conversation, organization)
+    return unless conversation.previously_new_record?
+
+    (recipient_owner_ids(organization).compact.uniq - [conversation.personal_membership_id]).each do |mid|
+      conversation.conversation_accesses.find_or_create_by!(membership_id: mid)
+    end
   end
 
   # HMAC-only threading for sealed mail (docs/E2EE.md Phase D). Same shape as
@@ -513,7 +574,7 @@ class InboundMailProcessor
   def find_or_create_conversation_sealed(organization)
     Array(@sealed["refs_hmac"]).reverse_each do |ref_hmac|
       existing = organization.messages.shared.find_by(msgid_hmac: ref_hmac)
-      return existing.conversation if existing
+      return existing.conversation if existing && joinable?(existing.conversation, organization)
       # Mixed-mode: the parent may be a PLAINTEXT row that predates HMAC
       # backfill — its Message-ID column can still be matched via HMAC compute
       # only at write time, so nothing to do here (plaintext rows written since
@@ -529,7 +590,7 @@ class InboundMailProcessor
         .where("created_at > ?", 30.days.ago)
         .order(updated_at: :desc)
         .first
-      return candidate if candidate
+      return candidate if candidate && joinable?(candidate, organization)
     end
 
     # Sealed conversations keep every plaintext preview column null; the
@@ -707,7 +768,7 @@ class InboundMailProcessor
       message: message,
       envelope: @envelope,
       raw_mime: raw_b64.present? ? Base64.decode64(raw_b64) : nil,
-      recipient_local_part: extract_recipient_local_part
+      recipient_local_part: recipient_base_local_part
     )
   rescue => e
     Rails.logger.warn("[InboundMailProcessor] auto-reply failed: #{e.message}")

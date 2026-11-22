@@ -121,8 +121,10 @@ class OutOfOfficeResponder
 
   # Mail from the away person to themselves, or from another address on this
   # same mailbox — answering it achieves nothing and can ping-pong.
+  # Tags ignored on both sides: ali+one@ writing to ali+two@ is still Ali.
   def self_addressed?
-    sender == recipient_address
+    local, host = sender.to_s.split("@", 2)
+    "#{Mailbox.base_local_part(local)}@#{host}" == recipient_address
   end
 
   def spam?
