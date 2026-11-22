@@ -12,9 +12,20 @@ extension FileProviderExtension: NSFileProviderThumbnailing, NSFileProviderCusto
                          perThumbnailCompletionHandler: @escaping (NSFileProviderItemIdentifier, Data?, Error?) -> Void,
                          completionHandler: @escaping (Error?) -> Void) -> Progress {
         let progress = Progress(totalUnitCount: Int64(itemIdentifiers.count))
+        // The completion runs once: on cancel at once, else when the last thumbnail is in.
+        let done = NSLock()
+        var finished = false
+        let finish: (Error?) -> Void = { error in
+            done.lock()
+            let first = !finished
+            finished = true
+            done.unlock()
+            if first { completionHandler(error) }
+        }
+        progress.cancellationHandler = { finish(CocoaError(.userCancelled)) }
         queue.async {
             let s: DiskSession
-            do { s = try self.session() } catch { return completionHandler(nsError(error)) }
+            do { s = try self.session() } catch { return finish(nsError(error)) }
             // A few at a time, so one slow thumbnail does not hold up the rest.
             let group = DispatchGroup()
             let slots = DispatchSemaphore(value: Self.thumbnailsAtOnce)
@@ -25,16 +36,16 @@ extension FileProviderExtension: NSFileProviderThumbnailing, NSFileProviderCusto
                 self.queue.async {
                     defer { slots.signal(); group.leave() }
                     if progress.isCancelled { return }
-                    do {
-                        perThumbnailCompletionHandler(id, try s.thumbnail(id: Ids.rust(id)), nil)
-                    } catch {
-                        perThumbnailCompletionHandler(id, nil, nsError(error))
-                    }
+                    let result: (Data?, Error?)
+                    do { result = (try s.thumbnail(id: Ids.rust(id)), nil) } catch { result = (nil, nsError(error)) }
+                    // A request still running when Finder cancelled reports nothing.
+                    if progress.isCancelled { return }
+                    perThumbnailCompletionHandler(id, result.0, result.1)
                     progress.completedUnitCount += 1
                 }
             }
             group.notify(queue: self.queue) {
-                completionHandler(progress.isCancelled ? CocoaError(.userCancelled) : nil)
+                finish(progress.isCancelled ? CocoaError(.userCancelled) : nil)
             }
         }
         return progress

@@ -19,6 +19,8 @@ use super::model::*;
 const ATTEMPTS: u32 = 3;
 const BACKOFF_BASE_MS: u64 = 500;
 const BACKOFF_CAP_MS: u64 = 4_000;
+/// Thumbnails: one try, this long at most per request.
+const THUMBNAIL_TIMEOUT: Duration = Duration::from_secs(8);
 
 #[derive(Clone)]
 pub struct DiskApi {
@@ -139,9 +141,21 @@ impl DiskApi {
         v["download"]["url"].as_str().map(str::to_string).ok_or_else(|| DiskError::Other("no download url".into()))
     }
 
+    /// One attempt with a short timeout: Finder waits on thumbnails, and a missed
+    /// one costs nothing (Finder asks again later).
+    fn send_once(&self, req: RequestBuilder) -> DiskResult<Response> {
+        req.timeout(THUMBNAIL_TIMEOUT).send().map_err(|e| DiskError::Offline(e.to_string()))
+    }
+
     /// A presigned GET for the version's server thumbnail. `NotFound` when it has none.
     pub fn thumbnail_url(&self, version_id: &str) -> DiskResult<String> {
-        let v: Value = self.get(&format!("versions/{version_id}/download"), &[("variant", "thumbnail".into())])?;
+        let req = self.http.get(self.url(&format!("versions/{version_id}/download"))).query(&[("variant", "thumbnail")]).bearer_auth(&self.token);
+        let r = self.send_once(req)?;
+        let status = r.status().as_u16();
+        let v: Value = r.json().unwrap_or(Value::Null);
+        if !(200..300).contains(&status) {
+            return Err(error_for(status, &v));
+        }
         v["download"]["url"].as_str().map(str::to_string).ok_or_else(|| DiskError::Other("no thumbnail url".into()))
     }
 
@@ -149,7 +163,7 @@ impl DiskApi {
     /// file downloads: Finder waits on it.
     pub fn get_small(&self, url: &str, max: u64) -> DiskResult<Vec<u8>> {
         use std::io::Read;
-        let r = self.send(|| self.http.get(url).timeout(Duration::from_secs(15)))?;
+        let r = self.send_once(self.http.get(url))?;
         match r.status().as_u16() {
             200..=299 => {
                 let mut buf = Vec::new();
