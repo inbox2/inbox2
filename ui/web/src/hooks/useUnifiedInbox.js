@@ -211,7 +211,12 @@ export default function useUnifiedInbox(accounts, onRestoreSelect, spaceFilter =
           if (triagedOnly) params.tags = [PRIORITY_URGENT, PRIORITY_IMPORTANT, PRIORITY_LATER];
           if (unreadOnly) params.read = 'false';
           if (spaceFilter) params.space = spaceFilter.key;
-          else if (acct.domainKey?.startsWith('dom_')) params.domain = acct.domainKey;
+          else {
+            if (acct.domainKey?.startsWith('dom_')) params.domain = acct.domainKey;
+            // Address folder the column lists (lib/addressFolders
+            // unifiedColumnAccounts): Inbox by default, mail for you.
+            if (acct.folder) params.folder = acct.folder;
+          }
           const data = await api.getConversations(orgId, params);
           convs = (data.conversations || []).map(c => normalize(c, acct.key, 'inbox2', orgId));
         } else if (isTauri() && spaceFilter) {
@@ -431,12 +436,14 @@ export default function useUnifiedInbox(accounts, onRestoreSelect, spaceFilter =
   // A different query also starts every column back at the top. A plain refresh
   // (sync, new mail, focus) deliberately does NOT — that's what keeps a scrolled
   // column from collapsing under you.
+  // A column switching address folder (same account count) is a new query too.
+  const folderSig = accounts.map(a => (a.folder ? `${a.key}:${a.folder}` : '')).join(',');
   useEffect(() => {
     if (!fetchedRef.current) return;
     columnPagesRef.current = {};
     fetchAll();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accounts.length, spaceFilter?.slug, spaceFilter?.key]);
+  }, [accounts.length, spaceFilter?.slug, spaceFilter?.key, folderSig]);
 
   // Reload as mail arrives. Shared throttled sync-event trigger (also used by
   // useInboxConversations); held in a ref so it never re-subscribes when

@@ -66,7 +66,7 @@ describe('useChannelUnreadCounts', () => {
     mount(DOMAIN_TAB);
     await flush();
     // Addressed by the ORG (a dom_ id is not an org identifier), narrowed by domain.
-    expect(getUnreadCount).toHaveBeenCalledWith('a-org', { domain: 'dom_a' });
+    expect(getUnreadCount).toHaveBeenCalledWith('a-org', { folder: 'inbox', domain: 'dom_a' });
     expect(useUnreadStore.getState().byChannel.dom_a).toBe(2);
   });
 

@@ -11,6 +11,10 @@ export const UNIFIED_VIEW_MODE = 'inbox2_unified_view_mode';
 // Unread-only filter (⌘U) — remembered like the view mode, so leaving the
 // unified inbox and coming back doesn't silently drop it.
 export const UNIFIED_UNREAD_ONLY = 'inbox2_unified_unread_only';
+// Unified list mode: each MX column's address folder + extra folder columns.
+export const UNIFIED_COLUMN_FOLDERS = 'inbox2_unified_column_folders';
+// Sidebar address-folder tree: which of Inbox / Yours / Shared are collapsed.
+export const ADDRESS_TREE_COLLAPSED = 'inbox2_address_tree_collapsed';
 export const MARK_READ_MODE = 'inbox2_mark_read_mode';
 export const MARK_READ_DELAY = 'inbox2_mark_read_delay';
 // Apollo API key moved to the encrypted secret store (lib/secretStore.js) — keyed

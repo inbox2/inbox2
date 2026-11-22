@@ -1,6 +1,7 @@
 import NavGroup, { NavItem } from '../NavGroup';
 import SyncStatusBar from '../SyncStatusBar/SyncStatusBar';
 import NextMeeting from '../Calendar/NextMeeting';
+import AddressFolderTree from '../AddressFolders/AddressFolderTree';
 import { isTauri } from '../../lib/tauri';
 import { QUADRANTS, PRIORITY_URGENT, PRIORITY_IMPORTANT } from '../../lib/priority';
 import { CONV_STATUS } from '../../lib/conversationStatus';
@@ -42,6 +43,7 @@ export default function InboxSidebar({
   selectedTags, onToggleTag, onClearTags,
   onFocusZone,
   allAccounts = [], activeUnifiedKey,
+  addressFolders = [], folderDomainKey, onSetFolderPref,
 }) {
   const metaProvider = META_PROVIDERS.includes(activeAccount?.provider_type) ? activeAccount.provider_type : null;
   const inboxView = folderViews[0];
@@ -77,7 +79,11 @@ export default function InboxSidebar({
             </>
           ) : (
             <>
-              {folderViews.map(v => (
+              {folderViews.map(v => (v === inboxView && addressFolders.length > 0 ? (
+                // MX domain: Inbox is mail for you, with the address folders under it.
+                <AddressFolderTree key={v.id} folders={addressFolders} domainKey={folderDomainKey}
+                  inboxView={v} activeView={activeView} onSwitchView={onSwitchView} onSetPref={onSetFolderPref} />
+              ) : (
                 <NavItem
                   key={v.id}
                   icon={v.icon || 'tray'}
@@ -85,7 +91,7 @@ export default function InboxSidebar({
                   active={activeView?.id === v.id}
                   onClick={() => onSwitchView(v)}
                 />
-              ))}
+              )))}
               <NavItem icon="archivebox" label="Archived"
                 active={activeView?.name === 'Archived'}
                 onClick={() => onSwitchView({ name: 'Archived', filters: [{ field: 'status', value: CONV_STATUS.ARCHIVED }] })} />

@@ -37,6 +37,9 @@ export default function ListViewColumns({
   // Infinite scroll: called with an account key when that column is scrolled
   // near its end. Each lane pages independently.
   onColumnEndReached,
+  // Optional controls after a column's title (account → node), e.g. the MX
+  // address-folder picker or the close button of an extra folder column.
+  renderHeaderAction,
 }) {
   const containerRef = useRef(null);
 
@@ -214,6 +217,7 @@ export default function ListViewColumns({
               <span className={styles.columnTitle}>
                 {account.email_address || account.display_name}
               </span>
+              {renderHeaderAction?.(account)}
               {/* The lane's count doubles as its selection readout. */}
               <span className={styles.columnCount}>
                 {selectedCount > 0 ? `${selectedCount} selected` : visible.length}

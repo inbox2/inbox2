@@ -114,7 +114,9 @@ export default function useChannelUnreadCounts(accounts) {
         try {
           const isDomain = a.domainKey?.startsWith('dom_');
           const orgId = isDomain ? (a.orgSlug || a.key) : a.key;
-          const data = await api.getUnreadCount(orgId, isDomain ? { domain: a.domainKey } : {});
+          // folder=inbox: the badge counts what the Inbox shows (mail for you,
+          // not every address on the domain — AddressFolders on the API).
+          const data = await api.getUnreadCount(orgId, isDomain ? { folder: 'inbox', domain: a.domainKey } : { folder: 'inbox' });
           setCount(a.key, data.unread_count || 0);
         } catch (e) {
           log.warn('Unread', `Count fetch failed for ${a.key}: ${e?.message || e}`);

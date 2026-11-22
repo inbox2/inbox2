@@ -16,6 +16,7 @@ import styles from './MemberAccessPage.module.css';
 import everythingIcon from '../../assets/access-everything.png';
 import specificIcon from '../../assets/access-specific.png';
 import { consolePath } from '../../lib/consoleHost';
+import { folderRows, withSendAs } from './folderGrants';
 
 /* Dedicated per-member access page (/console/team/:orgId/:memberId), reached by
  * clicking a person on the console Team table. One clear flow:
@@ -24,7 +25,9 @@ import { consolePath } from '../../lib/consoleHost';
  *      (whole-domain access minus waseem@-style personal threads).
  *   3. Below, separately: rules that EXTEND access (grant_access routing rules)
  *      — "also show them anything to info@ / from x / subject y".
- *   4. Send as: extra From addresses (info@, sales@) granted to this person.
+ *   4. Folders: one row per address (own + each shared address) with Read
+ *      (pool access or a `to equals` grant rule), Reply as (send_as_addresses)
+ *      and Shows in Inbox (the member's own preference, read-only here).
  * Every change applies immediately (one PATCH per change, same endpoints as the
  * Team table). */
 
@@ -39,34 +42,44 @@ export default function MemberAccessPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [ruleModal, setRuleModal] = useState(false);
-  const [sendLocal, setSendLocal] = useState('');
-  const [sendDomain, setSendDomain] = useState('');
+  const [shared, setShared] = useState({}); // { [domainId]: shared addresses }
 
-  const load = useCallback(() => Promise.all([
-    api.getMembers(orgId),
-    api.listDomains(orgId).catch(() => ({ domains: [] })),
-    api.get(`/orgs/${orgId}/rules`).catch(() => ({ rules: [] })),
-  ]), [orgId]);
+  const load = useCallback(async () => {
+    const [m, d, r] = await Promise.all([
+      api.getMembers(orgId),
+      api.listDomains(orgId).catch(() => ({ domains: [] })),
+      api.get(`/orgs/${orgId}/rules`).catch(() => ({ rules: [] })),
+    ]);
+    const s = Object.fromEntries(await Promise.all((d.domains || []).map((dom) =>
+      api.get(`/orgs/${orgId}/domains/${dom.id}/shared-addresses`)
+        .then((res) => [dom.id, res.shared_addresses || []])
+        .catch(() => [dom.id, []]))));
+    return [m, d, r, s];
+  }, [orgId]);
+
+  const apply = useCallback(([m, d, r, s]) => {
+    setMembers(m.members || []);
+    setDomains(d.domains || []);
+    setRules(r.rules || []);
+    setShared(s);
+  }, []);
 
   const reload = useCallback(async () => {
     try {
-      const [m, d, r] = await load();
-      setMembers(m.members || []);
-      setDomains(d.domains || []);
-      setRules(r.rules || []);
+      apply(await load());
     } catch (e) {
       log.warn('MemberAccess', `load failed: ${e?.message || e}`);
       setMembers([]);
     }
-  }, [load]);
+  }, [load, apply]);
 
   useEffect(() => {
     let cancelled = false;
     load()
-      .then(([m, d, r]) => { if (!cancelled) { setMembers(m.members || []); setDomains(d.domains || []); setRules(r.rules || []); } })
+      .then((res) => { if (!cancelled) apply(res); })
       .catch((e) => { log.warn('MemberAccess', `load failed: ${e?.message || e}`); if (!cancelled) setMembers([]); });
     return () => { cancelled = true; };
-  }, [load]);
+  }, [load, apply]);
 
   const member = useMemo(() => (members || []).find((m) => m.id === memberId), [members, memberId]);
   const myRole = useMemo(
@@ -97,34 +110,49 @@ export default function MemberAccessPage() {
     patch({ all_domains: false, domain_ids: next });
   };
 
-  // Revoke an extending rule: delete the rule when this grant is its only
-  // action, else strip just this member's grant from the action list.
-  const revokeRule = async (rule) => {
+  const run = async (fn, fallback) => {
     setBusy(true);
     setError(null);
     try {
-      const remaining = (rule.actions || []).filter((a) => !(a.type === 'grant_access' && a.value === memberId));
-      if (remaining.length === 0 && !(rule.branches?.length) && !(rule.else_actions?.length)) {
-        await api.delete(`/orgs/${orgId}/rules/${rule.id}`);
-      } else {
-        await api.patch(`/orgs/${orgId}/rules/${rule.id}`, { actions: remaining });
-      }
+      await fn();
       await reload();
     } catch (e) {
-      setError(e?.message || "Couldn't remove the rule.");
+      setError(e?.message || fallback);
     } finally {
       setBusy(false);
     }
   };
 
-  const setSendAs = (list) => patch({ send_as_addresses: list });
-  const addSendAs = async () => {
-    const local = sendLocal.trim().toLowerCase();
-    const domain = sendDomain || domains[0]?.name;
-    if (!local || !domain) return;
-    await setSendAs([...(member.send_as_addresses || []), `${local}@${domain}`]);
-    setSendLocal('');
+  // Drop this member's grant from a rule: delete the rule when the grant is its
+  // only action, else strip just this member's grant from the action list.
+  const dropGrant = async (rule) => {
+    const remaining = (rule.actions || []).filter((a) => !(a.type === 'grant_access' && a.value === memberId));
+    if (remaining.length === 0 && !(rule.branches?.length) && !(rule.else_actions?.length)) {
+      await api.delete(`/orgs/${orgId}/rules/${rule.id}`);
+    } else {
+      await api.patch(`/orgs/${orgId}/rules/${rule.id}`, { actions: remaining });
+    }
   };
+  const revokeRule = (rule) => run(() => dropGrant(rule), "Couldn't remove the rule.");
+
+  // Read on a shared address for a scoped member = a `to equals <address>`
+  // visibility rule (same API as the "Add rule" modal, backfilled over old mail).
+  const toggleRead = (row) => run(async () => {
+    if (row.read) {
+      for (const r of row.rules) await dropGrant(r);
+      return;
+    }
+    const conditions = [{ field: 'to', operator: 'equals', value: row.address }];
+    const { rule } = await api.post(`/orgs/${orgId}/rules`, {
+      name: `Visibility · ${who(member)} · ${ruleSummary({ conditions })}`.slice(0, 120),
+      conditions,
+      actions: [{ type: 'grant_access', value: memberId }],
+      enabled: true,
+    });
+    await api.post(`/orgs/${orgId}/rules/${rule.id}/apply-existing`, {});
+  }, "Couldn't change who reads it.");
+
+  const toggleReply = (row) => patch({ send_as_addresses: withSendAs(member.send_as_addresses, row.address, !row.replyAs) });
 
   const back = () => navigate(consolePath('people'));
 
@@ -154,6 +182,7 @@ export default function MemberAccessPage() {
     : [];
   const grantedIds = new Set(member.domains.map((d) => d.id));
   const scoped = !member.all_domains;
+  const rows = folderRows({ member, domains, sharedByDomain: shared, rules });
 
   return (
     <div className={`${styles.page} management`}>
@@ -280,45 +309,67 @@ export default function MemberAccessPage() {
           </section>
         )}
 
-        {/* ── Send as ── */}
-        {!isAdmin && (
-          <section className={styles.card}>
-            <div className={styles.cardHead}>
-              <span className={styles.cardLabel}>/ send as</span>
-              <h2 className={styles.cardTitle}>Addresses {who(member)} can send from</h2>
-            </div>
-            <div className={styles.cardBody}>
-              <p className={styles.note}>
-                Besides their own mailboxes. Add a shared address like info@ so their replies go out from it.
-              </p>
-              {(member.send_as_addresses || []).length > 0 && (
-                <div className={styles.ruleList}>
-                  {member.send_as_addresses.map((a) => (
-                    <div key={a} className={styles.ruleRow}>
-                      <Icon name="paperplane" size={13} />
-                      <span className={styles.ruleText}>{a}</span>
-                      <IconButton className={admin.personAction} icon="xmark" iconSize={11} disabled={busy}
-                        onClick={() => setSendAs(member.send_as_addresses.filter((x) => x !== a))}
-                        title={`Stop sending as ${a}`} aria-label={`Stop sending as ${a}`} />
-                    </div>
+        {/* ── Folders: Read / Reply as / Shows in Inbox per address ── */}
+        <section className={styles.card}>
+          <div className={styles.cardHead}>
+            <span className={styles.cardLabel}>/ folders</span>
+            <h2 className={styles.cardTitle}>Folders {who(member)} gets</h2>
+          </div>
+          <div className={styles.cardBody}>
+            {rows.length === 0 ? (
+              <p className={styles.note}>No addresses yet. Add shared addresses on the domain&apos;s Shared addresses tab.</p>
+            ) : (
+              <table className={styles.folderTable}>
+                <thead>
+                  <tr>
+                    <th scope="col">Address</th>
+                    <th scope="col">Read</th>
+                    <th scope="col">Reply as</th>
+                    <th scope="col">Shows in Inbox</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.address}>
+                      <th scope="row">
+                        <span className={styles.folderAddr}>{row.address}</span>
+                        {row.kind === 'own' && <span className={styles.folderSub}>own mailbox, +tags are subfolders</span>}
+                        {row.kind === 'extra' && <span className={styles.folderSub}>not a shared address</span>}
+                      </th>
+                      {row.kind === 'own' ? (
+                        <>
+                          <td className={styles.folderAlways}>always</td>
+                          <td className={styles.folderAlways}>always</td>
+                          <td className={styles.folderAlways}>always</td>
+                        </>
+                      ) : (
+                        <>
+                          <td>
+                            {row.kind === 'shared' && (
+                              <MgmtCheckbox checked={row.read} disabled={busy || !!row.readLocked}
+                                title={row.readLocked === 'domain' ? 'They read the whole domain' : undefined}
+                                aria-label={`Read ${row.address}`} onChange={() => toggleRead(row)} />
+                            )}
+                          </td>
+                          <td>
+                            <MgmtCheckbox checked={row.replyAs} disabled={busy}
+                              aria-label={`Reply as ${row.address}`} onChange={() => toggleReply(row)} />
+                          </td>
+                          <td className={styles.folderAlways}>{row.replyAs ? 'default on' : 'off'}</td>
+                        </>
+                      )}
+                    </tr>
                   ))}
-                </div>
-              )}
-              <div className={admin.condRow}>
-                <input className={[admin.modalInput, admin.condValue].join(' ')} value={sendLocal}
-                  placeholder="info" aria-label="Address name" disabled={busy}
-                  onChange={(e) => setSendLocal(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') addSendAs(); }} />
-                <MgmtSelect bare value={sendDomain || domains[0]?.name || ''} aria-label="Domain" disabled={busy}
-                  onChange={(e) => setSendDomain(e.target.value)}
-                  options={domains.map((d) => ({ value: d.name, label: `@${d.name}` }))} />
-                <MgmtButton variant="glass" size="sm" onClick={addSendAs} disabled={busy || !sendLocal.trim()}>
-                  <Icon name="plus" size={13} /> Add
-                </MgmtButton>
-              </div>
-            </div>
-          </section>
-        )}
+                </tbody>
+              </table>
+            )}
+            {(isAdmin || member.all_domains) && (
+              <p className={styles.note}>
+                Owners and admins read every shared address. Reply as is still a separate grant for them too.
+              </p>
+            )}
+          </div>
+        </section>
 
         {/* ── Their addresses ── */}
         {(member.mailboxes?.length || 0) > 0 && (

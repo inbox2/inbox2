@@ -1,0 +1,25 @@
+/* Shared addresses tab — a bordered table on the domain-settings panel. */
+.intro { margin: 0; font-size: var(--text-sm); color: var(--m-ink-soft); line-height: 1.5; }
+
+/* Narrow screens: the table scrolls sideways inside the panel. */
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table { width: 100%; min-width: 480px; border-collapse: separate; border-spacing: 0; border: 1px solid var(--m-line); border-radius: var(--m-r-lg); overflow: hidden; font-size: var(--text-sm); }
+.table th, .table td { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--m-line-soft); text-align: left; vertical-align: middle; }
+.table thead th { border-top: none; font-size: var(--text-3xs); font-weight: 550; color: var(--m-ink-soft); }
+.addr { font-family: var(--font-mono, ui-monospace, 'SF Mono', Menlo, monospace); font-weight: 600; color: var(--m-ink); }
+.repliers { color: var(--m-ink-soft); }
+.empty { color: var(--m-ink-faint); text-align: center; }
+.actions { width: 1%; text-align: right; }
+.nameInput { width: 100%; min-width: 120px; }
+
+.addRow { display: flex; align-items: center; gap: var(--space-2h); }
+.localInput { width: 180px; }
+.suffix { font-family: var(--font-mono, ui-monospace, 'SF Mono', Menlo, monospace); font-size: var(--text-sm); color: var(--m-ink-soft); margin-right: auto; }
+
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 820px) {
+  .addRow { flex-wrap: wrap; }
+  .localInput { width: auto; flex: 1 1 140px; min-width: 0; }
+  .suffix { margin-right: 0; }
+}

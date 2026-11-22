@@ -54,6 +54,9 @@ import useManualTriage, { manualTriageTarget } from '../../hooks/useManualTriage
 import useFolderViews from '../../hooks/useFolderViews';
 import usePanelResize from '../../hooks/usePanelResize';
 import useViewsAndTags from '../../hooks/useViewsAndTags';
+import useAddressFolders from '../../hooks/useAddressFolders';
+import { folderView, VIEW_KIND_FOLDER } from '../../lib/addressFolders';
+import ReadOnlyFolderNotice from '../../components/AddressFolders/ReadOnlyFolderNotice';
 import { filterConversations } from '../../lib/conversationFilter';
 import TouchStrip from '../../components/TouchStrip/TouchStrip';
 import styles from '../../styles/layout.module.css';
@@ -174,12 +177,39 @@ export default function InboxPage() {
     useNavigationStore.getState().navigateTo({ space: null }, { replaceStack: true });
   }, []);
 
+  // ── Address folders (MX domain tab only): Inbox = mail for you, + one per address ──
+  const folderDomainKey = activeAccountKey ? null : domainFilter;
+  const { folders: addressFolders, setPref: setFolderPref } = useAddressFolders(orgId, folderDomainKey, activeView?.id);
+  const addressFolderViews = useMemo(
+    () => addressFolders.map(f => folderView(f, folderDomainKey)),
+    [addressFolders, folderDomainKey],
+  );
+
   // ── Folder/view derivation + folder navigation ──
   const { folderViews, systemViews, personalViews, switchView } = useFolderViews({
     activeAccountKey, activeAccountProvider, syncFolders, views, activeView, setActiveView,
     setLabelFilters, setSelectedTags, setSelectedConv, mailboxFilter, senderFilter,
-    navIsRestoring, syncMgr, selectedId,
+    navIsRestoring, syncMgr, selectedId, addressFolderViews,
   });
+
+  // An address folder belongs to one domain: on another domain tab (or a
+  // channel) fall back to that place's Inbox instead of asking for info@ there.
+  const inboxFolderView = folderViews[0];
+  useEffect(() => {
+    if (activeView?.kind !== VIEW_KIND_FOLDER) return;
+    // Same domain: keep it while the tree loads (empty) or while it still lists
+    // it, taking the refreshed copy (an admin may have changed reply-as).
+    if (folderDomainKey && activeView.id.startsWith(`folder:${folderDomainKey}:`)) {
+      if (addressFolderViews.length === 0) return;
+      const fresh = addressFolderViews.find((v) => v.id === activeView.id);
+      if (fresh) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (fresh.canReply !== activeView.canReply || fresh.name !== activeView.name) setActiveView(fresh);
+        return;
+      }
+    }
+    setActiveView(inboxFolderView || null);
+  }, [activeView, folderDomainKey, inboxFolderView, addressFolderViews]);
 
   // Is the open folder the pool the tab badge counts? Only the Inbox view — and
   // the org/Meta default views, for which viewFolderRole is null — is. The badge
@@ -254,7 +284,10 @@ export default function InboxPage() {
   };
 
   const activeAccount = externalAccounts.find(a => a.key === activeAccountKey);
-  const defaultFrom = activeAccount?.email_address || orgDefaultFrom;
+  // A reply from an address folder you can reply as goes out as that address
+  // (replyFromAddress still prefers an own address already on the thread).
+  const folderFrom = activeView?.kind === VIEW_KIND_FOLDER && activeView.canReply ? activeView.address : null;
+  const defaultFrom = activeAccount?.email_address || folderFrom || orgDefaultFrom;
   // A new message (not a reply) goes out from the inbox being viewed: the
   // channel's account, else your address at the domain. (The unified inbox
   // remembers the last-used From instead — UnifiedInboxView.)
@@ -494,6 +527,7 @@ export default function InboxPage() {
           folderViews={folderViews} systemViews={systemViews} personalViews={personalViews}
           activeView={activeView} onSwitchView={switchView}
           onFocusZone={() => focusZone('folders')}
+          addressFolders={addressFolders} folderDomainKey={folderDomainKey} onSetFolderPref={setFolderPref}
           activeAccountKey={activeAccountKey} tags={tags} syncFolders={syncFolders}
           orgSlug={orgSlug} onNavigateSettings={() => navigate(orgSlug ? `/${orgSlug}/settings` : '/settings')}
           syncStatus={syncStatus} activeAccount={activeAccount} onOpenConsole={() => setConsoleOpen(true)}
@@ -567,6 +601,7 @@ export default function InboxPage() {
               onSetupDns={setupDomainDns}
             />
           )}
+          <ReadOnlyFolderNotice view={activeView} />
           <div ref={listBodyRef} className={styles.listBody} onScroll={handleListScroll}>
             {loadError && filteredConversations.length === 0 ? (
               <div className={styles.listEmptyWrap}>

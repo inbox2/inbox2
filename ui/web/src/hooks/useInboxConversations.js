@@ -1,5 +1,5 @@
 import { getDb } from '../lib/db.js';
-import { CONV_STATUS, INBOX_HIDDEN_STATUSES, DISCARDED_STATUSES, statusNotIn, statusFolderLabel } from '../lib/conversationStatus.js';
+import { INBOX_HIDDEN_STATUSES, DISCARDED_STATUSES, statusNotIn, statusFolderLabel } from '../lib/conversationStatus.js';
 import { FOLDER_ROLE } from '../lib/folderRoles.js';
 import { loadConversationFromDb, mapAttachments } from '../lib/conversationDetail.js';
 import formatBytes from '../lib/formatBytes.js';
@@ -13,6 +13,7 @@ import useRefetchOnFocus from './useRefetchOnFocus';
 import syncManager from '../lib/sync-manager';
 import log from '../lib/log';
 import { CONVERSATION_PATCHED } from '../lib/triage';
+import { orgListParams as buildOrgListParams } from '../lib/addressFolders';
 
 // Remembers each channel's last selected conversation so cycling between
 // channels (ChromeBar tabs, ⌘[ / ⌘], sidebar) restores where you left off.
@@ -434,59 +435,10 @@ export default function useInboxConversations({
   // The query for the current folder/filters, built once and shared by the first
   // page and every scrolled-in page — a later page filtered differently from the
   // first would silently mix folders together.
-  const orgListParams = useMemo(() => {
-    const params = { per_page: ORG_PAGE_SIZE };
-    if (mailboxFilter) params.to = mailboxFilter;
-    if (senderFilter) params.from = senderFilter;
-    // Translate the active view's filters into API query params. Each system
-    // view carries its own distinguishing filter (Sent=direction:outbound,
-    // Drafts=is_draft:true, Unassigned=assignee:is_empty, Mentioned=mentioned:is_me);
-    // without this every view collapsed to status=open and Inbox/Sent/Drafts all
-    // showed the same list.
-    //
-    // The Inbox is special: it is the open *pool* (every member sees the whole
-    // domain's open mail — see ConversationsController#unread_count), never an
-    // assignee scope. We force status=open for it regardless of the filter it
-    // ships with, because some backends still serve the legacy Inbox definition
-    // (assignee:is_me, from when it was named "Assigned to me"); honoring that
-    // would empty the inbox whenever nothing is assigned to the viewer.
-    const isInbox = activeView?.kind === 'system' && activeView?.name === 'Inbox';
-    if (isInbox) {
-      params.status = CONV_STATUS.OPEN;
-    } else {
-      for (const f of (activeView?.filters || [])) {
-        switch (f.field) {
-          case 'status': params.status = f.value; break;
-          case 'direction': params.direction = f.value; break;
-          case 'is_draft': params.is_draft = f.value; break;
-          case 'assignee':
-            params.assignee = f.operator === 'is_me' ? 'me' : f.operator === 'is_empty' ? 'none' : f.value;
-            break;
-          case 'mentioned':
-            if (f.operator === 'is_me') params.mentioned = 'me';
-            break;
-          default: break;
-        }
-      }
-      // Default to the open pool when no folder-defining filter is set (e.g. a
-      // not-yet-resolved view). "All Mail" intentionally has no filters, so it
-      // must NOT be forced to open — it spans every status.
-      const hasScopingFilter = params.status || params.direction || params.is_draft || params.assignee || params.mentioned;
-      if (!hasScopingFilter && activeView?.name !== 'All Mail') params.status = CONV_STATUS.OPEN;
-      if (activeView?.name === 'All Mail') params.include_sent = 'true';
-    }
-    // Sidebar LABELS overlay: AND the folder above with the selected tags
-    // (OR among themselves). Sent as tags[] so the API filters server-side
-    // (the list is paginated, so client-side narrowing would be wrong).
-    const tagNames = selectedTags ? Array.from(selectedTags) : [];
-    if (tagNames.length) params.tags = tagNames;
-    // Space drill-down (treemap → inbox): narrow the open pool to one MX
-    // classification bucket. AND-ed with the folder/labels above.
-    if (spaceFilter) params.space = spaceFilter;
-    // Per-domain workspace tab: narrow the org's MX pool to one domain.
-    if (domainFilter) params.domain = domainFilter;
-    return params;
-  }, [mailboxFilter, senderFilter, activeView, selectedTags, spaceFilter, domainFilter]);
+  const orgListParams = useMemo(
+    () => buildOrgListParams({ activeView, mailboxFilter, senderFilter, selectedTags, spaceFilter, domainFilter, perPage: ORG_PAGE_SIZE }),
+    [mailboxFilter, senderFilter, activeView, selectedTags, spaceFilter, domainFilter],
+  );
 
   // A new query (folder switch, filter change, another domain tab) starts at the
   // top. Declared before the load effect so the depth is already reset when that

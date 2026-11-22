@@ -7,6 +7,7 @@ import { FOLDER_ROLE } from '../lib/folderRoles';
 const FOLDER_NAMES = new Set(['Inbox', 'Sent', 'Drafts']);
 const ROLE_TO_FOLDER = { [FOLDER_ROLE.INBOX]: 'Inbox', [FOLDER_ROLE.SENT]: 'Sent', [FOLDER_ROLE.DRAFTS]: 'Drafts' };
 const ROLE_ICONS = { [FOLDER_ROLE.INBOX]: 'tray', [FOLDER_ROLE.SENT]: 'paperplane', [FOLDER_ROLE.DRAFTS]: 'doc' };
+const NO_VIEWS = [];
 const ROLE_ORDER = { [FOLDER_ROLE.INBOX]: 0, [FOLDER_ROLE.SENT]: 1, [FOLDER_ROLE.DRAFTS]: 2 };
 
 // Meta channels have no provider folders — their conversations are split by
@@ -43,6 +44,9 @@ export default function useFolderViews({
   activeAccountKey, activeAccountProvider, syncFolders, views, activeView, setActiveView,
   setLabelFilters, setSelectedTags, setSelectedConv, mailboxFilter, senderFilter,
   navIsRestoring, syncMgr, selectedId,
+  // MX address folders as views (lib/addressFolders folderView), so back/forward
+  // can land on one.
+  addressFolderViews = NO_VIEWS,
 }) {
   const folderSelectionRef = useRef({}); // viewName → selectedId
 
@@ -144,6 +148,7 @@ export default function useFolderViews({
     if (!targetName) { useNavigationStore.getState().consumeIsRestoring(); return; }
     const allViews = [
       ...folderViews,
+      ...addressFolderViews,
       ...views.filter(v => v.kind === 'system' && !FOLDER_NAMES.has(v.name)),
       ...views.filter(v => v.kind === 'personal'),
       { name: 'Archived', kind: 'system', filters: [{ field: 'status', value: CONV_STATUS.ARCHIVED }] },
@@ -157,7 +162,7 @@ export default function useFolderViews({
       useNavigationStore.getState().consumeIsRestoring();
     }
     // If not found, views may still be loading — effect re-runs when they arrive
-  }, [navIsRestoring, folderViews, views, setActiveView]);
+  }, [navIsRestoring, folderViews, views, setActiveView, addressFolderViews]);
 
   return { folderViews, systemViews, personalViews, switchView };
 }

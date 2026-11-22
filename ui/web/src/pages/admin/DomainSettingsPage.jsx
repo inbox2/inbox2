@@ -8,6 +8,7 @@ import DeliverabilityPanel from './DeliverabilityPanel';
 import TrackingPanel from './TrackingPanel';
 import E2eePanel from './E2eePanel';
 import MailImportPanel from './MailImportPanel';
+import SharedAddressesPanel from './SharedAddressesPanel';
 import useAuth from '../../hooks/useAuth';
 import { resolveWorkspace, defaultDomainOf } from '../../lib/workspace';
 import { initialsDataUri } from '../../lib/initialsIcon';
@@ -61,6 +62,7 @@ function toDomainModel(org, dom) {
 
 const TABS = [
   { key: 'settings', label: 'Settings', icon: 'gear' },
+  { key: 'addresses', label: 'Shared addresses', icon: 'at' },
   { key: 'dns', label: 'DNS', icon: 'globe' },
   { key: 'deliverability', label: 'Deliverability', icon: 'paperplane.fill' },
   { key: 'tracking', label: 'Open tracking', icon: 'eye' },
@@ -160,6 +162,7 @@ export default function DomainSettingsPage() {
             <SettingsPanel domain={domain} onPatch={patchDomain} refreshAccount={refreshAccount} />
           )}
           {tab === 'dns' && <DnsPanel domain={domain} onPatch={patchDomain} refreshAccount={refreshAccount} />}
+          {tab === 'addresses' && <SharedAddressesPanel key={domain.domainKey} domain={domain} />}
           {tab === 'deliverability' && <DeliverabilityPanel domain={domain} />}
           {tab === 'tracking' && <TrackingPanel domain={domain} />}
           {tab === 'encryption' && <E2eePanel domain={domain} />}

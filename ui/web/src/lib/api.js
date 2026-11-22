@@ -381,6 +381,10 @@ class ApiClient {
     const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v != null)).toString();
     return this.get(`/orgs/${orgId}/conversations/unread-count${qs ? `?${qs}` : ''}`);
   }
+  // Address folders (AddressFolders on the API): one domain's folder tree, and
+  // the member's Show in Inbox / bell per folder (`address` = full address or "inbox").
+  getFolders(orgId, domainKey) { return this.get(`/orgs/${orgId}/folders?domain=${encodeURIComponent(domainKey)}`); }
+  updateFolderPrefs(orgId, prefs) { return this.patch(`/orgs/${orgId}/folders/prefs`, prefs); }
   // Binary GET for a server-relative API path (`/orgs/…/attachments/…`), used by
   // attachment download. `request()` always parses JSON, and an attachment is
   // bytes; a plain <a href> can't carry the bearer the desktop authenticates

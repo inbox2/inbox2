@@ -25,6 +25,9 @@ class LocalFirstApi {
   // Badge count — always server-side: unread badges are not something the mirror
   // opts into (docs/MX-Sync.md), so the server stays the one source of the count.
   getUnreadCount(orgId, params) { return remoteApi.getUnreadCount(orgId, params); }
+  // Address folders — server-side only; the mirror has no folder tree.
+  getFolders(orgId, domainKey) { return remoteApi.getFolders(orgId, domainKey); }
+  updateFolderPrefs(orgId, prefs) { return remoteApi.updateFolderPrefs(orgId, prefs); }
 
   async getConversation(orgId, convId) {
     const localResult = await local.getConversation(orgId, convId);

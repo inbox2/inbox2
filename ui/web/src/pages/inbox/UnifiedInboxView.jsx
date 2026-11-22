@@ -14,7 +14,10 @@ import useHoverPreview from '../../hooks/useHoverPreview';
 import useColumnSelection from '../../hooks/useColumnSelection';
 import useMarkRead from '../../hooks/useMarkRead';
 import usePendingCompose from '../../hooks/usePendingCompose';
-import { UNIFIED_VIEW_MODE, UNIFIED_UNREAD_ONLY, PREVIEW_PANE_MODE } from '../../lib/storageKeys';
+import { UNIFIED_VIEW_MODE, UNIFIED_UNREAD_ONLY, UNIFIED_COLUMN_FOLDERS, PREVIEW_PANE_MODE } from '../../lib/storageKeys';
+import { unifiedColumnAccounts } from '../../lib/addressFolders';
+import ColumnFolderPicker from '../../components/AddressFolders/ColumnFolderPicker';
+import IconButton from '../../components/IconButton';
 import usePaneMode, { paneModeIcon } from '../../hooks/usePaneMode';
 import { PaneModeMenu, PaneStrip } from '../../components/PaneMode/PaneMode';
 import { ToolbarButton } from '../../components/ToolbarGroup/ToolbarGroup';
@@ -60,6 +63,16 @@ import Icon from '../../components/Icon';
 import syncManager from '../../lib/sync-manager';
 import layoutStyles from '../../styles/layout.module.css';
 import styles from './UnifiedInboxView.module.css';
+
+// Per-viewer column layout (list mode): which folder each MX column shows and
+// the extra folder columns opened from a picker. Storage can be absent.
+const NO_LAYOUT = { folders: {}, extras: [] };
+function readColumnLayout() {
+  try {
+    const v = JSON.parse(localStorage.getItem(UNIFIED_COLUMN_FOLDERS) || 'null');
+    return v && typeof v === 'object' ? { folders: v.folders || {}, extras: Array.isArray(v.extras) ? v.extras : [] } : NO_LAYOUT;
+  } catch { return NO_LAYOUT; }
+}
 
 export default function UnifiedInboxView() {
   const { orgSlug } = useParams();
@@ -118,6 +131,43 @@ export default function UnifiedInboxView() {
     }, { replace: true });
   }, [setSearchParams]);
 
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem(UNIFIED_VIEW_MODE) || 'grid');
+
+  // ── Address folders in the columns: MX columns list a folder (Inbox by
+  // default); list mode adds the header picker and extra folder columns.
+  const [columnLayout, setColumnLayout] = useState(readColumnLayout);
+  useEffect(() => {
+    try { localStorage.setItem(UNIFIED_COLUMN_FOLDERS, JSON.stringify(columnLayout)); } catch { /* storage off */ }
+  }, [columnLayout]);
+  const columnAccounts = useMemo(
+    () => unifiedColumnAccounts(allAccounts, columnLayout, viewMode === 'list'),
+    [allAccounts, columnLayout, viewMode],
+  );
+  const pickColumnFolder = useCallback((domainKey, folder) => {
+    setColumnLayout(prev => ({ ...prev, folders: { ...prev.folders, [domainKey]: folder } }));
+  }, []);
+  const addFolderColumn = useCallback((domainKey, folder) => {
+    setColumnLayout(prev => (prev.extras.some(x => x.domainKey === domainKey && x.folder === folder)
+      ? prev : { ...prev, extras: [...prev.extras, { domainKey, folder }] }));
+  }, []);
+  const closeFolderColumn = useCallback((domainKey, folder) => {
+    setColumnLayout(prev => ({ ...prev, extras: prev.extras.filter(x => !(x.domainKey === domainKey && x.folder === folder)) }));
+  }, []);
+  const renderColumnHeaderAction = useCallback((acct) => {
+    if (acct.provider_type !== 'inbox2') return null;
+    if (acct.folderColumnOf) {
+      return (
+        <IconButton icon="xmark" size="sm" iconSize={9} aria-label="Close column" title="Close column"
+          onClick={() => closeFolderColumn(acct.folderColumnOf, acct.folder)} />
+      );
+    }
+    if (!acct.domainKey?.startsWith('dom_')) return null;
+    return (
+      <ColumnFolderPicker orgId={acct.orgSlug || acct.key} domainKey={acct.domainKey} value={acct.folder}
+        onChange={(f) => pickColumnFolder(acct.key, f)} onAddColumn={(f) => addFolderColumn(acct.key, f)} />
+    );
+  }, [pickColumnFolder, addFolderColumn, closeFolderColumn]);
+
   const {
     conversations,
     allConversations,
@@ -131,7 +181,7 @@ export default function UnifiedInboxView() {
     loading,
     loadMoreColumn,
     loadMoreAllColumns,
-  } = useUnifiedInbox(allAccounts, handleRestoreSelect, spaceFilter);
+  } = useUnifiedInbox(columnAccounts, handleRestoreSelect, spaceFilter);
 
   const undoToasts = useUndoStore(s => s.toasts);
   const undoAction = useUndoStore(s => s.undo);
@@ -140,7 +190,6 @@ export default function UnifiedInboxView() {
   // UI state
   const [notifOpen, setNotifOpen] = useState(false);
   const [addAccountOpen, setAddAccountOpen] = useState(false);
-  const [viewMode, setViewMode] = useState(() => localStorage.getItem(UNIFIED_VIEW_MODE) || 'grid');
   const { enabled: dropBlockEnabled } = useDropBlockPref();
   const [unreadOnly, setUnreadOnly] = useState(() => localStorage.getItem(UNIFIED_UNREAD_ONLY) === '1');
   const { searchProps } = useChromeSearch(orgSlug);
@@ -248,6 +297,11 @@ export default function UnifiedInboxView() {
       ([key, s]) => [key, { ...s, enabled: s.enabled && shown.has(key) }]
     ));
   }, [unreadOnly, channelStates, allConversations, pinnedId]);
+
+  // Extra folder columns are views of a domain, not channels: no chip of their own.
+  const barChannelStates = useMemo(() => Object.fromEntries(
+    Object.entries(displayChannelStates).filter(([, s]) => !s.account?.folderColumnOf),
+  ), [displayChannelStates]);
 
   useSelectedConversationDetail({
     selectedId: selectedListId,
@@ -565,11 +619,11 @@ export default function UnifiedInboxView() {
         {/* ═══ MAIN CONTENT (no sidebar) ═══ */}
         <div className={styles.main}>
           <ChannelBar
-            channelStates={displayChannelStates}
+            channelStates={barChannelStates}
             onToggle={toggleChannel}
             unreadOnly={unreadOnly}
             onToggleUnread={toggleUnreadOnly}
-            accounts={accounts}
+            accounts={allAccounts}
             onSwitchAccount={handleSwitchAccount}
             onAddAccount={() => setAddAccountOpen(true)}
             onReorder={reorderAccounts}
@@ -640,6 +694,7 @@ export default function UnifiedInboxView() {
                 pinnedId={pinnedId}
                 onShowAll={toggleUnreadOnly}
                 onColumnEndReached={loadMoreColumn}
+                renderHeaderAction={renderColumnHeaderAction}
                 asideColumn={<CalendarRail orgSlug={effectiveOrgSlug} />}
               />
               <div ref={previewRef} className={styles.previewPane}>

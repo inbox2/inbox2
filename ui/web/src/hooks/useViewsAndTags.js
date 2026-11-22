@@ -5,6 +5,7 @@ import { TAGS_CHANGED } from '../components/LabelsField/LabelsField';
 import { isRealOrgId } from '../lib/org';
 import useNavigationStore from '../stores/navigationStore';
 import log from '../lib/log';
+import { VIEW_KIND_FOLDER } from '../lib/addressFolders';
 
 const FIRST_VIEWS_RETRY_MS = 2000;
 const MAX_VIEWS_RETRY_MS = 30000;
@@ -67,8 +68,10 @@ export default function useViewsAndTags(orgId, { activeView, setActiveView }) {
     // The hardcoded Archived/Spam/Trash folders aren't in `views`, so allow them
     // by name. Anything else (incl. null) falls back to the system Inbox.
     const HARDCODED_FOLDERS = ['Archived', 'Spam', 'Trash'];
+    // Address folders are not in `views`; InboxPage drops one from another domain.
     const valid = !!activeView
-      && (views.some((v) => v.id === activeView.id) || HARDCODED_FOLDERS.includes(activeView.name));
+      && (views.some((v) => v.id === activeView.id) || HARDCODED_FOLDERS.includes(activeView.name)
+        || activeView.kind === VIEW_KIND_FOLDER);
     if (valid) return;
     const inbox = views.find((v) => v.name === 'Inbox' && v.kind === 'system');
     if (inbox) setActiveView(inbox);
