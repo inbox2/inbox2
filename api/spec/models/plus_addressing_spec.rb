@@ -55,7 +55,7 @@ RSpec.describe "Plus addressing", type: :model do
   end
 
   it "backfills tagged threads that arrived before the fix" do
-    require Rails.root.join("db/migrate/20261122100001_backfill_plus_address_ownership")
+    require Rails.root.join("db/migrate/20261122100003_backfill_plus_address_ownership")
     conv = deliver("ali+receipts@acme.com")
     conv.update_column(:personal_membership_id, nil)
     shared = deliver("info@acme.com")
