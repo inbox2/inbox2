@@ -116,6 +116,29 @@ jobs:
           echo "$ASC_KEY_P8" | base64 --decode > "$RUNNER_TEMP/asc/AuthKey_$ASC_KEY_ID.p8"
           echo "APPLE_API_KEY_PATH=$RUNNER_TEMP/asc/AuthKey_$ASC_KEY_ID.p8" >> "$GITHUB_ENV"
 
+      # Disk in Finder (docs/Disk-Sync.md): tauri does not sign nested .appex
+      # bundles, so the File Provider extension is built and signed here first,
+      # with the certificate in a keychain of its own, then copied into PlugIns.
+      - name: Disk in Finder extension
+        if: matrix.name == 'macos'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          KC="$RUNNER_TEMP/appex.keychain-db"; PW="$(openssl rand -hex 16)"
+          security create-keychain -p "$PW" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$PW" "$KC"
+          echo "$APPLE_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/appex.p12"
+          security import "$RUNNER_TEMP/appex.p12" -k "$KC" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/appex.p12"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$PW" "$KC" >/dev/null
+          security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
+          brew install xcodegen
+          INBOX2_APP_ID=com.inbox2.desktop \
+            APPLE_SIGNING_IDENTITY="Developer ID Application: Waseem Sadiq (KF53B4S5HD)" \
+            ui/desktop/fileprovider/build.sh
+
       - name: Windows cross-compile tools
         if: matrix.name == 'windows'
         run: |
@@ -144,7 +167,9 @@ jobs:
           [ "${{ matrix.name }}" = linux ] && extra='{"version":"'"$V"'","bundle":{"createUpdaterArtifacts":false}}'
           xwin=()
           [ "${{ matrix.name }}" = windows ] && xwin=(--runner cargo-xwin --target x86_64-pc-windows-msvc)
-          node_modules/.bin/tauri build -c src-tauri/tauri.release.conf.json --config "$extra" "${xwin[@]}" --bundles ${{ matrix.bundles }}
+          plugin=()
+          [ "${{ matrix.name }}" = macos ] && plugin=(--config '{"bundle":{"macOS":{"files":{"PlugIns/Inbox2Disk.appex":"../fileprovider/build/Inbox2Disk.appex"}}}}')
+          node_modules/.bin/tauri build -c src-tauri/tauri.release.conf.json --config "$extra" "${plugin[@]}" "${xwin[@]}" --bundles ${{ matrix.bundles }}
 
       - name: Collect artifacts
         shell: bash

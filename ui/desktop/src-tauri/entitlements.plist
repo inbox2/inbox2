@@ -21,5 +21,13 @@
     <true/>
     <key>com.apple.security.cs.disable-library-validation</key>
     <true/>
+    <!-- Disk in Finder (docs/Disk-Sync.md): the app writes the File Provider
+         extension's config into this group's container. Team-prefixed, so a
+         Developer ID app needs no provisioning profile for it. -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>KF53B4S5HD.com.inbox2.desktop</string>
+        <string>KF53B4S5HD.com.inbox2.desktop.dev</string>
+    </array>
 </dict>
 </plist>

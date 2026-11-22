@@ -75,6 +75,9 @@ class SyncManager {
         // saved on the user's other devices.
         await syncChannelTrackingToLocal(invoke).catch((e) =>
           log.warn('SyncManager', `channel tracking sync failed: ${e?.message || e}`));
+        // Disk in Finder: the extension uses this token too (docs/Disk-Sync.md).
+        // Fails quietly while Disk in Finder is off (no config to update).
+        import('./diskFinder').then(({ diskFinder }) => diskFinder.available() && diskFinder.refresh()).catch(() => {});
       }
     } catch (e) {
       log.warn('SyncManager', `set_api_context failed: ${e?.message || e}`);

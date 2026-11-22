@@ -73,6 +73,17 @@
       "hardenedRuntime": true,
       "entitlements": "entitlements.plist"
     },
+    "fileAssociations": [
+      {
+        "ext": ["page"],
+        "name": "inbox2 page",
+        "description": "A Disk page that opens in inbox2.",
+        "role": "Viewer",
+        "mimeType": "application/json",
+        "contentTypes": ["com.inbox2.page"],
+        "exportedType": { "identifier": "com.inbox2.page", "conformsTo": ["public.json"] }
+      }
+    ],
     "windows": {
       "nsis": {
         "installMode": "both"

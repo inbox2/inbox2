@@ -120,6 +120,12 @@ objc = "0.2"
 # keys posted to WhatsApp's process alone (`post_to_pid` is behind `elcapitan`).
 core-foundation = "0.10"
 core-graphics = { version = "0.25", features = ["elcapitan"] }
+# Disk in Finder (disk_finder.rs): registers the File Provider domain, signals
+# it to pull, evicts sealed files when FileVault goes off.
+objc2 = "0.6"
+block2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSError", "NSURL", "NSArray", "NSProgress"] }
+objc2-file-provider = { version = "0.3", default-features = false, features = ["std", "block2", "NSFileProviderDomain", "NSFileProviderItem", "Extension"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 # Shell file-type icons (SHGetFileInfo). Windows only: on Linux the crate's GTK

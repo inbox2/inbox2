@@ -253,6 +253,8 @@ export default function AuthProvider({ children }) {
       if (isTauri()) {
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('clear_vault_session');
+        // Disk in Finder: the extension stops and the sealed key leaves this Mac.
+        await (await import('../lib/diskFinder')).diskFinder.signOut().catch(() => {});
       }
     } catch { /* engine not reachable */ }
     // Disk exact views converted on this device belong to this account (spec F5b); the engine stays.

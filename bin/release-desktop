@@ -80,7 +80,10 @@ TAURI="$ROOT/ui/desktop/node_modules/.bin/tauri"
 CONF=(-c src-tauri/tauri.release.conf.json --config "{\"version\":\"$V\"}")
 
 echo "== macOS (aarch64)"
-(cd ui/desktop && "$TAURI" build "${CONF[@]}" --bundles app,dmg)
+# Disk in Finder (docs/Disk-Sync.md): the extension, signed first, copied into PlugIns.
+INBOX2_APP_ID=com.inbox2.desktop ui/desktop/fileprovider/build.sh
+PLUGIN='{"bundle":{"macOS":{"files":{"PlugIns/Inbox2Disk.appex":"../fileprovider/build/Inbox2Disk.appex"}}}}'
+(cd ui/desktop && "$TAURI" build "${CONF[@]}" --config "$PLUGIN" --bundles app,dmg)
 
 echo "== Windows (x86_64)"
 (cd ui/desktop && "$TAURI" build "${CONF[@]}" --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis)

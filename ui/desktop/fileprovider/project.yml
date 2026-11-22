@@ -1,0 +1,31 @@
+# The Disk in Finder File Provider extension (docs/Disk-Sync.md). Generated
+# into Inbox2Disk.xcodeproj by build.sh (xcodegen); the project is not checked in.
+name: Inbox2Disk
+options:
+  deploymentTarget:
+    macOS: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: KF53B4S5HD
+    ENABLE_HARDENED_RUNTIME: YES
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ARCHS: arm64
+targets:
+  Inbox2Disk:
+    type: app-extension
+    platform: macOS
+    sources:
+      - Sources
+      - path: Generated/inbox2_core.swift
+    settings:
+      base:
+        PRODUCT_NAME: Inbox2Disk
+        PRODUCT_BUNDLE_IDENTIFIER: $(INBOX2_APP_ID).disk
+        INFOPLIST_FILE: Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        LIBRARY_SEARCH_PATHS: $(PROJECT_DIR)/Generated
+        SWIFT_INCLUDE_PATHS: $(PROJECT_DIR)/Generated
+        OTHER_LDFLAGS: -linbox2_core -framework Security -framework SystemConfiguration -framework CoreFoundation -lc++
+        DEAD_CODE_STRIPPING: YES

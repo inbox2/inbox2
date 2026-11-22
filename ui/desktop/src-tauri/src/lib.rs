@@ -8,6 +8,7 @@ pub mod vector;
 mod alert_sound;
 mod app_icon;
 mod commands;
+mod disk_finder;
 mod setup;
 mod shutdown;
 mod tray;
@@ -196,10 +197,19 @@ pub fn run() {
             if let Err(e) = tray::init(app.handle()) {
                 log::warn!("tray: init failed: {e}");
             }
+            // Disk in Finder: FileVault check + a 30 s nudge to the extension.
+            disk_finder::start(app.handle());
 
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            disk_finder::disk_finder_status,
+            disk_finder::disk_finder_enable,
+            disk_finder::disk_finder_update,
+            disk_finder::disk_finder_disable,
+            disk_finder::disk_finder_pause,
+            disk_finder::disk_finder_open,
+            disk_finder::disk_finder_open_system_settings,
             app_icon::set_app_icon,
             whatsapp::wa_status,
             whatsapp::wa_chats,
@@ -420,6 +430,15 @@ pub fn run() {
         .run(|app_handle, event| match event {
             // Log the lifecycle so a shutdown always leaves a trace, and we can
             // distinguish a clean exit from a crash (which the panic hook logs).
+            // A Disk page double-clicked in Finder: open it in inbox2 Disk (docs/Disk-Sync.md).
+            #[cfg(target_os = "macos")]
+            tauri::RunEvent::Opened { urls } => {
+                for url in urls {
+                    if let Ok(path) = url.to_file_path() {
+                        disk_finder::open_page_file(&path);
+                    }
+                }
+            }
             tauri::RunEvent::Ready => {
                 log::info!("Lifecycle: app ready");
             }

@@ -181,7 +181,16 @@ const buildEnv = {
   ...plan.env,
   APPLE_SIGNING_IDENTITY: signingIdentity,
 };
-execFileSync('yarn', ['tauri', 'build', '--bundles', 'app', '-c', plan.configArg], {
+// Disk in Finder (docs/Disk-Sync.md): the File Provider extension, built and
+// signed for this app's id first. Tauri copies it into Contents/PlugIns and
+// does not sign nested extensions, so build.sh signs it with its own entitlements.
+log('building the Disk in Finder extension');
+execFileSync(join(DESKTOP_DIR, 'fileprovider/build.sh'), [], {
+  stdio: 'inherit',
+  env: { ...buildEnv, INBOX2_APP_ID: plan.identifier },
+});
+const pluginArg = JSON.stringify({ bundle: { macOS: { files: { 'PlugIns/Inbox2Disk.appex': '../fileprovider/build/Inbox2Disk.appex' } } } });
+execFileSync('yarn', ['tauri', 'build', '--bundles', 'app', '-c', plan.configArg, '-c', pluginArg], {
   stdio: 'inherit',
   cwd: DESKTOP_DIR,
   env: buildEnv,
