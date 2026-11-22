@@ -33,7 +33,7 @@ enum MeetingAlarmPlan {
             if let mine = event.attendees.first(where: { myEmails.contains(($0.email ?? "").lowercased()) }),
                mine.responseStatus == "declined" { continue }
 
-            var body = "Starts in \(leadMinutes) min · \(event.startTimeLabel)"
+            var body = "Starts in \(leadMinutes) min · \(event.start.map(CalendarClock.device.string(from:)) ?? event.startTimeLabel)"
             if let loc = event.location, !loc.isEmpty, loc.count <= 60 { body += " · \(loc)" }
             out.append(MeetingAlarm(eventKey: event.id, title: event.title, body: body, fireAt: fireAt))
             if out.count >= limit { break }

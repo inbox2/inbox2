@@ -60,18 +60,24 @@ struct CalendarView: View {
     @State private var monthAnchor = Calendar.current.startOfDay(for: Date())  // any day in the visible month
     @State private var selectedDay = Calendar.current.startOfDay(for: Date())
     private var p: ThemePalette { theme.palette }
-    private let cal = Calendar.current
+    @ObservedObject private var zone = CalendarZone.shared
+    /// The shown zone's calendar (CalendarTimeZone.swift); this device's zone unless picked.
+    private var cal: Calendar { zone.calendar }
     private var isPad: Bool { sizeClass == .regular }
 
     /// Connected channels in switcher order — drives each channel's deterministic
     /// calendar colour (first channel = electric blue).
     private var channelOrder: [String] { engine.accounts.map(\.id) }
 
+    /// The event's day in the shown zone (CalendarZone). An all-day event keeps its
+    /// date: its midnight is this device's, so the date is moved across, not the instant.
+    private func agendaDay(_ e: CalendarEvent) -> Date { zone.day(of: e) }
+
     private var grouped: [(day: Date, items: [CalendarEvent])] {
         // Today's ended meetings stay listed, faded (the row's isPast opacity) — as
         // Google Calendar and Outlook do. Hiding them made an event saved for earlier
         // today vanish the moment the sheet closed, as if the save had gone nowhere.
-        var byDay = Dictionary(grouping: events, by: \.dayKey)
+        var byDay = Dictionary(grouping: events, by: agendaDay)
         // Zone-only days still get a section, so a focus block with no meetings in
         // it shows up in the agenda too.
         let today = cal.startOfDay(for: Date())
@@ -90,7 +96,7 @@ struct CalendarView: View {
     private var agendaSections: [(day: Date, items: [CalendarEvent])] {
         guard let sel = selectedChartDay else { return grouped }
         let items = chartEvents
-            .filter { cal.isDate($0.dayKey, inSameDayAs: sel) }
+            .filter { cal.isDate(agendaDay($0), inSameDayAs: sel) }
             .sorted { ($0.start ?? .distantPast) < ($1.start ?? .distantPast) }
         return [(day: sel, items: items)]
     }
@@ -118,12 +124,13 @@ struct CalendarView: View {
     var body: some View {
         NavigationStack {
             screenWithSheets
-            .task(id: engine.dataVersion) { await reloadAgenda() }
-            .task(id: engine.dataVersion) { await reloadChart() }
+            // The shown time zone moves day boundaries, so it reloads the windows too.
+            .task(id: "\(engine.dataVersion)|\(zone.timeZone.identifier)") { await reloadAgenda() }
+            .task(id: "\(engine.dataVersion)|\(zone.timeZone.identifier)") { await reloadChart() }
             .task(id: engine.dataVersion) {
                 hasWritableCalendars = await engine.store.read { !$0.writableCalendars().isEmpty }
             }
-            .task(id: monthReloadKey) { await reloadMonth() }
+            .task(id: "\(monthReloadKey)|\(zone.timeZone.identifier)") { await reloadMonth() }
             // Zones come from the API, not the store — no dataVersion here, it bumps on
             // every mark-read. The app refreshes the near window on each foreground.
             .task(id: cloud.isSignedIn) {
@@ -211,7 +218,14 @@ struct CalendarView: View {
         }
         .onChange(of: selectedDay, initial: true) { chrome.calendarDay = selectedDay }
         // The sidebar's New event greys out exactly when "+" does.
-        .onChange(of: hasWritableCalendars || zoneStore.enabled, initial: true) { _, can in chrome.calendarCanCreate = can }
+        .onChange(of: hasWritableCalendars || zoneStore.enabled, initial: true) { _, can in
+            chrome.calendarCanCreate = can
+            // A palette "New event" waits here until creating is possible.
+            if can && chrome.pendingCalendarCreate { chrome.pendingCalendarCreate = false; chrome.calendarCreateTick += 1 }
+        }
+        .onChange(of: chrome.pendingCalendarCreate) { _, want in
+            if want && chrome.calendarCanCreate { chrome.pendingCalendarCreate = false; chrome.calendarCreateTick += 1 }
+        }
     }
 
     private var screenWithSheets: some View {
@@ -370,9 +384,13 @@ struct CalendarView: View {
     }
 
     private func reloadAgenda() async {
-        let from = isoLocalInternet.string(from: cal.startOfDay(for: Date()))
-        let result = await engine.store.read { $0.upcomingEvents(fromISO: from) }
+        // A day early, then trimmed by the day each event shows on: an all-day event
+        // sits at this device's midnight, which in a far-off shown zone can be before today.
+        let today = cal.startOfDay(for: Date())
+        let from = isoLocalInternet.string(from: today.addingTimeInterval(-86_400))
+        let loaded = await engine.store.read { $0.upcomingEvents(fromISO: from) }
         guard !Task.isCancelled else { return }
+        let result = loaded.filter { zone.isCurrent($0, from: today) }
         events = result
         zoneStore.reconcileAnchors(result)
     }
@@ -412,12 +430,17 @@ struct CalendarView: View {
     private func reloadMonth() async {
         guard let from = gridDays.first,
               let to = cal.date(byAdding: .day, value: 1, to: gridDays.last ?? from) else { return }
-        let fromISO = isoLocalInternet.string(from: from), toISO = isoLocalInternet.string(from: to)
+        // A day wider each side: all-day events sit at this device's midnight, which in
+        // another shown zone can fall just outside the grid before buildDayMap moves
+        // them to their date. Days outside the grid are simply never looked up.
+        let fromISO = isoLocalInternet.string(from: from.addingTimeInterval(-86_400))
+        let toISO = isoLocalInternet.string(from: to.addingTimeInterval(86_400))
         // Fetch + build the day→events map off the main thread; the grid then does
         // O(1) lookups per cell instead of filtering all events 42 times.
+        let shown = cal
         let (result, map) = await engine.store.read { store -> ([CalendarEvent], [Date: [CalendarEvent]]) in
             let evs = store.eventsBetween(fromISO: fromISO, toISO: toISO)
-            return (evs, Self.buildDayMap(evs))
+            return (evs, Self.buildDayMap(evs, cal: shown))
         }
         guard !Task.isCancelled else { return }
         monthEvents = result
@@ -427,12 +450,17 @@ struct CalendarView: View {
 
     /// Bucket each event under every day its span covers (multi-day events dot every
     /// day), sorted by start. Built once per month load, off the main thread.
-    private nonisolated static func buildDayMap(_ events: [CalendarEvent]) -> [Date: [CalendarEvent]] {
-        let cal = Calendar.current
+    private nonisolated static func buildDayMap(_ events: [CalendarEvent], cal: Calendar) -> [Date: [CalendarEvent]] {
         var map: [Date: [CalendarEvent]] = [:]
+        // An all-day event keeps its dates in any zone: its midnights are this device's,
+        // so its span is moved across by date, not by instant (as the agenda does).
+        func moved(_ d: Date) -> Date {
+            cal.date(from: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: d)) ?? d
+        }
         for ev in events {
-            let s = ev.start ?? .distantFuture
-            let e = ev.end ?? s
+            let s = ev.allDay ? moved(ev.start ?? .distantFuture) : (ev.start ?? .distantFuture)
+            let rawEnd = ev.end ?? ev.start ?? s
+            let e = ev.allDay ? moved(rawEnd) : rawEnd
             var day = cal.startOfDay(for: s)
             let endDay = cal.startOfDay(for: e)
             var guardN = 0
@@ -498,7 +526,7 @@ struct CalendarView: View {
     private static let monthYear: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "MMMM yyyy"; return f
     }()
-    private var monthTitle: String { Self.monthYear.string(from: monthStart) }
+    private var monthTitle: String { Self.monthYear.timeZone = cal.timeZone; return Self.monthYear.string(from: monthStart) }
 
     private var weekdayRow: some View {
         HStack(spacing: 0) {

@@ -29,7 +29,9 @@ struct CalendarWeekView: View {
     @State private var dragCurrent: Int?
 
     private var p: ThemePalette { theme.palette }
-    private let cal = Calendar.current
+    @ObservedObject private var zone = CalendarZone.shared
+    /// The shown zone's calendar (CalendarTimeZone.swift); this device's zone unless picked.
+    private var cal: Calendar { zone.calendar }
     private let hourHeight: CGFloat = 48
     private let gutter: CGFloat = 52
     private var gridHeight: CGFloat { hourHeight * 24 }
@@ -60,6 +62,7 @@ struct CalendarWeekView: View {
     // ── Events per day ──
 
     private func overlaps(_ e: CalendarEvent, _ dayStart: Date) -> Bool {
+        if e.allDay { return zone.allDayCovers(e, dayStart) }   // by date, in any shown zone
         guard let s = e.start else { return false }
         return s < next(dayStart) && ((e.end ?? s) > dayStart || s >= dayStart)
     }
@@ -112,7 +115,7 @@ struct CalendarWeekView: View {
 
     private var header: some View {
         HStack(spacing: Space.s3) {
-            Text(Self.range.string(from: weekStart, to: days.last ?? weekStart))
+            Text({ Self.range.timeZone = cal.timeZone; return Self.range.string(from: weekStart, to: days.last ?? weekStart) }())
                 .font(AppFont.title3).foregroundStyle(p.textPrimary)
             Spacer()
             if !days.contains(where: { cal.isDateInToday($0) }) {
@@ -150,7 +153,7 @@ struct CalendarWeekView: View {
                 let today = cal.isDateInToday(d)
                 Button { onOpenDay(d) } label: {
                     HStack(spacing: 5) {
-                        Text(Self.weekday.string(from: d)).font(AppFont.xs(.medium))
+                        Text({ Self.weekday.timeZone = cal.timeZone; return Self.weekday.string(from: d) }()).font(AppFont.xs(.medium))
                             .foregroundStyle(today ? p.accentViolet : p.textTertiary)
                         Text("\(cal.component(.day, from: d))").font(AppFont.sm(.semibold)).monospacedDigit()
                             .foregroundStyle(today ? p.onAccent : p.textPrimary)
@@ -329,7 +332,9 @@ struct CalendarWeekView: View {
 
     private func reload() async {
         let from = weekStart, to = weekEnd
-        let fromISO = isoLocalInternet.string(from: from), toISO = isoLocalInternet.string(from: to)
+        // A day wider each side for all-day events at this device's midnight (CalendarZone).
+        let fromISO = isoLocalInternet.string(from: from.addingTimeInterval(-86_400))
+        let toISO = isoLocalInternet.string(from: to.addingTimeInterval(86_400))
         let result = await engine.store.read { $0.eventsBetween(fromISO: fromISO, toISO: toISO) }
         guard !Task.isCancelled else { return }
         events = result

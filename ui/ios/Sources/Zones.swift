@@ -461,7 +461,5 @@ final class ZoneStore: ObservableObject {
         f.dateFormat = "yyyy-MM-dd"; return f
     }()
 
-    static let clock: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f
-    }()
+    static var clock: DateFormatter { CalendarClock.formatter }
 }

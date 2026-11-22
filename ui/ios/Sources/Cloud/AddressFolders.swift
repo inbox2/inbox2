@@ -43,11 +43,14 @@ final class AddressFolderStore: ObservableObject {
     }
 
     private var lastDomain: Scope?
+    /// A folder to open once its domain's chip is on screen (the iPad Unified sidebar).
+    var pendingSelect: (domain: String, key: String)?
 
     /// The inbox switched chip: another domain starts back on its Inbox. Passing
     /// through unified keeps the pick (iPad portrait remounts the list as unified first).
     func show(_ s: Scope?) {
         if let s, s != lastDomain { lastDomain = s; selected = nil }
+        if let s, let want = pendingSelect, want.domain == s.domain { selected = want.key; pendingSelect = nil }
         if s != scope { scope = s }
         if let s { Task { await load(s) } }
     }
@@ -204,13 +207,14 @@ struct AddressFolderTree: View {
         if on { Label(title, systemImage: "checkmark") } else { Text(title) }
     }
 
-    /// Green pen (you can reply as it) or amber eye (read only), for address rows.
+    /// "Read only" on an address you can't reply as. Replying is the normal case, so
+    /// it has no mark (a pen and an eye read as noise, 2026-11-23).
     @ViewBuilder private func replyMark(_ f: AddressFolder) -> some View {
-        if f.kind == .own || f.kind == .shared {
-            Image(systemName: f.canReply ? "pencil" : "eye")
-                .font(AppFont.glyph(11, .semibold))
-                .foregroundStyle(f.canReply ? p.accentSuccess : p.accentAmber)
-                .accessibilityLabel(f.canReply ? "You can reply as this address" : "Read only")
+        if (f.kind == .own || f.kind == .shared) && !f.canReply {
+            Text("Read only")
+                .font(AppFont.xs3(.semibold)).foregroundStyle(p.textTertiary)
+                .padding(.horizontal, 5).padding(.vertical, 1)
+                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(p.borderSubtle))
         }
     }
 
@@ -227,7 +231,7 @@ struct ReadOnlyFolderNotice: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: Space.s2) {
-            Image(systemName: "eye").font(AppFont.glyph(12, .semibold)).foregroundStyle(theme.palette.accentAmber)
+            Image(systemName: "lock").font(AppFont.glyph(12, .semibold)).foregroundStyle(theme.palette.textTertiary)
             Text("You can read \(folder.label) but not reply as it. An admin gives reply-as in the console.")
                 .font(AppFont.sm).foregroundStyle(theme.palette.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)

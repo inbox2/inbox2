@@ -14,6 +14,7 @@ The Aero chrome-glass look was tried on 2026-09-29 and rejected. Design canvas: 
   - `StripWidgets.jsx` holds one component per widget. Each renders compact keys, or the full-width view when `expanded`.
   - `StripCustomize.jsx` is the customize sheet.
   - `TouchStrip.module.css` holds the styles.
+- **iPad** (SwiftUI port): `ui/ios/Sources/TouchStrip/` — `TouchStripMath.swift` (the pure maths, tested in `Tests/TouchStripMathTests.swift`), `TouchStripModel.swift` (feeds, layout sync, mode), `TouchStripWidgets.swift`, `TouchStripView.swift`, `TouchStripCustomize.swift`. Mounted under `IPadShell` with `.safeAreaInset(edge: .bottom)`; pinned or hidden (`ipad.touchStrip`), hidden while the on-screen keyboard is up. The same `account/touch-strip` layout; the device copy is tied to the account that saved it, so a second account starts from the defaults. A failed feed retries after 15 s.
 - It is mounted at the bottom of each app shell: `AppChrome` (explorer, search, spaces, calendar…), `UnifiedInboxView` and `InboxPage`. It is not on settings or console pages.
 - **Mode**: pinned, floating or hidden via `usePaneMode` (`TOUCH_STRIP_MODE`, per device), the same Rider-style picker as the calendar rail and reading pane.
   - **Pinned** sits in the layout flow.

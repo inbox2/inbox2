@@ -26,7 +26,9 @@ struct CalendarDayView: View {
     @State private var dragCurrent: Int?
 
     private var p: ThemePalette { theme.palette }
-    private let cal = Calendar.current
+    @ObservedObject private var zone = CalendarZone.shared
+    /// The shown zone's calendar (CalendarTimeZone.swift); this device's zone unless picked.
+    private var cal: Calendar { zone.calendar }
     private let hourHeight: CGFloat = 56
     private let gutter: CGFloat = 52
     private var gridHeight: CGFloat { hourHeight * 24 }
@@ -58,6 +60,12 @@ struct CalendarDayView: View {
 
     private func isAllDay(_ e: CalendarEvent) -> Bool {
         e.allDay || ((e.start ?? .distantFuture) <= dayStart && (e.end ?? .distantPast) >= dayEnd)
+    }
+    /// All-day events by their dates in the shown zone, timed ones by their instants.
+    private func onThisDay(_ e: CalendarEvent, from: Date, to: Date) -> Bool {
+        if e.allDay { return zone.allDayCovers(e, from) }
+        guard let s = e.start else { return false }
+        return s < to && ((e.end ?? s) > from || s >= from)
     }
     private var allDayEvents: [CalendarEvent] { events.filter(isAllDay) }
     private var timedEvents: [CalendarEvent] { events.filter { !isAllDay($0) && $0.start != nil } }
@@ -287,14 +295,13 @@ struct CalendarDayView: View {
 
     private func reload() async {
         let from = dayStart, to = dayEnd
-        let fromISO = isoLocalInternet.string(from: from), toISO = isoLocalInternet.string(from: to)
+        // A day wider each side for all-day events at this device's midnight (CalendarZone).
+        let fromISO = isoLocalInternet.string(from: from.addingTimeInterval(-86_400))
+        let toISO = isoLocalInternet.string(from: to.addingTimeInterval(86_400))
         let result = await engine.store.read { $0.eventsBetween(fromISO: fromISO, toISO: toISO) }
         guard !Task.isCancelled else { return }
         // The query's `end >= from` also returns what ends exactly at midnight.
-        events = result.filter { ev in
-            guard let s = ev.start else { return false }
-            return s < to && ((ev.end ?? s) > from || s >= from)
-        }
+        events = result.filter { onThisDay($0, from: from, to: to) }
         zoneStore.reconcileAnchors(result)
     }
 }

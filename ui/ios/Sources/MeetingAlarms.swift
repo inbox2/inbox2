@@ -104,7 +104,8 @@ final class MeetingAlarms: ObservableObject {
             guard let want = wanted[req.identifier],
                   let fires = (req.trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate()
             else { return true }
-            return abs(fires.timeIntervalSince(want.fireAt)) > 1
+            // Its text changed too (a renamed meeting, the local start time after travel): re-arm it.
+            return abs(fires.timeIntervalSince(want.fireAt)) > 1 || req.content.body != want.body || req.content.title != want.title
         }.map(\.identifier)
         if !stale.isEmpty { center.removePendingNotificationRequests(withIdentifiers: stale) }
 

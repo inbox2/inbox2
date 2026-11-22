@@ -73,6 +73,15 @@ group headers, warm active row with a 3pt rail). Mail's panel = the folders (mai
 + triage, or a Meta account's sub-views; group header = the selected chip);
 Calendar's = New event, a mini month, Coming up; Lore has none, so the column shrinks
 to the rail. New message lives in the list header (and ⌘N), not the sidebar.
+**Command palette** (`CommandPaletteView`, ⌘K or the ⌘ button on the rail): screens,
+folders, account chips and actions (new message, new event, Lore panel, folders, touch
+strip, calendar time zone), plus conversations from connected mailboxes and people as
+you type; ranking in `Models/PaletteMatch.swift`, the last four commands on top.
+**Touch strip** at the bottom (docs/Touch-Strip.md). **Calendar time zone**
+(`CalendarTimeZone.swift`, in the calendar sidebar): the week, day, month and agenda in
+another zone; all-day events keep their date. **Unified Inbox tree**: Inbox ▸ domain ▸
+the address folders kept out of Inbox (shared addresses, plus addresses), names without
+the domain; a tap opens that domain's chip with the folder selected.
 There is one split view per section at every width, because iPadOS re-lays the window out in another orientation for its App Switcher snapshot and swapping split views during that pass aborted inside UIKit (2026-11-08). **Landscape (≥1100pt)**: rail, folders and list share the sidebar column, beside the reader; a hide-folders
 button in the panel header leaves rail + list + reader, a button left of the INBOX
 title brings the panel back (remembered). **Portrait**: two columns — a folder pick

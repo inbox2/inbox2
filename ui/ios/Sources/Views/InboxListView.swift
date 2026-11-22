@@ -503,6 +503,15 @@ struct InboxListView: View {
             }
             // The pill set differs between domain (views) and offline (filters) —
             // reset to "All" on a channel switch if the current pill isn't valid.
+            // The command palette lists the chips and can open one.
+            .onChange(of: channels.map(\.id), initial: true) { _, _ in
+                chrome.channelChoices = channels.map { (id: $0.id, label: $0.label) }
+            }
+            .onChange(of: chrome.pendingChannel, initial: true) { _, want in
+                guard let want else { return }
+                chrome.pendingChannel = nil
+                if channels.contains(where: { $0.id == want }) { selectedChannel = want }
+            }
             .onChange(of: selectedChannel, initial: true) { old, new in
                 if let split {
                     if old == new, split.channel != new {

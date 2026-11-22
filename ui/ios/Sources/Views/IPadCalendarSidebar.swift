@@ -10,7 +10,8 @@ struct SidebarMiniMonth: View {
     @EnvironmentObject private var chrome: ChromeModel
     /// Any day in the shown month; follows the grid's day until the user pages.
     @State private var anchor = Date()
-    private let cal = Calendar.current
+    @ObservedObject private var zone = CalendarZone.shared
+    private var cal: Calendar { zone.calendar }
     private var p: ThemePalette { theme.palette }
 
     private var monthStart: Date { cal.dateInterval(of: .month, for: anchor)?.start ?? anchor }
@@ -24,7 +25,7 @@ struct SidebarMiniMonth: View {
     var body: some View {
         VStack(spacing: Space.s1) {
             HStack {
-                Text(Self.title.string(from: monthStart)).font(AppFont.sm(.semibold)).foregroundStyle(p.textPrimary)
+                Text({ Self.title.timeZone = cal.timeZone; return Self.title.string(from: monthStart) }()).font(AppFont.sm(.semibold)).foregroundStyle(p.textPrimary)
                 Spacer()
                 page("chevron.left", -1)
                 page("chevron.right", 1)
@@ -72,6 +73,7 @@ struct SidebarMiniMonth: View {
 /// The next few events (from today), each opening its detail sheet.
 struct SidebarComingUp: View {
     @Environment(\.theme) private var theme
+    @ObservedObject private var zone = CalendarZone.shared
     @EnvironmentObject private var engine: EngineModel
     @EnvironmentObject private var chrome: ChromeModel
     @State private var events: [CalendarEvent] = []
@@ -91,7 +93,7 @@ struct SidebarComingUp: View {
                             .frame(width: 3, height: 30)
                         VStack(alignment: .leading, spacing: 1) {
                             Text(ev.title).font(AppFont.xs(.semibold)).foregroundStyle(p.textPrimary).lineLimit(1)
-                            Text("\(DayHeader.label(ev.dayKey)) · \(ev.startTimeLabel)")
+                            Text("\(DayHeader.label(zone.day(of: ev))) · \(ev.startTimeLabel)")
                                 .font(AppFont.xs3).foregroundStyle(p.textTertiary).lineLimit(1)
                         }
                         Spacer(minLength: 0)
@@ -102,10 +104,25 @@ struct SidebarComingUp: View {
                 .buttonStyle(.plain)
             }
         }
-        .task(id: engine.dataVersion) {
-            let from = isoLocalInternet.string(from: Date())
-            let result = await engine.store.read { $0.upcomingEvents(fromISO: from, limit: 6) }
-            if !Task.isCancelled { events = result }
+        .task(id: "\(engine.dataVersion)|\(zone.timeZone.identifier)") {
+            // The next six from now, plus all-day events that started a day back but
+            // still fall on today in the shown zone (they sit at this device's midnight).
+            let now = Date()
+            let today = zone.calendar.startOfDay(for: now)
+            let fromNow = isoLocalInternet.string(from: now)
+            let dayBack = isoLocalInternet.string(from: now.addingTimeInterval(-86_400))
+            let dayOn = isoLocalInternet.string(from: now.addingTimeInterval(86_400))
+            // All-day events from their own two-day window, so no busy morning crowds them out.
+            let (next, early) = await engine.store.read {
+                ($0.upcomingEvents(fromISO: fromNow, limit: 6), $0.eventsBetween(fromISO: dayBack, toISO: dayOn))
+            }
+            if !Task.isCancelled {
+                let allDay = early.filter { $0.allDay && zone.isCurrent($0, from: today) }
+                var seen = Set<String>()
+                events = Array((allDay + next).filter { seen.insert($0.id).inserted }
+                    .sorted { zone.day(of: $0) != zone.day(of: $1) ? zone.day(of: $0) < zone.day(of: $1) : !$0.allDay && $1.allDay ? false : ($0.start ?? now) < ($1.start ?? now) }
+                    .prefix(6))
+            }
         }
     }
 }

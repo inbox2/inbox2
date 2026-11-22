@@ -6,6 +6,8 @@ import SwiftUI
 /// 30 days, right for the next 30). Bar colours line up with the agenda strips below
 /// it and scale to the busiest day in the window.
 struct UpcomingLoadChart: View {
+    /// Days in the calendar's shown zone, the same rule as the agenda below it.
+    @ObservedObject private var zone = CalendarZone.shared
     @Environment(\.theme) private var theme
     let events: [CalendarEvent]
     let channelOrder: [String]
@@ -13,7 +15,7 @@ struct UpcomingLoadChart: View {
     let onSelect: (Date) -> Void
     @State private var scrollEnabled = true   // toggled to kill momentum on "Today"
     private var p: ThemePalette { theme.palette }
-    private let cal = Calendar.current
+    private var cal: Calendar { zone.calendar }
     private let maxBarHeight: CGFloat = 54
     private let barWidth: CGFloat = 18
     private let columnWidth: CGFloat = 30
@@ -40,7 +42,7 @@ struct UpcomingLoadChart: View {
         // Groovebox colours bars per calendar (its pastel mapping); else per channel.
         let perCalendar = p.solidChipInk != nil
         for ev in events {
-            let day = ev.dayKey
+            let day = zone.day(of: ev)
             let key = perCalendar ? ev.pastelKey : ev.accountKey
             if counts[day]?[key] == nil { order[day, default: []].append(key) }
             counts[day, default: [:]][key, default: 0] += 1
@@ -195,7 +197,7 @@ struct EventDetailSheet: View {
     }
 
     private var dayLabel: String {
-        DayHeader.label(event.dayKey)
+        DayHeader.label(CalendarZone.shared.day(of: event))   // the day the agenda shows it on
     }
 
     /// Someone else's meeting: RSVP, and no Edit — the organizer owns it (the

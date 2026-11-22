@@ -134,12 +134,12 @@ struct CalendarEvent: Identifiable, Hashable {
 
     var startTimeLabel: String {
         guard !allDay, let s = start else { return "All day" }
-        return ZoneStore.clock.string(from: s)
+        return CalendarClock.formatter.string(from: s)
     }
     /// "– 10:30" end time, empty for all-day or zero-length.
     var endTimeLabel: String {
         guard !allDay, let s = start, let e = end, e > s else { return "" }
-        return ZoneStore.clock.string(from: e)
+        return CalendarClock.formatter.string(from: e)
     }
     /// "10:00 – 10:30" / "All day" — full range for the detail sheet.
     var rangeLabel: String {
@@ -241,8 +241,12 @@ enum DayHeader {
         let f = DateFormatter(); f.dateFormat = "EEEE, d MMM yyyy"; return f
     }()
 
+    /// In the calendar's shown zone (CalendarZone sets `CalendarClock.formatter.timeZone`).
     static func label(_ day: Date) -> String {
-        let cal = Calendar.current
+        var cal = Calendar.current
+        cal.timeZone = CalendarClock.formatter.timeZone
+        dayMonth.timeZone = cal.timeZone
+        dayMonthYear.timeZone = cal.timeZone
         if cal.isDateInToday(day) { return "Today" }
         if cal.isDateInTomorrow(day) { return "Tomorrow" }
         if cal.isDateInYesterday(day) { return "Yesterday" }

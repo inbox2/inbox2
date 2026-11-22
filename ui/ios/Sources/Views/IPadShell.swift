@@ -73,7 +73,21 @@ struct IPadShell: View {
 
     var body: some View {
         shell
+            // The Touch Strip (TouchStrip/): clocks, weather, markets, news, IP.
+            .safeAreaInset(edge: .bottom, spacing: 0) { TouchStripView() }
             .sheet(isPresented: $showSettings) { SettingsView(onClose: { showSettings = false }) }
+            .overlay {
+                if chrome.showPalette {
+                    CommandPaletteView(commands: paletteCommands, onClose: { chrome.showPalette = false },
+                                       searchMail: { chrome.pendingSearch = $0 },
+                                       openConversation: { c in
+                                           go(0)
+                                           notifications.pendingConversationKey = c.id
+                                       })
+                    .transition(.opacity)
+                }
+            }
+            .animation(.easeOut(duration: 0.12), value: chrome.showPalette)
             // Landscape shows the list as its own column; portrait stacks it in the sidebar.
             // The path moves in the same update as the width, so a rotation never draws
             // the other layout's page first.
@@ -89,6 +103,7 @@ struct IPadShell: View {
             .background {
                 Group {
                     Button("", action: onCompose).keyboardShortcut("n", modifiers: .command)
+                    Button("") { chrome.showPalette.toggle() }.keyboardShortcut("k", modifiers: .command)
                     // Mail only: the panel exists nowhere else.
                     if selection == 0 {
                         Button("") { withAnimation { loreBinding.wrappedValue.toggle() } }
@@ -263,6 +278,13 @@ struct IPadShell: View {
         VStack(spacing: Space.s1) {
             ForEach(0..<3, id: \.self) { i in railButton(i) }
             Spacer()
+            Button { chrome.showPalette = true } label: {
+                Image(systemName: "command")
+                    .font(AppFont.glyph(18, .regular)).foregroundStyle(p.textSecondary)
+                    .frame(width: Self.railWidth, height: 46).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Commands")
             railButton(3)
         }
         .padding(.top, Space.s2).padding(.bottom, Space.s3)
@@ -310,6 +332,61 @@ struct IPadShell: View {
         .accessibilityAddTraits(active ? .isSelected : [])
     }
 
+    /// Everything the command palette lists (CommandPaletteView). Built when it opens.
+    private var paletteCommands: [PaletteCommand] {
+        var out: [PaletteCommand] = []
+        for i in sections.indices {
+            out.append(PaletteCommand(id: "go:\(i)", group: .go, title: sections[i].label, icon: sections[i].icon,
+                                      shortcut: "⌘\(i + 1)") { go(i) })
+        }
+        for f in MailFolder.mailboxes + MailFolder.triage {
+            out.append(PaletteCommand(id: "folder:\(f.rawValue)", group: .go, title: f.title, icon: f.icon,
+                                      keywords: "folder mail") {
+                go(0)
+                selectedFolder = f
+                addressFolders.selected = nil
+            })
+        }
+        for c in chrome.channelChoices {
+            out.append(PaletteCommand(id: "account:\(c.id)", group: .accounts, title: c.label,
+                                      icon: c.id == "unified" ? "tray.2" : "person.crop.circle", keywords: "account inbox") {
+                go(0)
+                chrome.pendingChannel = c.id
+            })
+        }
+        out.append(PaletteCommand(id: "compose", group: .actions, title: "New message", icon: "square.and.pencil",
+                                  keywords: "compose write email", shortcut: "⌘N", run: onCompose))
+        out.append(PaletteCommand(id: "event", group: .actions, title: "New event", icon: "calendar.badge.plus",
+                                  keywords: "meeting calendar") {
+            go(2)
+            chrome.pendingCalendarCreate = true
+        })
+        out.append(PaletteCommand(id: "lore", group: .actions, title: showLore ? "Hide the Lore panel" : "Show the Lore panel",
+                                  icon: "sidebar.right", keywords: "lore panel", shortcut: "⇧⌘L") {
+            go(0)
+            withAnimation { loreBinding.wrappedValue.toggle() }
+        })
+        if wide {
+            out.append(PaletteCommand(id: "folders", group: .actions, title: foldersHidden ? "Show folders" : "Hide folders",
+                                      icon: "sidebar.left", keywords: "sidebar") {
+                go(0)
+                withAnimation { foldersHidden.toggle() }
+            })
+        }
+        out.append(PaletteCommand(id: "strip", group: .actions,
+                                  title: TouchStripModel.shared.mode == .hidden ? "Show the touch strip" : "Hide the touch strip",
+                                  icon: "rectangle.bottomthird.inset.filled", keywords: "clocks weather stocks news bar") {
+            withAnimation { TouchStripModel.shared.toggle() }
+        })
+        out.append(PaletteCommand(id: "timezone", group: .actions, title: "Change the calendar time zone", icon: "globe",
+                                  keywords: "time zone travel city") {
+            go(2)
+            // Held in CalendarZone: the sidebar picker presents it as soon as it mounts.
+            CalendarZone.shared.pickerOpen = true
+        })
+        return out
+    }
+
     /// The selected-item surface: the same colour as the open thread in the list.
     private func selectionPill(radius: CGFloat) -> some View {
         RoundedRectangle(cornerRadius: radius, style: .continuous)
@@ -331,6 +408,7 @@ struct IPadShell: View {
                     .disabled(!chrome.calendarCanCreate)
                     .opacity(chrome.calendarCanCreate ? 1 : 0.4)
                 navGroup("Month", icon: "calendar") { SidebarMiniMonth() }
+                navGroup("Time zone", icon: "globe") { CalendarTimeZonePicker() }
                 navGroup("Coming up", icon: "clock") { SidebarComingUp() }
             }
         } else {
@@ -343,6 +421,8 @@ struct IPadShell: View {
                             // An MX domain chip: its Inbox row becomes the address-folder tree.
                             if folder == .inbox && !addressFolders.folders.isEmpty {
                                 AddressFolderTree(selection: $selectedFolder, dense: true) { if !wide { sidebarPath = inboxPath } }
+                            } else if folder == .inbox && !unifiedDomains.isEmpty {
+                                unifiedInboxTree
                             } else {
                                 folderItem(folder)
                             }
@@ -352,6 +432,116 @@ struct IPadShell: View {
                 }
             }
         }
+    }
+
+    // ── Unified Inbox tree: Inbox ▸ domain ▸ address ▸ +tag ──
+    // Only folders whose mail is NOT already in the unified Inbox (Show in Inbox off):
+    // your own address is in Inbox, so it isn't listed. Names drop the domain (its row
+    // names it once); a plus address sits under its parent when that is listed, else
+    // shows in full. A domain with nothing to list is left out. A tap opens that
+    // domain's chip with the folder selected.
+
+    @AppStorage("ipad.unifiedInboxOpen") private var inboxTreeOpen = true
+    /// Open domain rows, as a comma list of `dom_…` ids.
+    @AppStorage("ipad.unifiedDomainsOpen") private var openDomainIds = ""
+
+    private var unifiedDomains: [(id: String, name: String, folders: [AddressFolder])] {
+        guard split.channel == "unified", let org = CloudSession.shared.currentOrg else { return [] }
+        return (org.domains ?? []).compactMap { d in
+            let f = (addressFolders.trees[d.id] ?? []).filter { ($0.kind == .own || $0.kind == .shared || $0.kind == .tag) && !$0.inInbox }
+            return f.isEmpty ? nil : (id: d.id, name: d.name, folders: f)
+        }
+    }
+
+    private func domainOpen(_ id: String) -> Binding<Bool> {
+        Binding(get: { openDomainIds.split(separator: ",").contains(Substring(id)) },
+                set: { on in
+                    var ids = openDomainIds.split(separator: ",").map(String.init).filter { $0 != id }
+                    if on { ids.append(id) }
+                    openDomainIds = ids.joined(separator: ",")
+                })
+    }
+
+    @ViewBuilder private var unifiedInboxTree: some View {
+        treeRow(MailFolder.inbox.title, icon: MailFolder.inbox.icon, depth: 0,
+                active: selectedFolder == .inbox, unread: 0, open: $inboxTreeOpen) {
+            selectedFolder = .inbox
+            addressFolders.selected = nil
+            if !wide { sidebarPath = inboxPath }
+        }
+        if inboxTreeOpen {
+            ForEach(unifiedDomains, id: \.id) { d in
+                let open = domainOpen(d.id)
+                treeRow(d.name, icon: "at", depth: 1, active: false, unread: 0, open: open) { open.wrappedValue.toggle() }
+                if open.wrappedValue {
+                    let listed = Set(d.folders.map(\.key))
+                    // Tops: addresses, and plus addresses whose parent isn't listed.
+                    ForEach(d.folders.filter { $0.kind != .tag || !listed.contains($0.parent ?? "") }) { f in
+                        folderLeaf(f, domain: d.id, depth: 2, full: f.kind == .tag)
+                        if f.kind != .tag {
+                            ForEach(d.folders.filter { $0.kind == .tag && $0.parent == f.key }) { folderLeaf($0, domain: d.id, depth: 3) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func folderLeaf(_ f: AddressFolder, domain: String, depth: Int, full: Bool = false) -> some View {
+        // "info", and a tag as "+receipts" under its parent (in full when on its own).
+        let label = f.kind == .tag && !full ? "+" + (f.key.split(separator: "+", maxSplits: 1).last.map(String.init) ?? f.key) : f.key
+        return treeRow(label, icon: f.kind == .tag ? "tag" : f.kind == .own ? "person" : "tray", depth: depth,
+                       active: false, unread: f.unread, open: nil) {
+            // Opened when that domain's chip is on screen (AddressFolderStore.show).
+            addressFolders.pendingSelect = (domain: domain, key: f.key)
+            chrome.pendingChannel = domain
+            selectedFolder = .inbox
+            if !wide { sidebarPath = inboxPath }
+        }
+    }
+
+    /// A sidebar row with indent and an optional disclosure chevron (its own tap target).
+    private func treeRow(_ title: String, icon: String, depth: Int, active: Bool, unread: Int,
+                         open: Binding<Bool>?, action: @escaping () -> Void) -> some View {
+        let ink = active ? p.keycapLabel(.selected, or: p.textPrimary) : p.textSecondary
+        return HStack(spacing: 0) {
+            Group {
+                if let open {
+                    Button { withAnimation(.easeOut(duration: 0.15)) { open.wrappedValue.toggle() } } label: {
+                        Image(systemName: "chevron.right")
+                            .font(AppFont.glyph(10, .semibold)).foregroundStyle(p.textMuted)
+                            .rotationEffect(.degrees(open.wrappedValue ? 90 : 0))
+                            .frame(width: 22, height: 32).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(open.wrappedValue ? "Collapse \(title)" : "Expand \(title)")
+                } else {
+                    Color.clear.frame(width: 22, height: 1)
+                }
+            }
+            Button(action: action) {
+                HStack(spacing: Space.s2) {
+                    Image(systemName: icon).font(AppFont.glyph(depth == 0 ? 15 : 13, .semibold))
+                        .foregroundStyle(ink).opacity(active ? 1 : 0.45).frame(width: 18)
+                    Text(title).font(AppFont.sm(active ? .bold : .medium)).foregroundStyle(ink).lineLimit(1)
+                    Spacer(minLength: 0)
+                    if unread > 0 {
+                        Text("\(unread)").font(AppFont.xs3(.semibold)).monospacedDigit().foregroundStyle(p.textTertiary)
+                    }
+                }
+                .padding(.vertical, Space.s2 + 1).padding(.trailing, Space.s3)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(active ? .isSelected : [])
+        }
+        .padding(.leading, CGFloat(depth) * 14)
+        .background {
+            if active, let key = p.selectKeycap { Color.clear.keycap(key, radius: 10) }
+            else if active { selectionPill(radius: 10) }
+        }
+        .padding(.horizontal, Space.s2).padding(.vertical, 1)
     }
 
     private func sidebarAction(_ title: String, icon: String, action: @escaping () -> Void) -> some View {

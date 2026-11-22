@@ -259,6 +259,8 @@ targets:
       # itself isn't here — it needs the notification centre and the engine).
       - path: Sources/Models/MeetingAlarmPlan.swift
       - path: Sources/Models/CalendarEvent.swift
+      - path: Sources/Models/CalendarClock.swift
+      - path: Sources/Models/AccountKey.swift
       # CalendarEvent parses its dates with RelativeTime (Conversation.swift), which
       # drags in the two other pure-Foundation model files it names.
       - path: Sources/Models/Conversation.swift
@@ -266,7 +268,11 @@ targets:
       # Recipient-autocomplete ranking — pure Foundation, reads Contact/MailAddress
       # out of Conversation.swift above.
       - path: Sources/Models/ContactRanking.swift
+      # iPad command palette ranking — pure Foundation.
+      - path: Sources/Models/PaletteMatch.swift
       - path: Sources/Cloud/CloudDTOs.swift
+      # Touch Strip maths + layout merge (treemap, time zones, rain) — pure Foundation.
+      - path: Sources/TouchStrip/TouchStripMath.swift
       - path: Tests
       # The shipped email-body bundle + the flattened rendering corpus, bundled into
       # the test so EmailBodyRenderingTests can run every fixture through the REAL

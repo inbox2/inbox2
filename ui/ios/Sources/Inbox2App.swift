@@ -18,6 +18,13 @@ import BackgroundTasks
     /// Set by a reader address token's "Search mail" — the inbox pops to root,
     /// opens its search field with this query, then clears it.
     @Published var pendingSearch: String?
+    /// iPad command palette (CommandPaletteView): open state, the inbox's account
+    /// chips it lists (published by InboxListView), and a chip it asks the list to open.
+    @Published var showPalette = false
+    @Published var channelChoices: [(id: String, label: String)] = []
+    @Published var pendingChannel: String?
+    /// "New event" from the palette, held until the calendar is up and knows it can create.
+    @Published var pendingCalendarCreate = false
     /// Set by a meeting-invite banner tap — RootTabs switches to the Calendar tab
     /// and CalendarView opens this event's detail, then clears it.
     @Published var pendingCalendarEventKey: String?
