@@ -8,7 +8,7 @@
   Team email for every domain you own.<br>
   <a href="https://inbox2.com"><b>Website</b></a> ·
   <a href="https://mail.inbox2.com"><b>Web app</b></a> ·
-  <a href="https://github.com/inbox2/inbox2/releases/tag/cli-latest"><b>Terminal client</b></a> ·
+  <a href="https://github.com/inbox2/inbox2/releases/tag/cli-latest"><b>TUI</b></a> ·
   <a href="docs/"><b>Docs</b></a>
 </p>
 
@@ -24,13 +24,23 @@
   <img src="fixtures/screenshots/marketing/ios/04-conversation.png" alt="A conversation on iPhone" width="220">
 </p>
 
+<p align="center">
+  <img src="fixtures/screenshots/marketing/tui/inbox.webp" alt="The inbox2 TUI: folders, Spaces and triage labels, the message list and the open conversation" width="900">
+</p>
+
+<p align="center">
+  <img src="fixtures/screenshots/marketing/tui/search.webp" alt="Search in the TUI: has:attachment from:lena" width="440">
+  &nbsp;
+  <img src="fixtures/screenshots/marketing/tui/scripting.webp" alt="The inbox2 command in a shell: list, search, read and send, with JSON output for jq" width="440">
+</p>
+
 ## The product
 
 All mail for a connected domain lands in one inbox for the whole team. Each member builds their own views on top of it. Routing rules send a message to a person, an AI agent or a webhook.
 
 You get two parts. Use one or both.
 
-- **The apps.** Native apps for macOS, Windows, Linux, iOS and Android, a web app and a terminal client. Add Gmail, Microsoft 365 or any IMAP account. That mail syncs to your device and stays there. WhatsApp, Instagram and Messenger sit in the same inbox.
+- **The apps.** Native apps for macOS, Windows, Linux, iOS and Android, a web app and a TUI for the terminal. Add Gmail, Microsoft 365 or any IMAP account. That mail syncs to your device and stays there. WhatsApp, Instagram and Messenger sit in the same inbox.
 - **Hosted mail.** Point a domain's MX records at inbox2. We receive, filter and send its mail, and your team shares it. Calendars, meeting invites and an email sending API come with it.
 
 The native apps keep a local copy of your mail and share one sync engine, written in Rust.
@@ -44,7 +54,7 @@ The native apps keep a local copy of your mail and share one sync engine, writte
 | [`ui/web`](ui/web) | Web app at mail.inbox2.com and the interface of the desktop app | React 19, Vite, CSS Modules | [Routing](docs/Routing.md) |
 | [`ui/ios`](ui/ios) | iPhone and iPad app | SwiftUI on the Rust core | [iOS-App](docs/iOS-App.md) |
 | [`ui/android`](ui/android) | Android app | Jetpack Compose on the Rust core | [Android-App](docs/Android-App.md) |
-| [`ui/cli`](ui/cli) | Terminal client | Python, Textual | [CLI](docs/CLI.md) |
+| [`ui/cli`](ui/cli) | TUI: the terminal app and the `inbox2` command | Python, Textual | [CLI](docs/CLI.md) |
 | [`ui/admin-cli`](ui/admin-cli) | Operator console for the hosted service | Python, Textual | [SaaS](docs/SaaS.md) |
 | [`api`](api) | API for hosted mail: domains, teams, calendars, rules and the sending API | Rails 8.1, PostgreSQL | [Reference-Implementation](docs/Reference-Implementation.md) |
 | [`mta`](mta) | Mail transport: the MX receiver and the outbound SMTP sender | Go, NATS JetStream | [MX-Inbound](docs/MX-Inbound.md) |
@@ -74,7 +84,7 @@ Attachments need the local object store: `docker compose -f docker/docker-compos
 
 ## Releases
 
-A push to `main` runs these GitHub Actions workflows. The iOS, Android and terminal client workflows run only when their code or the Rust core changes.
+A push to `main` runs these GitHub Actions workflows. The iOS, Android and TUI workflows run only when their code or the Rust core changes.
 
 | Target | Workflow | Destination |
 |--------|----------|---------------|
@@ -82,7 +92,7 @@ A push to `main` runs these GitHub Actions workflows. The iOS, Android and termi
 | Desktop app | [`desktop.yml`](.github/workflows/desktop.yml) | The Update button in every installed copy ([Desktop-Release](docs/Desktop-Release.md)) |
 | iOS app | [`ios.yml`](.github/workflows/ios.yml) | TestFlight ([iOS-TestFlight](docs/iOS-TestFlight.md)) |
 | Android app | [`android.yml`](.github/workflows/android.yml) | Firebase App Distribution |
-| Terminal client | [`cli-release.yml`](.github/workflows/cli-release.yml) | [`cli-latest`](https://github.com/inbox2/inbox2/releases/tag/cli-latest) |
+| TUI | [`cli-release.yml`](.github/workflows/cli-release.yml) | [`cli-latest`](https://github.com/inbox2/inbox2/releases/tag/cli-latest) |
 
 ## Licensing
 
