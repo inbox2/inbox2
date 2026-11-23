@@ -86,43 +86,34 @@ export default function Composer({
   // rides along so the engine can hydrate In-Reply-To/References at send time.
   const replyParentKey = messages?.length ? messages[messages.length - 1].key : undefined
 
-  // Set while a send or a hand-off to the full composer waits for the signature,
-  // so a second click can't send twice or open a second draft.
+  // Set while a send waits for the signature, so a second click can't send twice.
   const busyRef = useRef(false)
-  const [handingOff, setHandingOff] = useState(false)
 
-  const handleMaximize = async () => {
-    if (busyRef.current) return
-    busyRef.current = true
-    setHandingOff(true)
-    try {
-      const signature = await getSignature()
-      const currentText = textareaRef.current?.value || ''
-      const subject = replySubject
-        ? (replySubject.startsWith('Re: ') ? replySubject : `Re: ${replySubject}`)
-        : ''
+  // The full composer adds the From address's signature itself (addSignature).
+  const handleMaximize = () => {
+    const currentText = textareaRef.current?.value || ''
+    const subject = replySubject
+      ? (replySubject.startsWith('Re: ') ? replySubject : `Re: ${replySubject}`)
+      : ''
 
-      const quotedHtml = buildQuotedHtml(messages)
+    const quotedHtml = buildQuotedHtml(messages)
 
-      await createDraft({
-        conversationId,
-        fromAddress,
-        toAddress: replyTo || '',
-        subject,
-        bodyPlain: signature ? `${currentText}\n\n${signatureText(signature.html)}` : currentText,
-        // plainTextToHtml escapes the user's text — `<` or `&` typed in the
-        // reply must not be interpreted as markup in the outgoing HTML.
-        bodyHtml: `${currentText ? `<p>${plainTextToHtml(currentText)}</p>` : '<p></p>'}${signature ? `<p></p>${signatureBlock(signature)}` : ''}`,
-        quotedHtml,
-        replyToMessageKey: replyParentKey,
-        focus: 'body',
-      })
+    createDraft({
+      conversationId,
+      fromAddress,
+      toAddress: replyTo || '',
+      subject,
+      bodyPlain: currentText,
+      // plainTextToHtml escapes the user's text — `<` or `&` typed in the
+      // reply must not be interpreted as markup in the outgoing HTML.
+      bodyHtml: currentText ? `<p>${plainTextToHtml(currentText)}</p>` : '',
+      quotedHtml,
+      replyToMessageKey: replyParentKey,
+      focus: 'body',
+      addSignature: true,
+    })
 
-      clearField()
-    } finally {
-      busyRef.current = false
-      setHandingOff(false)
-    }
+    clearField()
   }
 
   const handleSend = async () => {
@@ -333,14 +324,12 @@ export default function Composer({
       <div className={styles.actions}>
         <div className={styles.actionsLeft}>
           <ToolbarGroup>
-            <ToolbarButton icon="paperclip" onClick={handleAttach} disabled={handingOff}>Attach</ToolbarButton>
+            <ToolbarButton icon="paperclip" onClick={handleAttach}>Attach</ToolbarButton>
             <ToolbarButton icon="note.text" onClick={handleNote}>Note</ToolbarButton>
             <ToolbarButton icon="list.bullet.rectangle" onClick={handleTemplateToggle}>Template</ToolbarButton>
             <ToolbarButton
               icon="arrow.up.left.and.arrow.down.right"
               onClick={handleMaximize}
-              disabled={handingOff}
-              aria-busy={handingOff}
             />
           </ToolbarGroup>
         </div>

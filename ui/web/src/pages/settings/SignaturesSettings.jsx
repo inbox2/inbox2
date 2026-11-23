@@ -27,7 +27,7 @@ function Preview({ html }) {
 }
 
 export default function SignaturesSettings({ orgId }) {
-  const { organizations } = useAuth();
+  const { organizations, user } = useAuth();
   const org = organizations?.find((o) => o.id === orgId || o.slug === orgId);
   const isAdmin = isAdminRole(org?.role);
   const [data, setData] = useState(null);
@@ -37,9 +37,9 @@ export default function SignaturesSettings({ orgId }) {
   const [error, setError] = useState('');
 
   const load = useCallback((fresh) => {
-    (fresh ? reloadSignatures(orgId) : loadSignatures(orgId))
+    (fresh ? reloadSignatures(orgId, user?.id) : loadSignatures(orgId, user?.id))
       .then((d) => { setLoadError(''); setData(d); }, (e) => setLoadError(errText(e)));
-  }, [orgId]);
+  }, [orgId, user?.id]);
   useEffect(() => { load(false); }, [load]);
 
   const byId = useMemo(() => Object.fromEntries((data?.signatures || []).map((s) => [s.id, s])), [data]);
