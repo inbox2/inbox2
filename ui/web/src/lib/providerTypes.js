@@ -100,6 +100,17 @@ export const channelLabel = (acct) => {
   return id || acct.display_name || '';
 };
 
+/** A channel's short name: the domain of its address ("sadiq.nl"), or the full
+ * address when another of `accounts` shares that domain (two gmail.com). */
+export const channelShortLabel = (acct, accounts = []) => {
+  const label = channelLabel(acct);
+  const at = label.indexOf('@');
+  if (at < 0) return label;
+  const domain = label.slice(at).toLowerCase();
+  const shared = accounts.filter(a => channelLabel(a).toLowerCase().endsWith(domain)).length > 1;
+  return shared ? label : label.slice(at + 1);
+};
+
 // Friendly display label for a Meta surface (used by the comment card / chat
 // header), e.g. "Instagram", "Facebook". Falls back to the raw key capitalised.
 export const CHANNEL_LABELS = {

@@ -6,9 +6,10 @@ import { useAvatarUrl } from '../../lib/avatar';
 import useAccountStatusStore, { needsReconnect } from '../../stores/accountStatusStore';
 import useRainbowTabs from '../../lib/rainbowTabsPref';
 import { withShortcut } from '../../lib/shortcuts';
+import { channelShortLabel } from '../../lib/providerTypes';
 import styles from './ChannelBar.module.css';
 
-function ChannelItem({ account, enabled, muteCheck, onToggle, onNavigate }) {
+function ChannelItem({ account, peers, enabled, muteCheck, onToggle, onNavigate }) {
   // Prefer the provider photo, then a Gravatar for the address; ProviderIcon
   // falls back to the provider/default icon if neither resolves.
   const picture = useAvatarUrl(account.email_address);
@@ -38,7 +39,7 @@ function ChannelItem({ account, enabled, muteCheck, onToggle, onNavigate }) {
         {reconnect && <span className={styles.channelReauthDot} aria-hidden="true" />}
       </span>
       <span className={styles.channelLabel}>
-        {account.email_address || account.display_name}
+        {channelShortLabel(account, peers)}
       </span>
     </button>
   );
@@ -76,6 +77,7 @@ export default function ChannelBar({ channelStates, onToggle, unreadOnly, onTogg
 
   const channels = Object.entries(channelStates);
   if (channels.length === 0) return null;
+  const peers = channels.map(([, st]) => st.account);
 
   return (
     <div className={styles.bar} ref={barRef} role="toolbar" aria-label="Channel filters">
@@ -97,6 +99,7 @@ export default function ChannelBar({ channelStates, onToggle, unreadOnly, onTogg
         <ChannelItem
           key={key}
           account={state.account}
+          peers={peers}
           enabled={state.enabled}
           muteCheck={rainbowTabs}
           onToggle={() => onToggle(key)}

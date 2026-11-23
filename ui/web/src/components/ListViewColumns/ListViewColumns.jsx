@@ -5,7 +5,7 @@ import MiniCard from '../MiniCard/MiniCard';
 import { GhostColumn } from '../Ghosts/Ghosts';
 import ChannelEmptyState from '../ChannelEmptyState/ChannelEmptyState';
 import Button from '../Button/Button';
-import { accountIconSrc } from '../../lib/providerTypes';
+import { accountIconSrc, channelShortLabel } from '../../lib/providerTypes';
 import { filterUnread } from '../../lib/unreadFilter';
 import styles from './ListViewColumns.module.css';
 
@@ -214,8 +214,9 @@ export default function ListViewColumns({
                 name={account.display_name || account.email_address}
                 size={18}
               />
-              <span className={styles.columnTitle}>
-                {account.email_address || account.display_name}
+              <span className={styles.columnTitle} title={account.email_address || account.display_name}>
+                {/* An extra folder column keeps its folder address: its display_name is the domain's. */}
+                {account.folderColumnOf ? account.email_address : channelShortLabel(account, columnData.map(c => c.account))}
               </span>
               {renderHeaderAction?.(account)}
               {/* The lane's count doubles as its selection readout. */}

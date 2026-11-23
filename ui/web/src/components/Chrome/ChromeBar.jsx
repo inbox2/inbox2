@@ -18,7 +18,7 @@ import UnifiedCubeIcon from './UnifiedCubeIcon';
 import WindowControls from './WindowControls';
 import { startDrag, toggleMaximizeOnDoubleClick, isTauri } from '../../lib/tauri';
 import { formatShortcut, withShortcut } from '../../lib/shortcuts';
-import { channelLabel, PROVIDER } from '../../lib/providerTypes';
+import { channelLabel, channelShortLabel, PROVIDER } from '../../lib/providerTypes';
 import { focusGlobalSearch } from '../../lib/globalSearch';
 import { resolveWorkspace } from '../../lib/workspace';
 import useRainbowTabs, { RAINBOW_TAB_COUNT } from '../../lib/rainbowTabsPref';
@@ -287,13 +287,6 @@ export default function ChromeBar({ activeTab, activeAccountKey, accounts = [], 
     return idx >= 0 && idx < 9 ? ` (${formatShortcut(`⌘${idx + 1}`)})` : '';
   };
 
-  const tabText = (label) => {
-    const at = label.indexOf('@');
-    if (at < 0) return label;
-    const domain = label.slice(at);
-    return accounts.filter(a => channelLabel(a).endsWith(domain)).length > 1 ? label : domain.slice(1);
-  };
-
   return (
     <div className={styles.chrome} role="presentation" onMouseDown={startDrag} onDoubleClick={toggleMaximizeOnDoubleClick}>
       <div className={styles.chromeTabs} data-testid="chrome-tabs">
@@ -346,7 +339,7 @@ export default function ChromeBar({ activeTab, activeAccountKey, accounts = [], 
                   onNavigate={() => navigateTab(`channel:${acct.key}`)}
                 >
                   <ProviderIcon type={acct.provider_type} iconUrl={acct.icon_url} avatarUrl={acct.avatar_url} name={acct.display_name || acct.email_address} size={16} />
-                  <span className={styles.chromeTabChannelLabel}>{tabText(label)}</span>
+                  <span className={styles.chromeTabChannelLabel}>{channelShortLabel(acct, accounts)}</span>
                   {/* A dead sign-in takes the badge slot with a red dot — it needs the
                       user's attention more than the unread count does. */}
                   {reconnect
