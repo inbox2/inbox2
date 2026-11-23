@@ -59,8 +59,7 @@ module Disk
 
     def open_to_org? = openness == OPENNESS_ORG
     # Open to this member: open to the org and, when the share has a team, the member sees that domain.
-    # A whole-org share (no team) is the team's: not for a mailbox-only member.
-    def open_to?(membership) = open_to_org? && (domain_id.nil? ? membership.org_wide_access? : membership.accessible_domain_ids.include?(domain_id))
+    def open_to?(membership) = open_to_org? && (domain_id.nil? || membership.accessible_domain_ids.include?(domain_id))
     def trashed? = trashed_at.present?
     def archived? = archived_at.present?
 

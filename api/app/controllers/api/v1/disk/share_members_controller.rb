@@ -6,6 +6,9 @@ module Api
         # GET /shares/:share_id/members
         def index
           rows = share.share_memberships.includes(membership: :user).order(:created_at)
+          # A whole-org share reaches people on every team: a non-admin sees only
+          # the roster entries of people they may know about (Membership#teammates).
+          rows = rows.where(membership_id: membership.teammates.select(:id)) unless membership.admin?
           render json: { members: ::Disk::ShareMemberSerializer.new(rows).to_h }
         end
 

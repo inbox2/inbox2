@@ -226,7 +226,8 @@ RSpec.describe "Scoped member: no directory of the org's other teams (2026-11-08
 end
 
 # A member with one mailbox and no domain grants (lalaaji.com staff, 2026-11-23):
-# their own mail and nothing else, including org-wide calendars and Disk shares.
+# their own mail and nothing else, including org-wide calendars. Whole-org Disk
+# shares stay open to everyone (Waseem, 2026-11-23).
 RSpec.describe "Mailbox-only member: no org-wide resources", type: :request do
   let!(:org) { create(:organization, domain: "one.test") }
   let!(:dom_b) { create(:domain, organization: org, name: "two.test") }
@@ -249,11 +250,17 @@ RSpec.describe "Mailbox-only member: no org-wide resources", type: :request do
     expect(org.calendars.for_member(colleague)).to include(shared)
   end
 
-  it "does not get a whole-org open Disk share" do
+  it "sees a whole-org share's roster without people from other teams" do
+    create(:subscription, organization: org, plan: Plan.paid)
     share = Disk::Share.create_with_root!(organization: org, name: "Everyone", openness: Disk::Share::OPENNESS_ORG)
-    expect(Disk::Access.visible_shares(member)).not_to include(share)
-    expect(share.open_to?(member)).to be(false)
-    expect(Disk::Access.visible_shares(colleague)).to include(share)
+    one_only = create(:membership, organization: org, role: "member")
+      .tap { |m| m.update!(all_domains: false, domains: [org.default_domain]) }
+    Disk::ShareMembership.create!(organization: org, share: share, membership: one_only, role: "view")
+    Disk::ShareMembership.create!(organization: org, share: share, membership: colleague, role: "view")
+    get "/api/v1/orgs/#{org.key}/disk/shares/#{share.key}/members", headers: h
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(colleague.key)
+    expect(response.body).not_to include(one_only.key)
   end
 
   it "lists only teammates in the activity summary" do
