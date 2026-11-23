@@ -25,23 +25,10 @@ function folderMenuItems(f, onSetPref) {
   return items;
 }
 
-/** Green pen (you can reply as it) or amber eye (read only), for address rows. */
-export function ReplyMark({ folder }) {
-  if (folder.kind !== FOLDER_KIND.OWN && folder.kind !== FOLDER_KIND.SHARED) return null;
-  return folder.can_reply ? (
-    <span className={styles.canReply} title="You can reply as this address" aria-label="You can reply as this address" role="img">
-      <Icon name="pencil" size={11} />
-    </span>
-  ) : (
-    <span className={styles.readOnly} title="Read only" aria-label="Read only" role="img">
-      <Icon name="eye" size={11} />
-    </span>
-  );
-}
-
 function FolderRow({ folder, label, icon, active, indent, onSelect, onSetPref, expanded, onToggle }) {
   const [menuAt, setMenuAt] = useState(null);
   const isInbox = folder.kind === FOLDER_KIND.INBOX;
+  const readOnly = (folder.kind === FOLDER_KIND.OWN || folder.kind === FOLDER_KIND.SHARED) && !folder.can_reply;
   // Other has no address to keep a pref under: no bell, no menu.
   const hasPrefs = folder.kind !== FOLDER_KIND.OTHER;
   const openMenuFrom = (el) => {
@@ -67,11 +54,12 @@ function FolderRow({ folder, label, icon, active, indent, onSelect, onSetPref, e
       >
         <Icon name={icon} size={15} className={styles.icon} />
         <span className={styles.label}>{label}</span>
-        <ReplyMark folder={folder} />
+        {/* Plain words like iOS and Android; the pen and eye icons read as noise (2026-11-23). */}
+        {readOnly && <span className={styles.readOnly}>Read only</span>}
       </button>
       {hasPrefs && <button
         type="button"
-        className={`${styles.ctl} ${folder.notify ? styles.ctlOn : ''} ${isInbox ? styles.ctlShown : ''}`}
+        className={`${styles.ctl} ${styles.ctlShown} ${folder.notify ? styles.ctlOn : ''}`}
         aria-label={folder.notify ? 'Notifications on' : 'Notifications off'}
         aria-pressed={!!folder.notify}
         title={folder.notify ? 'Notifications on' : 'Notifications off'}
@@ -82,7 +70,7 @@ function FolderRow({ folder, label, icon, active, indent, onSelect, onSetPref, e
       {!isInbox && hasPrefs && (
         <button
           type="button"
-          className={styles.ctl}
+          className={`${styles.ctl} ${styles.more}`}
           aria-label={`${label} options`}
           aria-haspopup="menu"
           onClick={(e) => openMenuFrom(e.currentTarget)}

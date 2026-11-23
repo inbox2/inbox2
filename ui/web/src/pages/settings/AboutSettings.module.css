@@ -25,18 +25,21 @@
 }
 
 .banner[data-kind='available'] {
-  border-color: color-mix(in srgb, var(--accent, #4a9eff) 45%, transparent);
-  background: color-mix(in srgb, var(--accent, #4a9eff) 12%, transparent);
+  color: var(--notice-text);
+  background: var(--notice-bg);
+  border: 1px solid var(--notice-border);
 }
 
 .banner[data-kind='ok'] {
-  border-color: color-mix(in srgb, var(--success, #36c08a) 45%, transparent);
-  background: color-mix(in srgb, var(--success, #36c08a) 10%, transparent);
+  color: var(--notice-success-text);
+  background: var(--notice-success-bg);
+  border: 1px solid var(--notice-success-border);
 }
 
 .banner[data-kind='error'] {
-  border-color: color-mix(in srgb, var(--danger, #e5484d) 45%, transparent);
-  background: color-mix(in srgb, var(--danger, #e5484d) 10%, transparent);
+  color: var(--notice-error-text);
+  background: var(--notice-error-bg);
+  border: 1px solid var(--notice-error-border);
 }
 
 .bannerBody {
@@ -50,12 +53,12 @@
 }
 
 .bannerNotes {
-  color: var(--text-secondary);
+  color: inherit;
   white-space: pre-wrap;
 }
 
 .bannerHint {
-  color: var(--text-tertiary, var(--text-secondary));
+  color: inherit;
   font-size: var(--text-2xs);
 }
 

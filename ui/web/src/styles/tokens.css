@@ -315,6 +315,18 @@
   --btn-admin-bg: linear-gradient(180deg, #ffd84f 0%, #ffcb1f 100%);
   --btn-admin-bg-hover: linear-gradient(180deg, #ffe066 0%, #ffd23f 100%);
   --btn-admin-text: #1a1a1f;
+  /* Notices and banners: the same solid yellow, never a tint over transparent. */
+  --notice-bg: var(--btn-admin-bg);
+  --notice-border: var(--btn-admin-border);
+  --notice-text: var(--btn-admin-text);
+  --notice-button-bg: #fff6cc;
+  /* Errors and successes keep their own solid colour, so they never read as a notice. */
+  --notice-error-bg: #d93d42;
+  --notice-error-border: #b8292e;
+  --notice-error-text: #ffffff;
+  --notice-success-bg: #1f8a4c;
+  --notice-success-border: #17703c;
+  --notice-success-text: #ffffff;
 
   /* Calendar zones (docs/Calendar.md "Zones") — the palette keys the API stores
      (blue/amber/violet/green/rose/teal), resolved per theme so a zone keeps its

@@ -180,8 +180,7 @@
 /* Sign-in expired: red outline on the tile + a red dot on the avatar so it's
    obvious the channel needs reconnecting. */
 .channelReauth {
-  border-color: color-mix(in srgb, var(--status-danger-text) 55%, transparent) !important;
-  background: color-mix(in srgb, var(--status-danger-text) 10%, transparent);
+  border-color: var(--status-danger-text) !important;
 }
 .channelReauth .channelLabel {
   color: var(--status-danger-text);

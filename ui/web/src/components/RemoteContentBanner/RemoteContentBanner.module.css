@@ -5,15 +5,15 @@
   padding: var(--space-1h) var(--space-2h);
   margin-bottom: var(--space-2h);
   font-size: var(--text-2xs);
-  color: var(--text-secondary);
-  background: var(--accent-warning-dim);
-  border: 1px solid var(--border-default);
+  color: var(--notice-text);
+  background: var(--notice-bg);
+  border: 1px solid var(--notice-border);
   border-radius: var(--radius-md);
 }
 
 .icon {
   flex-shrink: 0;
-  color: var(--text-secondary);
+  color: inherit;
 }
 
 .text {
@@ -32,9 +32,9 @@
 .solo {
   font-size: var(--text-2xs);
   font-weight: 600;
-  color: var(--text-primary);
-  background: var(--accent-primary-dim);
-  border: 1px solid var(--border-default);
+  color: var(--notice-text);
+  background: var(--notice-button-bg);
+  border: 1px solid var(--notice-border);
   cursor: pointer;
 }
 
@@ -56,7 +56,7 @@
   padding: 0 var(--space-1h);
   border-left: none;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  color: var(--text-secondary);
+  color: var(--notice-text);
 }
 
 .action:hover,

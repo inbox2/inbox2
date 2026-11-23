@@ -68,9 +68,9 @@
   gap: var(--space-1h);
   padding: var(--space-2) var(--space-2h);
   border-radius: var(--radius-6);
-  border: 1px solid var(--accent-danger);
-  background: color-mix(in srgb, var(--accent-danger) 12%, transparent);
-  color: var(--text-primary);
+  color: var(--notice-error-text);
+  background: var(--notice-error-bg);
+  border: 1px solid var(--notice-error-border);
   font-size: var(--text-sm);
   flex-shrink: 0;
 }

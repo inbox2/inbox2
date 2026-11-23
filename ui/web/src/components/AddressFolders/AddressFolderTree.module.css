@@ -56,16 +56,7 @@
   margin-left: 0;
 }
 
-.canReply,
-.readOnly {
-  display: inline-flex;
-  flex-shrink: 0;
-}
-
-.canReply { color: var(--accent-success); }
-.readOnly { color: var(--accent-amber); }
-
-/* Bell + … : shown on hover / keyboard focus; a lit bell and the Inbox bell stay. */
+/* The bell always shows, right-aligned; … joins it on hover / keyboard focus. */
 .ctl {
   display: inline-flex;
   align-items: center;
@@ -97,6 +88,27 @@
 
 .ctlOn {
   color: var(--accent-warning);
+}
+
+/* The selected row is light: its controls take the row's dark text colour. */
+.readOnly {
+  flex-shrink: 0;
+  font-size: var(--text-3xs);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.more { display: none; }
+.row:hover .more,
+.row:focus-within .more { display: inline-flex; }
+
+.rowActive .readOnly {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.rowActive .ctl {
+  color: inherit;
 }
 
 /* Inbox's children: indented one step, so the tree reads as one block. */
@@ -179,15 +191,15 @@
   margin: 0 var(--space-3) var(--space-2);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--accent-amber) 35%, transparent);
-  background: var(--accent-amber-dim);
-  color: var(--text-secondary);
+  color: var(--notice-text);
+  background: var(--notice-bg);
+  border: 1px solid var(--notice-border);
   font-size: var(--text-2xs);
 }
 
 .noticeIcon {
   flex-shrink: 0;
-  color: var(--accent-amber);
+  color: inherit;
 }
 
 /* Unified column header: folder picker + close of an extra folder column. */

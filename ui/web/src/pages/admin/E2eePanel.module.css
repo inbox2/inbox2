@@ -13,8 +13,9 @@
   padding: var(--space-3) var(--space-3h);
   margin-top: var(--space-3);
   border-radius: var(--radius-10);
-  background: color-mix(in srgb, var(--m-accent) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--m-accent) 30%, transparent);
+  color: var(--notice-text);
+  background: var(--notice-bg);
+  border: 1px solid var(--notice-border);
   font-size: var(--text-xs);
 }
 
