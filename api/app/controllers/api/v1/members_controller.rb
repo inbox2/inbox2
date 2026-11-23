@@ -13,7 +13,7 @@ module Api
         me = current_active_membership!
         home = me.all_domains_access? ? nil : me.home_domain_ids
         members = me.teammates.includes(:user)
-        render json: { members: members.map { |m| MembershipSerializer.new(m, params: { avatar_org_key: current_organization.key, domain_ids: home }).to_h } }
+        render json: { members: members.map { |m| MembershipSerializer.new(m, params: { avatar_org_key: current_organization.key, domain_ids: home, hide_private: !me.admin? }).to_h } }
       end
 
       # POST /api/v1/members/invite-mx — invite one person to a private mailbox on

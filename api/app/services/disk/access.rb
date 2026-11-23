@@ -37,7 +37,9 @@ module Disk
       return shares if membership.admin?
 
       mine = Disk::ShareMembership.where(membership_id: membership.id).select(:share_id)
-      open = shares.live.where(openness: Disk::Share::OPENNESS_ORG, domain_id: [nil, *membership.accessible_domain_ids])
+      # A whole-org share (no domain) is the team's: not for a mailbox-only member.
+      open_domains = membership.org_wide_access? ? [nil, *membership.accessible_domain_ids] : membership.accessible_domain_ids
+      open = shares.live.where(openness: Disk::Share::OPENNESS_ORG, domain_id: open_domains)
       open.or(shares.live.where(id: mine))
     end
 
@@ -88,7 +90,7 @@ module Disk
         end
         sm = preload ? preload[:share_memberships][share.id] : share.share_memberships.find_by(membership_id: membership.id)
         out << Source.new(kind: SOURCE_SHARE_MEMBER, role: sm.role, share: share) if sm
-        open = preload ? share.open_to_org? && (share.domain_id.nil? || preload[:domain_ids].include?(share.domain_id)) : share.open_to?(membership)
+        open = preload ? share.open_to_org? && (share.domain_id.nil? ? membership.org_wide_access? : preload[:domain_ids].include?(share.domain_id)) : share.open_to?(membership)
         out << Source.new(kind: SOURCE_SHARE_DEFAULT, role: share.org_role, share: share) if open
       end
       ids = (path || node.path).map(&:id)

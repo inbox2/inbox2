@@ -76,6 +76,8 @@ RSpec.describe "Disk share teams", type: :request do
   it "makes a removed domain's shares members-only instead of opening them to the org" do
     open = make_share("Marketing", openness: "org", domain: lalaaji)
     make_share("Marketing", openness: "org")
+    # Still on a team after lalaaji goes, so the whole-org share reaches them.
+    MembershipDomain.create!(membership: member, domain: main)
     lalaaji.destroy!
     expect(open.reload).to have_attributes(domain_id: nil, openness: "assigned", name: "Marketing (lalaaji.test)")
     expect(share_names(member_h)).to contain_exactly("Marketing")

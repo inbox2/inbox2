@@ -61,7 +61,7 @@ class Membership < ApplicationRecord
   has_many :blocked_times, dependent: :destroy
   has_many :external_busy_blocks, dependent: :delete_all
   has_many :conferencing_connections, dependent: :destroy
-  has_many :signatures, dependent: :nullify
+  has_many :signatures, dependent: :destroy # nullified, a personal one would turn team-wide
   has_many :templates, dependent: :nullify
   has_many :views, dependent: :nullify
   has_many :created_calendar_events, class_name: "CalendarEvent",
@@ -127,6 +127,11 @@ class Membership < ApplicationRecord
   # conversations shared with them — assigned, tagged in, or matched by a
   # grant_access visibility rule.
   def all_domains_access? = admin? || all_domains?
+
+  # Org-wide resources (calendars and Disk shares with no domain) belong to the
+  # team. A member with no domain grant, only their own mailbox, is not on it
+  # and gets none of them (2026-11-23, lalaaji.com staff).
+  def org_wide_access? = all_domains_access? || membership_domains.exists?
 
   # Domain ids whose pool slice this member may see (every org domain when
   # unscoped). Direct conversation assignments/grants can still expose threads

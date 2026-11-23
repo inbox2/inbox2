@@ -388,7 +388,7 @@ module Api
       # spec 4.1.5, A6.10
       def raw
         conversation = visible_conversations.find_by!(key: params[:id])
-        message = conversation.messages.find_by!(key: params[:message_id])
+        message = conversation.messages.readable_by(current_membership).find_by!(key: params[:message_id])
 
         render json: {
           message_id: message.key,
@@ -447,7 +447,7 @@ module Api
       # spec 4.2.8, A6.8 — Split
       def split
         conversation = visible_conversations.find_by!(key: params[:id])
-        message = conversation.messages.find_by!(key: params[:message_id])
+        message = conversation.messages.readable_by(current_membership).find_by!(key: params[:message_id])
 
         new_conv = visible_conversations.create!(
           subject: message.subject || conversation.subject,

@@ -21,7 +21,11 @@ class Calendar < ApplicationRecord
 
   scope :active, -> { where(status: STATUS_ACTIVE) }
   scope :visible, -> { where(is_visible: true) }
-  scope :for_member, ->(membership) { where(membership: [membership, nil]) }
+  # Org-wide calendars (no membership) span every domain, so a member scoped to
+  # some domains (or only their own mailbox) doesn't get them.
+  scope :for_member, ->(membership) {
+    where(membership: membership.org_wide_access? ? [membership, nil] : membership)
+  }
 
   # The member's own default calendar, created on first use. Nothing else
   # provisions one, so without this a brand-new member has zero calendars: the

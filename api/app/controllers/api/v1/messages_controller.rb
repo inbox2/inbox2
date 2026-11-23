@@ -16,7 +16,7 @@ module Api
 
         from = message_params[:from_address]
         return refuse_sender(from) if from.present? && !sendable_from?(from)
-        return refuse_size if too_big?(current_organization.attachments.where(key: Array(params[:attachment_keys])))
+        return refuse_size if too_big?(attachable.where(key: Array(params[:attachment_keys])))
 
         # Reputation throttle for our own SMTP (docs/Mail-Deliverability.md):
         # young orgs get tight hourly/daily caps; 6-month-old orgs are
@@ -206,7 +206,7 @@ module Api
 
         # Scope through visible_conversations so a domain-scoped member can't
         # answer another domain's invite (E3).
-        message = Message.where(conversation: visible_conversations).find_by!(key: params[:id])
+        message = Message.where(conversation: visible_conversations).readable_by(current_membership).find_by!(key: params[:id])
         invite = message.calendar_invite
         if invite.blank?
           return render json: ErrorSerializer.serialize("message is not an invite", status: 422), status: :unprocessable_content
@@ -242,7 +242,7 @@ module Api
       def calendar_import
         # Scope through visible_conversations so a domain-scoped member can't import
         # another domain's event (E3).
-        message = Message.where(conversation: visible_conversations).find_by!(key: params[:id])
+        message = Message.where(conversation: visible_conversations).readable_by(current_membership).find_by!(key: params[:id])
         invite = message.calendar_invite
         # A detected meeting's times are the sender's wall clock: read them in the
         # viewer's zone (`time_zone`, IANA), else the org's.
@@ -334,8 +334,18 @@ module Api
       # nothing is linked yet).
       def pending_attachments
         Array(params[:attachment_keys]).filter_map do |att_key|
-          current_organization.attachments.find_by(key: att_key)
+          attachable.find_by(key: att_key)
         end
+      end
+
+      # Attachments this member may move onto their message: only uploads on
+      # their own drafts (every client uploads to the draft, then sends its
+      # keys). Linking moves the row, so a key from received or sent mail, a
+      # colleague's draft or another domain's thread must never match.
+      def attachable
+        current_organization.attachments.joins(:message)
+          .where(messages: { is_draft: true, owner_membership_id: current_membership.id,
+                             conversation_id: visible_conversations.select(:id) })
       end
 
       # Re-associate pre-uploaded attachments (by key) to the outbound message
@@ -353,7 +363,7 @@ module Api
         return if keys.blank?
 
         keys.each do |att_key|
-          attachment = current_organization.attachments.find_by(key: att_key)
+          attachment = attachable.find_by(key: att_key)
           if attachment
             attachment.update!(message: message)
             Rails.logger.info("[MessagesController] Linked attachment #{att_key} (#{attachment.filename}) to message #{message.key}")

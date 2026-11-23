@@ -224,3 +224,64 @@ RSpec.describe "Scoped member: no directory of the org's other teams (2026-11-08
     expect(row["members"].map { |m| m["key"] }).to eq([scoped.key])
   end
 end
+
+# A member with one mailbox and no domain grants (lalaaji.com staff, 2026-11-23):
+# their own mail and nothing else, including org-wide calendars and Disk shares.
+RSpec.describe "Mailbox-only member: no org-wide resources", type: :request do
+  let!(:org) { create(:organization, domain: "one.test") }
+  let!(:dom_b) { create(:domain, organization: org, name: "two.test") }
+  let!(:admin_m) { create(:membership, organization: org, role: "admin") }
+  let!(:colleague) { create(:membership, organization: org, role: "member") } # all-domains, on two.test
+  let!(:member) do
+    create(:membership, organization: org, role: "member").tap do |m|
+      m.update!(all_domains: false, domains: [])
+      m.mailboxes.create!(domain: dom_b, local_part: "huda")
+    end
+  end
+  let(:h) { auth_headers(member.user) }
+
+  it "does not list or open an org-wide calendar" do
+    shared = org.calendars.create!(name: "Shared", membership: nil)
+    get "/api/v1/orgs/#{org.key}/calendars", headers: h
+    expect(response.parsed_body["calendars"].map { |c| c["id"] }).not_to include(shared.key)
+    get "/api/v1/orgs/#{org.key}/calendars/#{shared.key}", headers: h
+    expect(response).to have_http_status(:not_found)
+    expect(org.calendars.for_member(colleague)).to include(shared)
+  end
+
+  it "does not get a whole-org open Disk share" do
+    share = Disk::Share.create_with_root!(organization: org, name: "Everyone", openness: Disk::Share::OPENNESS_ORG)
+    expect(Disk::Access.visible_shares(member)).not_to include(share)
+    expect(share.open_to?(member)).to be(false)
+    expect(Disk::Access.visible_shares(colleague)).to include(share)
+  end
+
+  it "lists only teammates in the activity summary" do
+    one_only = create(:membership, organization: org, role: "member")
+      .tap { |m| m.update!(all_domains: false, domains: [org.default_domain]) }
+    get "/api/v1/orgs/#{org.key}/members/activity", headers: h
+    expect(response.parsed_body["activity"].to_s).to include(member.key)
+    expect(response.parsed_body["activity"].to_s).not_to include(one_only.key)
+  end
+
+  it "cannot read a colleague's draft through raw in a thread shared with them" do
+    conv = create(:conversation, organization: org, domain: dom_b, to_address: "huda@two.test")
+    draft = create(:message, conversation: conv, organization: org, is_draft: true, owner_membership_id: colleague.id)
+    get "/api/v1/orgs/#{org.key}/conversations/#{conv.key}/raw/#{draft.key}", headers: h
+    expect(response).to have_http_status(:not_found)
+  end
+
+  it "cannot move another thread's attachment onto their own message" do
+    other = create(:message, conversation: create(:conversation, organization: org, domain: dom_b, from_address: "x@y.test", to_address: "info@two.test"))
+    att = create(:attachment, message: other)
+    post "/api/v1/orgs/#{org.key}/messages",
+         params: { from_address: "huda@two.test", to_address: "x@example.com", body_plain: "hi", attachment_keys: [att.key] }, headers: h
+    expect(att.reload.message_id).to eq(other.id)
+    # nor one from mail they can read: linking moves the row off the original
+    own = create(:message, conversation: create(:conversation, organization: org, domain: dom_b, to_address: "huda@two.test"))
+    att2 = create(:attachment, message: own)
+    post "/api/v1/orgs/#{org.key}/messages",
+         params: { from_address: "huda@two.test", to_address: "x@example.com", body_plain: "hi", attachment_keys: [att2.key] }, headers: h
+    expect(att2.reload.message_id).to eq(own.id)
+  end
+end

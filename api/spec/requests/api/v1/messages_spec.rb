@@ -215,7 +215,8 @@ RSpec.describe "Api::V1::Messages", type: :request do
 
     context "negative — attachments over the size cap" do
       it "refuses a send whose attachments add up to more than 25 MB" do
-        draft = create(:message, organization: org, conversation: create(:conversation, organization: org), is_draft: true)
+        draft = create(:message, organization: org, conversation: create(:conversation, organization: org), is_draft: true,
+                                  owner_membership_id: owner_membership.id)
         keys = 2.times.map { create(:attachment, message: draft, size_bytes: 13 * 1024 * 1024).key }
         post "/api/v1/orgs/#{org.key}/messages",
              params: { from_address: "user@msg.com", to_address: "x@example.com", body_plain: "hi", attachment_keys: keys },

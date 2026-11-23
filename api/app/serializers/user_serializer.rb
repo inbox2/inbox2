@@ -1,6 +1,11 @@
 class UserSerializer < ::ApplicationSerializer
-  attributes :username, :display_name, :billing_email, :pending_billing_email, :default_timezone, :default_language,
+  attributes :username, :display_name, :default_timezone, :default_language,
              :out_of_office_start, :out_of_office_end, :out_of_office_message
+
+  # A person's own sign-up address (often a private Gmail) is not for their
+  # teammates: members#index sends hide_private for a non-admin caller.
+  attribute(:billing_email) { |user| params&.dig(:hide_private) ? nil : user.billing_email }
+  attribute(:pending_billing_email) { |user| params&.dig(:hide_private) ? nil : user.pending_billing_email }
 
   # Always the resolved shape, never the raw NULL — the client renders a working
   # day either way, and "unset" is an implementation detail of the column.

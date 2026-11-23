@@ -35,7 +35,7 @@ module Api
         end
 
         dates = (0...WINDOW_DAYS).map { |i| since + i }
-        memberships = current_organization.memberships
+        memberships = current_active_membership!.teammates
           .where(status: Membership::STATUS_ACTIVE).includes(:user)
 
         render json: {
