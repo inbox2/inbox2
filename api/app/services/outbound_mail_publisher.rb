@@ -358,7 +358,30 @@ class OutboundMailPublisher
   end
 
   def append_body_part(lines)
-    html = tracked_html
+    html, images = InlineImages.extract(tracked_html)
+    if images.any?
+      # multipart/related: the HTML refers to its images by cid: (a signature logo).
+      related = "inbox2-rel-#{SecureRandom.hex(16)}"
+      lines << "Content-Type: multipart/related; boundary=\"#{related}\""
+      lines << ""
+      lines << "--#{related}"
+      append_alternative(lines, html)
+      images.each do |img|
+        lines << "--#{related}"
+        lines << "Content-Type: #{img.content_type}; #{MailHeaderEncoding.encode_param('name', img.filename)}"
+        lines << "Content-Disposition: inline; #{MailHeaderEncoding.encode_param('filename', img.filename)}"
+        lines << "Content-ID: <#{img.content_id}>"
+        lines << "Content-Transfer-Encoding: base64"
+        lines << ""
+        lines << Base64.strict_encode64(img.data).scan(/.{1,76}/).join("\r\n")
+      end
+      lines << "--#{related}--"
+    else
+      append_alternative(lines, html)
+    end
+  end
+
+  def append_alternative(lines, html)
     if html.present?
       boundary = "inbox2-alt-#{SecureRandom.hex(16)}"
       lines << "Content-Type: multipart/alternative; boundary=\"#{boundary}\""

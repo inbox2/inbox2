@@ -19,6 +19,7 @@ import McpConnectionsSettings from './McpConnectionsSettings';
 import IntegrationsSettings from './IntegrationsSettings';
 import SchedulingSettings from './SchedulingSettings';
 import MailClientsSettings from './MailClientsSettings';
+import SignaturesSettings from './SignaturesSettings';
 import DiskFinderSettings from './DiskFinderSettings';
 import PrivacySettings from './PrivacySettings';
 import AboutSettings from './AboutSettings';
@@ -333,6 +334,7 @@ export default function SettingsPage() {
       case 'spaces': return <SpacesSettings orgId={orgId} />;
       case 'triage-labels': return <TriageLabelsSettings orgId={orgId} />;
       case 'rules': return <RulesSettings orgId={orgId} />;
+      case 'signatures': return <SignaturesSettings key={orgId} orgId={settingsOrg?.id || orgId} />;
       case 'scheduling': return <SchedulingSettings orgId={orgId} />;
       case 'disk': return <DiskFinderSettings key={orgId} orgId={orgId} />;
       case 'mail-clients': return <MailClientsSettings key={orgId} orgId={orgId} />;

@@ -312,6 +312,10 @@ class ApiClient {
   // Mail clients (docs/Mail-Clients.md): the settings to type into a client and
   // the member's own app passwords. The password comes back once.
   mailClientSettings(orgId) { return this.get(`/orgs/${orgId}/mail-client`); }
+  listSignatures(orgId) { return this.get(`/orgs/${orgId}/signatures`); }
+  createSignature(orgId, body) { return this.post(`/orgs/${orgId}/signatures`, body); }
+  updateSignature(orgId, key, body) { return this.patch(`/orgs/${orgId}/signatures/${key}`, body); }
+  deleteSignature(orgId, key) { return this.delete(`/orgs/${orgId}/signatures/${key}`); }
   listMailClientPasswords(orgId) { return this.get(`/orgs/${orgId}/mail-client/passwords`); }
   createMailClientPassword(orgId, name) { return this.post(`/orgs/${orgId}/mail-client/passwords`, { name }); }
   deleteMailClientPassword(orgId, key) { return this.delete(`/orgs/${orgId}/mail-client/passwords/${key}`); }

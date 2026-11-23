@@ -72,6 +72,10 @@ struct ComposeView: View {
     @State private var subject: String
     @State private var messageBody: String
     @State private var showCcBcc: Bool
+    /// The From address's signature (domain mail only), and whether the person
+    /// took it off this message.
+    @State private var signature: MailSignature?
+    @State private var signatureOff = false
     @State private var attachments: [PickedAttachment] = []
     @State private var importing = false
     /// Photo-library picks. `PhotosPicker` runs out-of-process, so it needs no
@@ -200,6 +204,7 @@ struct ComposeView: View {
                     field("Subject", text: $subject)
                     attachmentBar
                     bodyEditor
+                    signatureRow
                     if let sendError {
                         Text(sendError).font(AppFont.xs).foregroundStyle(p.accentDanger)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -275,6 +280,10 @@ struct ComposeView: View {
             }
             .task { allContacts = await engine.store.read { $0.contacts() } }
             .task { await downloadPendingAttachments() }
+            .task(id: "\(resolvedFromKey ?? "")|\(fromEmail)") {
+                guard isDomain, let key = resolvedFromKey, !fromEmail.isEmpty else { signature = nil; return }
+                signature = await cloud.signature(orgId: key, from: fromEmail)
+            }
             .confirmationDialog("Save this draft?", isPresented: $showSaveDialog, titleVisibility: .visible) {
                 Button("Save draft") { saveDraft() }
                 Button("Discard", role: .destructive) { discardDraft() }
@@ -418,6 +427,25 @@ struct ComposeView: View {
         .clipShape(RoundedRectangle(cornerRadius: wellRadius, style: .continuous))
     }
 
+    /// The signature that goes under the message, as text; Remove takes it off this one.
+    @ViewBuilder private var signatureRow: some View {
+        if let sig = signature {
+            VStack(alignment: .leading, spacing: Space.s1) {
+                HStack {
+                    Text("Signature").font(AppFont.xs(.semibold)).foregroundStyle(p.textTertiary)
+                    Spacer()
+                    Button(signatureOff ? "Add signature" : "Remove") { signatureOff.toggle() }
+                        .font(AppFont.xs(.semibold)).foregroundStyle(p.accentViolet)
+                }
+                if !signatureOff {
+                    Text(sig.previewText).font(AppFont.sm).foregroundStyle(p.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .padding(.horizontal, Space.s3)
+        }
+    }
+
     /// Body editor + attachment rows: Groovebox wells are rounder.
     private var wellRadius: CGFloat { p.panelRadius != nil ? 14 : Radius.md }
 
@@ -557,7 +585,8 @@ struct ComposeView: View {
                 let ok = await cloud.send(conversationId: conversationId, from: fromEmail, to: to,
                                           cc: cc.isEmpty ? nil : cc,
                                           subject: subject.isEmpty ? nil : subject, bodyPlain: messageBody,
-                                          attachments: domainAtts, orgId: key)
+                                          attachments: domainAtts, orgId: key,
+                                          signature: signatureOff ? nil : signature)
                 await MainActor.run {
                     sending = false
                     if ok { draftStore.delete(id: draftId); markThreadRead(); close() }
@@ -606,7 +635,8 @@ struct ComposeView: View {
             let ok = await cloud.scheduleSend(conversationId: conversationId, from: fromEmail, to: to,
                                               cc: cc.isEmpty ? nil : cc,
                                               subject: subject.isEmpty ? nil : subject, bodyPlain: messageBody,
-                                              attachments: atts, at: scheduleDate, orgId: resolvedFromKey)
+                                              attachments: atts, at: scheduleDate, orgId: resolvedFromKey,
+                                              signature: signatureOff ? nil : signature)
             await MainActor.run {
                 sending = false
                 if ok { draftStore.delete(id: draftId); markThreadRead(); close() }

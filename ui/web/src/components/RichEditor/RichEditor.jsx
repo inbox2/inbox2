@@ -6,6 +6,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCaret from '@tiptap/extension-collaboration-caret'
 import EditorToolbar from './EditorToolbar'
+import SignatureNode from './SignatureNode'
 import { handleEditorKeyDown, isFunctionKeyText } from './editorKeys'
 import styles from './RichEditor.module.css'
 
@@ -43,7 +44,9 @@ export default function RichEditor({
         // key was silently ignored, leaving both enabled.)
         undoRedo: yjsDoc ? false : undefined,
       }),
-      Image,
+      // allowBase64: a signature's images are data: URIs; resize: drag a corner to size one.
+      Image.configure({ allowBase64: true, resize: { enabled: true, alwaysPreserveAspectRatio: true, minWidth: 32 } }),
+      SignatureNode,
       Placeholder.configure({ placeholder }),
       ...extraExtensions,
     ]

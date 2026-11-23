@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useCallback, useContext } from 'react'
 import useDismiss from '../../hooks/useDismiss'
 import ToolbarGroup, { ToolbarButton } from '../ToolbarGroup'
 import Button from '../Button/Button'
@@ -14,6 +14,8 @@ import api from '../../lib/localFirstApi'
 import log from '../../lib/log'
 import useUndoStore from '../../stores/undoStore'
 import { buildQuotedHtml as buildMessageQuote, plainTextToHtml } from '../../lib/draftBuilders'
+import { loadSignatures, signatureFor, signatureBlock, signatureText } from '../../lib/signatures'
+import { AuthContext } from '../../hooks/AuthProvider'
 import styles from './Composer.module.css'
 
 function buildQuotedHtml(messages) {
@@ -34,7 +36,13 @@ export default function Composer({
 }) {
   const { createDraft, sendInline } = useDrafts()
   // Reply from the address the thread was sent to, not the page default.
-  const fromAddress = replyFromAddress(messages?.[messages.length - 1], useFromIdentities(), defaultFrom)
+  const fromIdentities = useFromIdentities()
+  const fromAddress = replyFromAddress(messages?.[messages.length - 1], fromIdentities, defaultFrom)
+  // The From address's signature goes under the reply (spec 8.1.7). Read when
+  // sending, so a quick first reply still waits for it.
+  const fromOrgId = fromIdentities.find((i) => i.email.toLowerCase() === (fromAddress || '').toLowerCase())?.orgId
+  const userId = useContext(AuthContext)?.user?.id
+  const getSignature = () => loadSignatures(fromOrgId || null, userId).then((d) => signatureFor(d, fromAddress), () => null)
   const textareaRef = useRef(null)
   const fileInputRef = useRef(null)
   const [templates, setTemplates] = useState(null)
@@ -78,43 +86,60 @@ export default function Composer({
   // rides along so the engine can hydrate In-Reply-To/References at send time.
   const replyParentKey = messages?.length ? messages[messages.length - 1].key : undefined
 
-  const handleMaximize = () => {
-    const currentText = textareaRef.current?.value || ''
-    const subject = replySubject
-      ? (replySubject.startsWith('Re: ') ? replySubject : `Re: ${replySubject}`)
-      : ''
+  // Set while a send or a hand-off to the full composer waits for the signature,
+  // so a second click can't send twice or open a second draft.
+  const busyRef = useRef(false)
+  const [handingOff, setHandingOff] = useState(false)
 
-    const quotedHtml = buildQuotedHtml(messages)
+  const handleMaximize = async () => {
+    if (busyRef.current) return
+    busyRef.current = true
+    setHandingOff(true)
+    try {
+      const signature = await getSignature()
+      const currentText = textareaRef.current?.value || ''
+      const subject = replySubject
+        ? (replySubject.startsWith('Re: ') ? replySubject : `Re: ${replySubject}`)
+        : ''
 
-    createDraft({
-      conversationId,
-      fromAddress,
-      toAddress: replyTo || '',
-      subject,
-      bodyPlain: currentText,
-      // plainTextToHtml escapes the user's text — `<` or `&` typed in the
-      // reply must not be interpreted as markup in the outgoing HTML.
-      bodyHtml: currentText ? `<p>${plainTextToHtml(currentText)}</p>` : '',
-      quotedHtml,
-      replyToMessageKey: replyParentKey,
-      focus: 'body',
-    })
+      const quotedHtml = buildQuotedHtml(messages)
 
-    clearField()
+      await createDraft({
+        conversationId,
+        fromAddress,
+        toAddress: replyTo || '',
+        subject,
+        bodyPlain: signature ? `${currentText}\n\n${signatureText(signature.html)}` : currentText,
+        // plainTextToHtml escapes the user's text — `<` or `&` typed in the
+        // reply must not be interpreted as markup in the outgoing HTML.
+        bodyHtml: `${currentText ? `<p>${plainTextToHtml(currentText)}</p>` : '<p></p>'}${signature ? `<p></p>${signatureBlock(signature)}` : ''}`,
+        quotedHtml,
+        replyToMessageKey: replyParentKey,
+        focus: 'body',
+      })
+
+      clearField()
+    } finally {
+      busyRef.current = false
+      setHandingOff(false)
+    }
   }
 
   const handleSend = async () => {
     const text = textareaRef.current?.value?.trim()
-    if (!text || sending) return
+    if (!text || sending || busyRef.current) return
     // No resolvable recipient — escalate to the full composer so the user can address it.
     if (!replyTo) { handleMaximize(); return }
+    busyRef.current = true
 
     const subject = replySubject
       ? (replySubject.startsWith('Re: ') ? replySubject : `Re: ${replySubject}`)
       : ''
-    const bodyHtml = `<p>${plainTextToHtml(text)}</p>${buildQuotedHtml(messages)}`
-
     setSending(true)
+    const signature = await getSignature()
+    const bodyHtml = `<p>${plainTextToHtml(text)}</p>${signature ? `<br>${signatureBlock(signature)}` : ''}${buildQuotedHtml(messages)}`
+    const sigText = signature ? signatureText(signature.html) : ''
+
     setSendError(null)
     try {
       const result = await sendInline({
@@ -123,7 +148,7 @@ export default function Composer({
         toAddress: replyTo,
         subject,
         bodyHtml,
-        bodyPlain: text,
+        bodyPlain: sigText ? `${text}\n\n${sigText}` : text,
         replyToMessageKey: replyParentKey,
       })
       // Accepted (sent or durably queued): clear the field either way.
@@ -139,6 +164,7 @@ export default function Composer({
       // Keep the text in place so the user can retry; surface the failure.
       setSendError(e?.message || 'Your reply didn’t send. Try again.')
     } finally {
+      busyRef.current = false
       setSending(false)
     }
   }
@@ -307,12 +333,14 @@ export default function Composer({
       <div className={styles.actions}>
         <div className={styles.actionsLeft}>
           <ToolbarGroup>
-            <ToolbarButton icon="paperclip" onClick={handleAttach}>Attach</ToolbarButton>
+            <ToolbarButton icon="paperclip" onClick={handleAttach} disabled={handingOff}>Attach</ToolbarButton>
             <ToolbarButton icon="note.text" onClick={handleNote}>Note</ToolbarButton>
             <ToolbarButton icon="list.bullet.rectangle" onClick={handleTemplateToggle}>Template</ToolbarButton>
             <ToolbarButton
               icon="arrow.up.left.and.arrow.down.right"
               onClick={handleMaximize}
+              disabled={handingOff}
+              aria-busy={handingOff}
             />
           </ToolbarGroup>
         </div>

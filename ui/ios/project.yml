@@ -270,6 +270,7 @@ targets:
       - path: Sources/Models/ContactRanking.swift
       # iPad command palette ranking — pure Foundation.
       - path: Sources/Models/PaletteMatch.swift
+      - path: Sources/Models/MailSignature.swift
       - path: Sources/Cloud/CloudDTOs.swift
       # Touch Strip maths + layout merge (treemap, time zones, rain) — pure Foundation.
       - path: Sources/TouchStrip/TouchStripMath.swift
@@ -305,6 +306,7 @@ targets:
       - path: Sources/Data/Log.swift
       - path: Sources/Cloud/CloudDTOs.swift
       - path: Sources/Cloud/CloudClient.swift
+      - path: Sources/Models/MailSignature.swift
     info:
       path: ShareExtension/Info.plist
       properties:

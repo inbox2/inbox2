@@ -154,13 +154,21 @@ class CloudClient {
         request("POST", "/orgs/$orgId/messages/$messageId/calendar-import",
             JSONObject().put("time_zone", java.util.TimeZone.getDefault().id).toString(), authed = true)
     }
-    suspend fun createDraft(orgId: String, from: String, to: String, cc: String?, subject: String?, bodyPlain: String, conversationId: String?): CloudMessage {
+    suspend fun createDraft(orgId: String, from: String, to: String, cc: String?, subject: String?, bodyPlain: String, conversationId: String?, bodyHtml: String? = null): CloudMessage {
         val body = JSONObject().put("from_address", from).put("to_address", to).put("body_plain", bodyPlain)
+        bodyHtml?.let { body.put("body_html", it) }
         conversationId?.let { body.put("conversation_id", it) }
         cc?.takeIf { it.isNotEmpty() }?.let { body.put("cc_address", it) }
         subject?.let { body.put("subject", it) }
         return decode<CloudDraftResponse>(request("POST", "/orgs/$orgId/drafts", body.toString(), authed = true)).draft
     }
+    @kotlinx.serialization.Serializable
+    private data class SignaturesResponse(val applied: Map<String, com.inbox2.app.model.MailSignature> = emptyMap())
+
+    /** The signature for each address the member may send as (spec 8.1.7). */
+    suspend fun signatures(orgId: String): Map<String, com.inbox2.app.model.MailSignature> =
+        decode<SignaturesResponse>(request("GET", "/orgs/$orgId/signatures", authed = true)).applied
+
     suspend fun deleteDraft(orgId: String, draftId: String) {
         runCatching { request("DELETE", "/orgs/$orgId/drafts/$draftId", authed = true) }
     }

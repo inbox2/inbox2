@@ -13,6 +13,7 @@ import FileIcon from '../FileIcon'
 import formatBytes from '../../lib/formatBytes'
 import PreviewPane from '../PreviewPane'
 import { editorHtmlToEmailHtml } from '../../lib/emailHtml'
+import { useSignatures, signatureFor, applySignature } from '../../lib/signatures'
 import ConfirmDialog from '../ConfirmDialog'
 import { mayLinkInstead } from '../../lib/disk/mail'
 import { ToolbarButton } from '../ToolbarGroup'
@@ -221,8 +222,40 @@ export default function ComposePopup({ draft, index = 0 }) {
     return () => clearTimeout(t)
   }, [draft.focus])
 
+  // Signatures (spec 8.1.7): the one for the From address goes under the text,
+  // and changes with the From. A new message gets it added; a saved draft keeps
+  // what it has (its signature still swaps, or goes, with the From).
+  const fromOrgId = fromIdentities.find((i) => i.email.toLowerCase() === (draft.fromAddress || '').toLowerCase())?.orgId
+  const signatures = useSignatures(fromOrgId || null)
+  const signatureLoading = !!fromOrgId && signatures === undefined
+  const addSignatureRef = useRef(null) // null until the editor is first seen: then whether it was empty
+  const applyingSignatureRef = useRef(false)
+  const hadSignatureRef = useRef(false) // the body had a signature when the editor opened
+  // Read when the editor opens, before the signatures load or anyone types.
+  // A draft that already had a signature gets one back after a From switch.
+  useEffect(() => {
+    if (editor && addSignatureRef.current === null) {
+      hadSignatureRef.current = editor.getHTML().includes('data-signature')
+      addSignatureRef.current = editor.isEmpty || !!draft.addSignature || hadSignatureRef.current
+    }
+  }, [editor, draft.addSignature])
+  // The From address the body's signature belongs to (the draft's own when it opened).
+  const signedFromRef = useRef(draft.fromAddress)
+  useEffect(() => {
+    if (!editor || signatures === undefined || !draft.fromAddress) return
+    // A saved draft keeps the signature it has until its From address changes.
+    if (signedFromRef.current === draft.fromAddress && hadSignatureRef.current) return
+    // The fetch failed: keep the draft's own signature, but drop one that belongs
+    // to a different From address.
+    const sig = signatures === null ? undefined : signatureFor(signatures, draft.fromAddress)
+    if (sig === undefined && signedFromRef.current === draft.fromAddress) return
+    applyingSignatureRef.current = true
+    try { applySignature(editor, sig ?? null, addSignatureRef.current) } finally { applyingSignatureRef.current = false }
+    signedFromRef.current = draft.fromAddress
+  }, [editor, signatures, draft.fromAddress])
+
   const handleEditorUpdate = useCallback(({ html, text }) => {
-    dirtyRef.current = true
+    if (!applyingSignatureRef.current) dirtyRef.current = true
     setPreviewHtml(editorHtmlToEmailHtml(html))
     updateDraftLocal(draft.id, {
       bodyHtml: html,
@@ -400,6 +433,8 @@ export default function ComposePopup({ draft, index = 0 }) {
       setSendError('Wait for the upload to finish.')
       return
     }
+    // The new From address's signature is still loading; the old one is in the body.
+    if (signatureLoading) return
     // Guard against a doomed send to nobody (provider rejects it 400). A typed
     // recipient is committed on blur, so by here draft.toAddress should be set.
     if (!(draft.toAddress || '').includes('@')) {
@@ -417,7 +452,7 @@ export default function ComposePopup({ draft, index = 0 }) {
       setSendError(e?.message || 'Couldn’t send. Your draft is still here.')
       setSending(false)
     }
-  }, [draft.id, draft.toAddress, draft.attachments, sendDraft, sending, uploading])
+  }, [draft.id, draft.toAddress, draft.attachments, sendDraft, sending, uploading, signatureLoading])
 
   const handleDiscardRequest = useCallback(() => {
     setConfirmDiscard(true)
@@ -548,8 +583,9 @@ export default function ComposePopup({ draft, index = 0 }) {
         sendError={sendError}
         onSend={handleSend}
         onDiscard={handleDiscardRequest}
-        sendDisabled={hasPendingAttachments || uploading}
-        sendDisabledTitle={uploading ? 'Wait for the upload to finish.' : 'Waiting for attachments to finish downloading…'}
+        // While the new From address's signature loads, the old one is still in the body.
+        sendDisabled={hasPendingAttachments || uploading || signatureLoading}
+        sendDisabledTitle={uploading ? 'Wait for the upload to finish.' : hasPendingAttachments ? 'Waiting for attachments to finish downloading…' : 'Loading your signature…'}
       />
 
       <input

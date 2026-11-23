@@ -1,3 +1,4 @@
+require "mail"
 require "rails_helper"
 
 RSpec.describe OutboundMailPublisher do
@@ -53,6 +54,19 @@ RSpec.describe OutboundMailPublisher do
       expect(rfc5322).to include("text/html")
       expect(rfc5322).to include("Hello, this is a reply.")
       expect(rfc5322).to include("<p>Hello, this is a reply.</p>")
+    end
+
+    it "sends a signature's data: image as a cid: part of multipart/related" do
+      png = Base64.strict_encode64("\x89PNG fake")
+      message.update!(body_html: %(<p>Hi</p><div data-signature="sig_x"><img src="data:image/png;base64,#{png}"></div>))
+      rfc5322 = described_class.new(message).compose_mime
+      parsed = Mail.new(rfc5322)
+      expect(parsed.mime_type).to eq("multipart/related")
+      image = parsed.parts.find { |p| p.mime_type == "image/png" }
+      expect(image.decoded.b).to eq("\x89PNG fake".b)
+      html = parsed.html_part.decoded
+      expect(html).to include("cid:#{image.content_id[1..-2]}")
+      expect(html).not_to include("data:image")
     end
 
     it "builds the HTML alternative from the plain body when no HTML body was composed" do

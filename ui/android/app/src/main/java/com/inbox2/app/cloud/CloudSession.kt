@@ -281,15 +281,16 @@ class CloudSession(context: Context) {
     suspend fun importCalendarEvent(orgId: String, messageId: String): Boolean =
         runCatching { client.importCalendarEvent(orgId, messageId); bump(); true }.getOrDefault(false)
 
-    suspend fun send(orgId: String, conversationId: String?, from: String, to: String, cc: String?, subject: String?, body: String, attachments: List<OutgoingAttachment> = emptyList()) {
+    suspend fun send(orgId: String, conversationId: String?, from: String, to: String, cc: String?, subject: String?, typed: String, attachments: List<OutgoingAttachment> = emptyList(), signature: com.inbox2.app.model.MailSignature? = null) {
+        val (body, html) = com.inbox2.app.model.MailSignature.body(typed, signature)
         val messageId = if (attachments.isEmpty()) {
-            client.send(orgId, conversationId, from, to, cc, subject, body)
+            client.send(orgId, conversationId, from, to, cc, subject, body, html)
         } else {
             // Attachments need a message to upload against: create a draft, upload to it,
             // send threaded to the draft's conversation, then drop the draft (iOS parity).
-            val draft = client.createDraft(orgId, from, to, cc, subject, body, conversationId)
+            val draft = client.createDraft(orgId, from, to, cc, subject, body, conversationId, html)
             val keys = attachments.map { client.uploadAttachment(orgId, draft.id, it.filename, it.mimeType, it.data) }
-            val id = client.send(orgId, conversationId ?: draft.conversationId, from, to, cc, subject, body, attachmentKeys = keys)
+            val id = client.send(orgId, conversationId ?: draft.conversationId, from, to, cc, subject, body, html, attachmentKeys = keys)
             client.deleteDraft(orgId, draft.id)
             id
         }
@@ -430,12 +431,25 @@ class CloudSession(context: Context) {
     suspend fun scheduleSend(orgId: String, draftId: String, sendAtISO: String) { runCatching { client.scheduleSend(orgId, draftId, sendAtISO); bump() } }
 
     /** Compose-and-schedule: create a draft (with any attachments) then schedule it for `sendAtISO`. */
-    suspend fun scheduleNewSend(orgId: String, conversationId: String?, from: String, to: String, cc: String?, subject: String?, body: String, sendAtISO: String, attachments: List<OutgoingAttachment> = emptyList()): Boolean =
+    suspend fun scheduleNewSend(orgId: String, conversationId: String?, from: String, to: String, cc: String?, subject: String?, typed: String, sendAtISO: String, attachments: List<OutgoingAttachment> = emptyList(), signature: com.inbox2.app.model.MailSignature? = null): Boolean =
         runCatching {
-            val d = client.createDraft(orgId, from, to, cc, subject, body, conversationId)
+            val (body, html) = com.inbox2.app.model.MailSignature.body(typed, signature)
+            val d = client.createDraft(orgId, from, to, cc, subject, body, conversationId, html)
             attachments.forEach { client.uploadAttachment(orgId, d.id, it.filename, it.mimeType, it.data) }
             client.scheduleSend(orgId, d.id, sendAtISO); bump(); true
         }.getOrDefault(false)
+
+    /** Signatures per org, refetched when older than five minutes. */
+    private val signatureCache = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, Map<String, com.inbox2.app.model.MailSignature>>>()
+
+    /** The signature for mail from `address` in `orgId`, or null. */
+    suspend fun signature(orgId: String, address: String): com.inbox2.app.model.MailSignature? {
+        val key = address.lowercase()
+        signatureCache[orgId]?.takeIf { System.currentTimeMillis() - it.first < 300_000 }?.let { return it.second[key] }
+        val applied = runCatching { client.signatures(orgId) }.getOrNull() ?: return signatureCache[orgId]?.second?.get(key)
+        signatureCache[orgId] = System.currentTimeMillis() to applied
+        return applied[key]
+    }
 
     /** Undo the last domain send within the window (server reverts it to a draft). */
     suspend fun undoLastSend(): Boolean {

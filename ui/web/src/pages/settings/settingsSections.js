@@ -30,6 +30,8 @@ export const ALL_SECTIONS = [
   { key: 'rules', label: 'Routing rules', icon: 'arrow.triangle.branch', group: 'Workspace', org: true, admin: true, inConsole: true },
   // Meet links + conferencing (docs/Calendar.md) — per-member, so it lives here
   // rather than in the console.
+  // Mail signatures, the member's own and the admin's per domain (spec 8.1.7).
+  { key: 'signatures', label: 'Signatures', icon: 'signature', group: 'Workspace', org: true },
   { key: 'scheduling', label: 'Scheduling', icon: 'calendar', group: 'Workspace', org: true },
   // IMAP and SMTP for Outlook, Apple Mail, Thunderbird: the member's own app passwords.
   // Disk in Finder (docs/Disk-Sync.md): the File Provider extension's switch and settings. Mac app only.

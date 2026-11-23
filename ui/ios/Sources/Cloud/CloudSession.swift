@@ -467,20 +467,22 @@ final class CloudSession: ObservableObject {
     }
 
     func send(conversationId: String?, from: String, to: String, cc: String?, subject: String?,
-              bodyPlain: String, attachments: [OutgoingAttachment] = [], orgId: String? = nil) async -> Bool {
+              bodyPlain typed: String, attachments: [OutgoingAttachment] = [], orgId: String? = nil,
+              signature: MailSignature? = nil) async -> Bool {
         // A fresh compose can pick any org's identity from the From menu, so the send
         // must go to THAT org — not whichever one the inbox happens to be showing.
         guard let orgId = orgId ?? currentOrgId else { return false }
+        let (bodyPlain, bodyHtml) = MailSignature.body(plain: typed, signature: signature)
         do {
             let messageId: String
             if attachments.isEmpty {
                 messageId = try await client.send(orgId: orgId, conversationId: conversationId, from: from, to: to,
-                                                  cc: cc, subject: subject, bodyPlain: bodyPlain, bodyHtml: nil)
+                                                  cc: cc, subject: subject, bodyPlain: bodyPlain, bodyHtml: bodyHtml)
             } else {
                 // Attachments need a message to upload against: create a draft, upload
                 // to it, send threaded to the draft's conversation, then drop the draft.
                 let draft = try await client.createDraft(orgId: orgId, from: from, to: to, cc: cc,
-                                                         subject: subject, bodyPlain: bodyPlain,
+                                                         subject: subject, bodyPlain: bodyPlain, bodyHtml: bodyHtml,
                                                          conversationId: conversationId)
                 var keys: [String] = []
                 for a in attachments {
@@ -489,7 +491,7 @@ final class CloudSession: ObservableObject {
                 }
                 messageId = try await client.send(orgId: orgId, conversationId: conversationId ?? draft.conversationId,
                                                   from: from, to: to, cc: cc, subject: subject, bodyPlain: bodyPlain,
-                                                  bodyHtml: nil, attachmentKeys: keys)
+                                                  bodyHtml: bodyHtml, attachmentKeys: keys)
                 await client.deleteDraft(orgId: orgId, draftId: draft.id)
             }
             armUndo(messageId: messageId)
@@ -500,12 +502,13 @@ final class CloudSession: ObservableObject {
     /// Schedule a domain message for later: create a draft (with any attachments),
     /// then schedule it for `date`. Returns success.
     func scheduleSend(conversationId: String?, from: String, to: String, cc: String?, subject: String?,
-                      bodyPlain: String, attachments: [OutgoingAttachment] = [], at date: Date,
-                      orgId: String? = nil) async -> Bool {
+                      bodyPlain typed: String, attachments: [OutgoingAttachment] = [], at date: Date,
+                      orgId: String? = nil, signature: MailSignature? = nil) async -> Bool {
         guard let orgId = orgId ?? currentOrgId else { return false }
+        let (bodyPlain, bodyHtml) = MailSignature.body(plain: typed, signature: signature)
         do {
             let draft = try await client.createDraft(orgId: orgId, from: from, to: to, cc: cc,
-                                                     subject: subject, bodyPlain: bodyPlain,
+                                                     subject: subject, bodyPlain: bodyPlain, bodyHtml: bodyHtml,
                                                      conversationId: conversationId)
             for a in attachments {
                 _ = try await client.uploadAttachment(orgId: orgId, messageId: draft.id,
@@ -514,6 +517,18 @@ final class CloudSession: ObservableObject {
             try await client.scheduleSend(orgId: orgId, draftId: draft.id, sendAtISO: Self.snoozeFmt.string(from: date))
             return true
         } catch { await handleAuthError(error); return false }
+    }
+
+    /// Signatures per org, refetched when older than five minutes (a change in
+    /// Settings on another device shows up on the next compose).
+    private var signatureCache: [String: (at: Date, applied: [String: MailSignature])] = [:]
+
+    /// The signature for mail from `address` in `orgId`, or nil.
+    func signature(orgId: String, from address: String) async -> MailSignature? {
+        if let c = signatureCache[orgId], c.at.timeIntervalSinceNow > -300 { return c.applied[address.lowercased()] }
+        guard let applied = try? await client.signatures(orgId: orgId) else { return signatureCache[orgId]?.applied[address.lowercased()] }
+        signatureCache[orgId] = (Date(), applied)
+        return applied[address.lowercased()]
     }
 
     /// Surface the "Undo send" affordance for the undo window, then auto-clear.

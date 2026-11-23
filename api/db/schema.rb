@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_22_130001) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_23_100001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -1813,6 +1813,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_130001) do
   create_table "signatures", force: :cascade do |t|
     t.text "body_html"
     t.datetime "created_at", null: false
+    t.bigint "domain_id"
     t.string "from_address"
     t.boolean "is_default", default: false, null: false
     t.string "key", null: false
@@ -1820,6 +1821,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_130001) do
     t.string "name", null: false
     t.bigint "organization_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["domain_id"], name: "index_signatures_on_domain_id"
     t.index ["key"], name: "index_signatures_on_key", unique: true
     t.index ["organization_id"], name: "index_signatures_on_organization_id"
   end
@@ -2380,6 +2382,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_130001) do
   add_foreign_key "saml_identities", "organizations", on_delete: :cascade
   add_foreign_key "saml_identities", "users", on_delete: :cascade
   add_foreign_key "sessions", "users"
+  add_foreign_key "signatures", "domains", on_delete: :cascade
   add_foreign_key "signatures", "memberships"
   add_foreign_key "signatures", "organizations"
   add_foreign_key "subscriptions", "organizations"

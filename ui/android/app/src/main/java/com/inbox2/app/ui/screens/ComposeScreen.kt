@@ -200,6 +200,13 @@ fun ComposeScreen(engine: EngineModel, cloud: com.inbox2.app.cloud.CloudSession,
         ?: identities.firstOrNull { it.key == fromKey }
     // A reply/forward's exact From only holds while its own account is picked (iOS parity).
     val fromEmail = pickedEmail ?: prefill.fromEmailOverride?.takeIf { fromKey == prefill.accountKey } ?: fromIdentity?.email ?: ""
+    // The From address's signature (domain mail only); Remove takes it off this message.
+    var signature by remember { mutableStateOf<com.inbox2.app.model.MailSignature?>(null) }
+    var signatureOff by remember { mutableStateOf(false) }
+    LaunchedEffect(fromKey, fromEmail) {
+        val key = fromKey
+        signature = if (key != null && com.inbox2.app.model.AccountKey.isDomain(key) && fromEmail.isNotEmpty()) cloud.signature(key, fromEmail) else null
+    }
     val hasContent = to.isNotBlank() || cc.isNotBlank() || bcc.isNotBlank() || subject.isNotBlank() || body.isNotBlank() || attachments.isNotEmpty()
 
     /// Read a picked content URI into an attachment chip (shared by the file and photo
@@ -274,7 +281,7 @@ fun ComposeScreen(engine: EngineModel, cloud: com.inbox2.app.cloud.CloudSession,
         scope.launch {
             if (com.inbox2.app.model.AccountKey.isDomain(key)) {
                 val atts = attachments.mapNotNull { att -> att.bytes?.let { com.inbox2.app.cloud.OutgoingAttachment(att.name, att.mime, it) } }
-                val res = runCatching { cloud.send(key, prefill.conversationId, fromEmail, to, cc.ifBlank { null }, subject, body, atts) }
+                val res = runCatching { cloud.send(key, prefill.conversationId, fromEmail, to, cc.ifBlank { null }, subject, body, atts, signature.takeUnless { signatureOff }) }
                 sending = false
                 if (res.isSuccess) { prefill.savedDraftId?.let(drafts::delete); markThreadRead(key); onDomainSent(); close() }
                 else statusMsg = "Couldn't send: ${res.exceptionOrNull()?.message}"
@@ -299,7 +306,7 @@ fun ComposeScreen(engine: EngineModel, cloud: com.inbox2.app.cloud.CloudSession,
             val iso = java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(
                 java.time.Instant.ofEpochMilli(sendAtMs).atZone(java.time.ZoneId.systemDefault()))
             val atts = attachments.mapNotNull { att -> att.bytes?.let { com.inbox2.app.cloud.OutgoingAttachment(att.name, att.mime, it) } }
-            val ok = cloud.scheduleNewSend(key, prefill.conversationId, fromEmail, to, cc.ifBlank { null }, subject, body, iso, atts)
+            val ok = cloud.scheduleNewSend(key, prefill.conversationId, fromEmail, to, cc.ifBlank { null }, subject, body, iso, atts, signature.takeUnless { signatureOff })
             sending = false
             if (ok) { prefill.savedDraftId?.let(drafts::delete); markThreadRead(key); close() } else statusMsg = "Couldn't schedule"
         }
@@ -445,6 +452,16 @@ fun ComposeScreen(engine: EngineModel, cloud: com.inbox2.app.cloud.CloudSession,
                 keyboardOptions = KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences),
                 cursorBrush = SolidColor(p.accentViolet), modifier = Modifier.fillMaxWidth(),
             )
+        }
+        signature?.let { sig ->
+            Column(Modifier.fillMaxWidth().padding(horizontal = Space.s4 + Space.s3)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Signature", color = p.textTertiary, style = AppFont.xs, modifier = Modifier.weight(1f))
+                    Text(if (signatureOff) "Add signature" else "Remove", color = p.accentViolet, style = AppFont.xs,
+                        modifier = Modifier.noRippleClickable { signatureOff = !signatureOff })
+                }
+                if (!signatureOff) Text(sig.previewText, color = p.textSecondary, style = AppFont.sm, modifier = Modifier.padding(top = Space.s1))
+            }
         }
         statusMsg?.let { Text(it, color = if (it.startsWith("Couldn't")) p.accentDanger else p.textTertiary, style = AppFont.xs, modifier = Modifier.padding(Space.s4)) }
         Spacer(Modifier.height(40.dp))

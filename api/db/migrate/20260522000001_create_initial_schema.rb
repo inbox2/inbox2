@@ -1833,6 +1833,7 @@ class CreateInitialSchema < ActiveRecord::Migration[8.1]
     create_table "signatures", force: :cascade do |t|
       t.text "body_html"
       t.datetime "created_at", null: false
+      t.bigint "domain_id"
       t.string "from_address"
       t.boolean "is_default", default: false, null: false
       t.string "key", null: false
@@ -1840,6 +1841,7 @@ class CreateInitialSchema < ActiveRecord::Migration[8.1]
       t.string "name", null: false
       t.bigint "organization_id", null: false
       t.datetime "updated_at", null: false
+      t.index ["domain_id"], name: "index_signatures_on_domain_id"
       t.index ["key"], name: "index_signatures_on_key", unique: true
       t.index ["organization_id"], name: "index_signatures_on_organization_id"
     end
@@ -2388,6 +2390,7 @@ class CreateInitialSchema < ActiveRecord::Migration[8.1]
     add_foreign_key "saml_identities", "organizations", on_delete: :cascade
     add_foreign_key "saml_identities", "users", on_delete: :cascade
     add_foreign_key "sessions", "users"
+    add_foreign_key "signatures", "domains", on_delete: :cascade
     add_foreign_key "signatures", "memberships"
     add_foreign_key "signatures", "organizations"
     add_foreign_key "subscriptions", "organizations"

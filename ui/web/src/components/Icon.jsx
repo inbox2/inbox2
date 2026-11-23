@@ -221,6 +221,14 @@ const ICONS = {
     </>
   ),
 
+  // Settings › Signatures: a handwritten stroke on a line.
+  'signature': (
+    <>
+      <path d="M3 17c2.5-5 4.5-9 6-9 2 0 -1.5 8 .5 8 1.5 0 2.5-4 4-4 1.2 0 .8 3 2 3 .9 0 1.6-1 2.5-2" />
+      <path d="M3 21h18" />
+    </>
+  ),
+
   'pencil': (
     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" fill="currentColor" fillOpacity="0.08" />
   ),

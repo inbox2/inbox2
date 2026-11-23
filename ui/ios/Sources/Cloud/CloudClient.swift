@@ -361,13 +361,21 @@ actor CloudClient {
     /// Create a draft (a stub message) so attachments can be uploaded against it
     /// before the real send. Returns the draft (carries its id + conversation_id).
     func createDraft(orgId: String, from: String, to: String, cc: String?, subject: String?,
-                     bodyPlain: String, conversationId: String?) async throws -> CloudMessage {
+                     bodyPlain: String, bodyHtml: String? = nil, conversationId: String?) async throws -> CloudMessage {
         var body: [String: Any] = ["from_address": from, "to_address": to, "body_plain": bodyPlain]
+        if let bodyHtml { body["body_html"] = bodyHtml }
         if let conversationId { body["conversation_id"] = conversationId }
         if let cc, !cc.isEmpty { body["cc_address"] = cc }
         if let subject { body["subject"] = subject }
         let resp: CloudDraftResponse = try await request("POST", "/orgs/\(orgId)/drafts", body: body, authed: true)
         return resp.draft
+    }
+
+    /// The signature for each address the member may send as (spec 8.1.7).
+    func signatures(orgId: String) async throws -> [String: MailSignature] {
+        struct Response: Decodable { let applied: [String: MailSignature] }
+        let r: Response = try await request("GET", "/orgs/\(orgId)/signatures", authed: true)
+        return r.applied
     }
 
     func deleteDraft(orgId: String, draftId: String) async {

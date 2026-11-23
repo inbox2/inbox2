@@ -10,6 +10,7 @@ import { setLastFrom } from '../lib/lastUsedPref'
 import useAccountStore from '../stores/accountStore'
 import useFromIdentities from './useFromIdentities'
 import YjsActionCableProvider from '../lib/YjsActionCableProvider'
+import { bodyTextWithoutSignature } from '../lib/signatures'
 import DraftContext from './DraftContext'
 
 const AUTOSAVE_DELAY = 2000
@@ -28,6 +29,7 @@ const DRAFT_STATUS = {
 let draftCache = []
 const yjsCache = {} // { [draftId]: { doc, provider } }
 const saveTimerCache = {}
+const pendingFieldsCache = {}
 
 export default function DraftProvider({ orgId, activeAccountKey, children }) {
   const [drafts, setDraftsState] = useState(draftCache)
@@ -39,6 +41,7 @@ export default function DraftProvider({ orgId, activeAccountKey, children }) {
     })
   }, [])
   const saveTimers = useRef(saveTimerCache)
+  const pendingFields = useRef(pendingFieldsCache) // draftId → fields the next autosave sends
   const yjsRefs = useRef(yjsCache)
 
   const createYjsDoc = useCallback((draftId, user) => {
@@ -122,6 +125,9 @@ export default function DraftProvider({ orgId, activeAccountKey, children }) {
       // Which field to focus when the popup opens: 'body' for reply/reply-all
       // (recipients already filled), 'to' for new messages / forwards.
       focus: opts.focus || 'to',
+      // Add the From address's signature when the editor opens, even though the
+      // body already has text (a reply carried over from the inline box).
+      addSignature: !!opts.addSignature,
     }
 
     setDrafts(prev => [...prev, draft])
@@ -154,9 +160,14 @@ export default function DraftProvider({ orgId, activeAccountKey, children }) {
     if (saveTimers.current[draftId]) {
       clearTimeout(saveTimers.current[draftId])
     }
+    // Merge with the fields still waiting: a From change followed by a body edit
+    // (the signature swap) must save both, not only the last.
+    const merged = { ...pendingFields.current[draftId], ...fields }
+    pendingFields.current[draftId] = merged
     updateDraftLocal(draftId, { saveStatus: 'unsaved' })
     saveTimers.current[draftId] = setTimeout(() => {
-      saveDraft(draftId, fields)
+      delete pendingFields.current[draftId]
+      saveDraft(draftId, merged)
       delete saveTimers.current[draftId]
     }, AUTOSAVE_DELAY)
   }, [saveDraft, updateDraftLocal])
@@ -175,16 +186,23 @@ export default function DraftProvider({ orgId, activeAccountKey, children }) {
       clearTimeout(saveTimers.current[draftId])
       delete saveTimers.current[draftId]
     }
+    // Fields the cancelled autosave held (a From change) go out with the close save.
+    const pending = pendingFields.current[draftId] || {}
+    delete pendingFields.current[draftId]
     const draft = drafts.find(d => d.id === draftId)
     if (draft) {
       // The editor's empty state is "<p></p>", so test the text, not the HTML.
-      const bodyText = (draft.bodyHtml || '').replace(/<[^>]*>|&nbsp;/g, '').trim() || (draft.bodyPlain || '').trim()
+      // The signature the composer added doesn't count: a draft with only that is empty.
+      // (bodyPlain carries the signature's text too, so it only counts when there is no signature.)
+      const bodyText = bodyTextWithoutSignature(draft.bodyHtml)
+        || (draft.bodyHtml?.includes('data-signature') ? '' : (draft.bodyPlain || '').trim())
       const hasContent = bodyText || draft.subject || draft.toAddress || draft.attachments?.length
       if (!hasContent && !draftId.startsWith('draft_local_')) {
         // An untouched compose would otherwise linger as a blank thread in every inbox.
         await api.deleteDraft(orgId, draftId).catch(() => { log.warn('Draft', `Failed to drop empty draft: ${draftId}`) })
       } else if (hasContent) {
         await saveDraft(draftId, {
+          ...pending,
           body_html: draft.bodyHtml,
           body_plain: draft.bodyPlain,
           subject: draft.subject,
@@ -201,6 +219,7 @@ export default function DraftProvider({ orgId, activeAccountKey, children }) {
       clearTimeout(saveTimers.current[draftId])
       delete saveTimers.current[draftId]
     }
+    delete pendingFields.current[draftId]
     destroyYjsDoc(draftId)
     if (!draftId.startsWith('draft_local_')) {
       try {
