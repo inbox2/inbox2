@@ -100,6 +100,8 @@ pub fn run() {
                 .with_denylist(&["notification", tray::WINDOW])
                 .build(),
         )
+        // Must come before the sql plugin: see quit_guard.
+        .plugin(quit_guard())
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations("sqlite:inbox2.db", migrations)
@@ -462,15 +464,12 @@ pub fn run() {
                 // The window-state plugin only persists on RunEvent::Exit, which we
                 // skip — so replicate its save here first (it honors the same
                 // `notification` denylist via the cache; flags match the builder).
+                if code == Some(tauri::RESTART_EXIT_CODE) {
+                    RESTARTING.store(true, std::sync::atomic::Ordering::SeqCst);
+                }
                 #[cfg(target_os = "macos")]
                 if code != Some(tauri::RESTART_EXIT_CODE) {
-                    use tauri_plugin_window_state::AppHandleExt;
-                    let _ = app_handle.save_window_state(
-                        tauri_plugin_window_state::StateFlags::all()
-                            & !tauri_plugin_window_state::StateFlags::MAXIMIZED,
-                    );
-                    log::info!("Lifecycle: hard-exit (skipping wry teardown)");
-                    std::process::exit(code.unwrap_or(0));
+                    hard_exit(app_handle, code.unwrap_or(0));
                 }
             }
             tauri::RunEvent::Exit => {
@@ -478,4 +477,39 @@ pub fn run() {
             }
             _ => {}
         });
+}
+
+/// Set when the updater relaunches: that path must reach RunEvent::Exit.
+static RESTARTING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Save window state and leave the process now, skipping wry's teardown (see ExitRequested).
+#[cfg(target_os = "macos")]
+fn hard_exit<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>, code: i32) -> ! {
+    use tauri_plugin_window_state::AppHandleExt;
+    let _ = app_handle.save_window_state(
+        tauri_plugin_window_state::StateFlags::all()
+            & !tauri_plugin_window_state::StateFlags::MAXIMIZED,
+    );
+    log::info!("Lifecycle: hard-exit (skipping wry teardown)");
+    std::process::exit(code);
+}
+
+/// A quit from outside the app (a Quit Apple Event, logout, restart) goes straight
+/// to RunEvent::Exit without ExitRequested. tauri-plugin-sql then block_on()s its
+/// pool close on the main thread, and it hung for good on 2026-11-23. Plugins see
+/// events in registration order, so this one runs first: the same shutdown and
+/// hard-exit as ExitRequested.
+fn quit_guard() -> tauri::plugin::TauriPlugin<tauri::Wry> {
+    tauri::plugin::Builder::new("quit-guard")
+        .on_event(|app_handle, event| {
+            if let tauri::RunEvent::Exit = event {
+                if RESTARTING.load(std::sync::atomic::Ordering::SeqCst) {
+                    return;
+                }
+                shutdown::SHUTDOWN_ONCE.call_once(|| shutdown::graceful_shutdown(app_handle));
+                #[cfg(target_os = "macos")]
+                hard_exit(app_handle, 0);
+            }
+        })
+        .build()
 }
