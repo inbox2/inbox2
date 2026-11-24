@@ -17,6 +17,11 @@ jobs:
       # with it the target dir outgrew the runner's disk (the runner was lost).
       CARGO_PROFILE_DEV_DEBUG: "0"
       CARGO_PROFILE_TEST_DEBUG: "0"
+      # The runner was still lost after that (never green on GitHub): out of
+      # memory, linking the lib's staticlib + cdylib + test binaries 4 at a time.
+      # Two jobs, no incremental state, and extra swap (below).
+      CARGO_BUILD_JOBS: "2"
+      CARGO_INCREMENTAL: "0"
     defaults:
       run:
         working-directory: ui/desktop/src-tauri
@@ -27,6 +32,11 @@ jobs:
         run: |
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/local/lib/android
           df -h /
+
+      - name: Add swap
+        run: |
+          sudo fallocate -l 8G /swap2 && sudo chmod 600 /swap2 && sudo mkswap /swap2 && sudo swapon /swap2
+          free -h
 
       - name: Install Tauri system dependencies
         run: |
