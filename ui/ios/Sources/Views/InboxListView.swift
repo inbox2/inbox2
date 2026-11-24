@@ -398,14 +398,15 @@ struct InboxListView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: cloud.lastSend != nil)
-            .safeAreaInset(edge: .bottom) { Color.clear.frame(height: split == nil ? 70 : 0) }
+            .safeAreaInset(edge: .bottom) { Color.clear.frame(height: split == nil ? 70 : chrome.stripHeight) }
             // Bulk-action bar takes the floating nav's place while multi-selecting —
             // RootTabs hides the nav (via chrome.editing), and this sits at the same
             // bottom offset (after the inset), so it reads as a drop-in replacement.
             .overlay(alignment: .bottom) {
                 if bulk.editing {
                     selectionBar
-                        .padding(.bottom, Space.s2)
+                        // The overlay ignores the inset above; on iPad clear the Touch Strip here.
+                        .padding(.bottom, Space.s2 + (split == nil ? 0 : chrome.stripHeight))
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else if readAloud.phase == .listening {
                     // Hands-free triage window for an in-place "Read aloud" — sits above
@@ -413,7 +414,7 @@ struct InboxListView: View {
                     // The pill owns the live mic-level observation, so it can't re-render
                     // the list behind it on every audio frame.
                     ReadAloudListeningPill()
-                        .padding(.bottom, 78)
+                        .padding(.bottom, split == nil ? 78 : Space.s2 + chrome.stripHeight)   // iPad: no floating nav, clear the strip
                 }
             }
             .animation(.easeInOut(duration: 0.25), value: readAloud.phase == .listening)
@@ -513,6 +514,8 @@ struct InboxListView: View {
                 if channels.contains(where: { $0.id == want }) { selectedChannel = want }
             }
             .onChange(of: selectedChannel, initial: true) { old, new in
+                // Focus belongs to the folder jump's channel; any other switch (a chip, the palette) ends it.
+                if old != new, chrome.focusChannel != nil, chrome.focusChannel != new { withAnimation(.easeInOut(duration: 0.45)) { chrome.focusChannel = nil } }
                 if let split {
                     if old == new, split.channel != new {
                         // First mount: iPad portrait remounts this list on every sidebar
@@ -901,6 +904,20 @@ struct InboxListView: View {
             HStack(spacing: Space.s2 + 2) {
                 // No leading control in edit mode — cancelling lives on the bulk bar's
                 // trailing ✕ (next to the floating-nav slot it occupies).
+                if !bulk.editing && chrome.focusChannel != nil && chrome.focusChannel == selectedChannel {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.45)) { chrome.focusChannel = nil }
+                        addressFolders.selected = nil
+                        withAnimation(.easeOut(duration: 0.15)) { selectedChannel = "unified" }
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(AppFont.glyph(20, .semibold))
+                            .foregroundStyle(p.accentViolet)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Back to all channels")
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+                }
                 if !bulk.editing { leadingControl(20) }
                 Text(bulk.editing ? "\(bulk.selection.count) Selected" : listTitle)
                     .font(AppFont.title.smallCaps())
@@ -941,7 +958,8 @@ struct InboxListView: View {
                     .plainListRow()
             }
 
-            ChannelsRow(channels: channels, selection: $selectedChannel)
+            ChannelsRow(channels: channels, selection: $selectedChannel, focus: Binding(get: { chrome.focusChannel != nil && chrome.focusChannel == selectedChannel },
+                                                                         set: { if !$0 { chrome.focusChannel = nil } }))
                 .padding(.bottom, Space.s4)
                 .plainListRow()
 

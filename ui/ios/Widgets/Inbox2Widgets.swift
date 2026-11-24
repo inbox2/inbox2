@@ -8,6 +8,7 @@ struct Inbox2WidgetBundle: WidgetBundle {
         MailLiveActivity()
         ZoneLiveActivity()
         LoreLiveActivity()
+        UnreadStackWidget()
     }
 }
 
@@ -175,7 +176,7 @@ private struct ActionRow: View {
 
 /// The app icon as the card's mark (the extension has no theme runtime or brand
 /// vector; `BrandMark.imageset` is the icon master downscaled).
-private struct BrandMark: View {
+struct BrandMark: View {
     let size: CGFloat
 
     private var assetName: String {

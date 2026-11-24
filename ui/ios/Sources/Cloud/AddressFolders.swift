@@ -1,3 +1,4 @@
+import CryptoKit
 import SwiftUI
 
 // Address folders: the store and tree. The `AddressFolder` DTO is in CloudDTOs.swift.
@@ -7,8 +8,43 @@ enum MxFolderFilter: Sendable {
     /// One folder: the row's `folder` equals this key.
     case address(String)
     /// Inbox: rows in a folder shown in Inbox (per domain key), or `direct` ones.
-    /// Domains without a loaded tree are not filtered.
+    /// A domain with no tree yet maps to no keys: only its `direct` rows show.
     case inbox([String: [String]])
+}
+
+/// Diagnostics for mail from hidden addresses showing in the Inbox: every distinct
+/// filter, list result and tree load goes to Documents/inbox2/inbox-filter.log.
+@MainActor
+enum InboxFilterLog {
+    private static var last: [String: String] = [:]
+
+    /// Writes only when the line for `key` changed, so list reloads don't flood the file.
+    /// Debug builds only; folder keys go in as `redact`ed hashes.
+    static func note(_ key: String, _ line: String) {
+        #if DEBUG
+        guard last[key] != line else { return }
+        last[key] = line
+        Log.cloud.debug("inbox filter: \(line, privacy: .private)")
+        DiagLog.note("inbox-filter.log", line)
+        #endif
+    }
+
+    /// A folder key (an address local part) as a short stable hash: the same key
+    /// reads the same on every line without naming the mailbox.
+    nonisolated static func redactNonisolated(_ key: String) -> String { redactKey(key) }
+    static func redact(_ key: String) -> String { redactKey(key) }
+    nonisolated private static func redactKey(_ key: String) -> String {
+        SHA256.hash(data: Data(key.utf8)).prefix(3).map { String(format: "%02x", $0) }.joined()
+    }
+
+    static func describe(_ f: MxFolderFilter?) -> String {
+        switch f {
+        case .address(let k): return "folder=\(redact(k))"
+        case .inbox(let m) where m.isEmpty: return "inbox UNFILTERED(no trees)"
+        case .inbox(let m): return "inbox " + m.sorted { $0.key < $1.key }.map { "\($0.key):[\($0.value.map(redact).joined(separator: ","))]" }.joined(separator: " ")
+        case nil: return "no-filter"
+        }
+    }
 }
 
 /// The folder trees (per `dom_…` key), which domain chip the inbox shows and the
@@ -19,7 +55,14 @@ final class AddressFolderStore: ObservableObject {
 
     struct Scope: Equatable { let orgId: String; let domain: String }
 
-    @Published private(set) var trees: [String: [AddressFolder]] = [:]
+    /// Saved across launches, so a cold start filters before the first fetch lands.
+    @Published private(set) var trees: [String: [AddressFolder]] = AddressFolderStore.saved() {
+        didSet { UserDefaults.standard.set(try? JSONEncoder().encode(trees), forKey: Self.savedKey) }
+    }
+    private static let savedKey = "addressFolders.trees"
+    private static func saved() -> [String: [AddressFolder]] {
+        UserDefaults.standard.data(forKey: savedKey).flatMap { try? JSONDecoder().decode([String: [AddressFolder]].self, from: $0) } ?? [:]
+    }
     /// The MX domain chip on screen; nil on unified or a channel chip.
     @Published private(set) var scope: Scope?
     /// The open address folder's key (Inbox of the drawer's mailboxes when nil).
@@ -38,8 +81,13 @@ final class AddressFolderStore: ObservableObject {
     }
 
     /// The Inbox's folder keys per loaded domain, for the local list filter.
+    /// Every domain of every org is listed: one without a tree fails closed
+    /// (direct mail only) until it loads, and the version bump re-lists.
     var inboxFilter: MxFolderFilter {
-        .inbox(trees.mapValues { $0.filter { $0.kind != .inbox && $0.inInbox }.map(\.key) })
+        var keys: [String: [String]] = [:]
+        for org in CloudSession.shared.orgs { for d in org.domains ?? [] { keys[d.id] = [] } }
+        for (d, tree) in trees { keys[d] = tree.filter { $0.kind != .inbox && $0.inInbox }.map(\.key) }
+        return .inbox(keys)
     }
 
     private var lastDomain: Scope?
@@ -67,11 +115,25 @@ final class AddressFolderStore: ObservableObject {
         }
     }
 
+    /// Before an Inbox read: fetch the trees an org's domains don't have yet, so the
+    /// filter never runs open (cold launch, the widget's background refresh).
+    func ensureLoaded(orgId: String) async {
+        guard let org = CloudSession.shared.orgs.first(where: { $0.id == orgId }) else { return }
+        for d in org.domains ?? [] where trees[d.id] == nil {
+            await load(.init(orgId: orgId, domain: d.id))
+        }
+    }
+
     func load(_ s: Scope) async {
         guard inFlight.insert(s.domain).inserted else { return }
         defer { inFlight.remove(s.domain) }
-        guard let tree = await CloudSession.shared.addressFolders(orgId: s.orgId, domain: s.domain),
-              trees[s.domain] != tree else { return }
+        guard let tree = await CloudSession.shared.addressFolders(orgId: s.orgId, domain: s.domain) else {
+            InboxFilterLog.note("tree|\(s.domain)", "tree \(s.domain) load FAILED (had \(trees[s.domain] == nil ? "none" : "a tree"))")
+            return
+        }
+        let hidden = tree.filter { $0.kind != .inbox && !$0.inInbox }.map(\.key)
+        InboxFilterLog.note("tree|\(s.domain)", "tree \(s.domain) folders=\(tree.count) hidden=[\(hidden.map(InboxFilterLog.redact).joined(separator: ","))]")
+        guard trees[s.domain] != tree else { return }
         trees[s.domain] = tree
         version += 1
     }

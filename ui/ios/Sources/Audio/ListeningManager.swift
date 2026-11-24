@@ -171,7 +171,14 @@ final class ListeningManager: ObservableObject {
             }
 
             let input = engine.inputNode
-            let format = input.outputFormat(forBus: 0)
+            var format = input.outputFormat(forBus: 0)
+            // The first start after launch often reads the route before the session
+            // has settled (0 Hz), which ended the very first tap at once. Give it a
+            // moment before giving up.
+            for _ in 0..<20 where format.sampleRate == 0 || format.channelCount == 0 {
+                try await Task.sleep(nanoseconds: 50_000_000)
+                format = input.outputFormat(forBus: 0)
+            }
             // installTap raises an uncatchable ObjC exception (not a Swift error) on an
             // invalid format — which the input node reports (0 Hz / 0 ch) while the
             // audio session/route isn't ready. Crashed the app in the field; bail soft.

@@ -30,17 +30,7 @@ final class MailActivityManager {
     /// see docs/iOS-Device.md) as well as the unified log.
     func note(_ message: String) {
         Log.ui.info("live activity: \(message, privacy: .public)")
-        let line = "\(ISO8601DateFormatter().string(from: Date())) \(message)\n"
-        guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("inbox2", isDirectory: true) else { return }
-        let url = dir.appendingPathComponent("live-activity.log")
-        if let h = try? FileHandle(forWritingTo: url) {
-            defer { try? h.close() }
-            _ = try? h.seekToEnd()
-            try? h.write(contentsOf: Data(line.utf8))
-        } else {
-            try? Data(line.utf8).write(to: url)
-        }
+        DiagLog.note("live-activity.log", message)
     }
 
     /// Once per process (Inbox2App). Also adopts cards that already exist — e.g. one
@@ -103,6 +93,8 @@ final class MailActivityManager {
     /// `excluding` drops one conversation from the lookup — the one a card button just
     /// acted on, so the card moves on before the action has been applied.
     func refresh(excluding: String? = nil) async {
+        // The Unread widget follows the same inbox changes as the card.
+        await UnreadStackFeed.shared.refresh()
         guard observing, let engine = PushRegistrar.engine else { return }
         let state = await newestUnread(engine: engine, cloud: PushRegistrar.cloud, excluding: excluding)
         let activities = Activity<MailActivityAttributes>.activities

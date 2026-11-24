@@ -112,6 +112,19 @@ extension InboxStore {
         return Self.wrap(type, rows)
     }
 
+    /// Diagnostics (inbox-filter.log): the org's open threads grouped by domain,
+    /// address folder and `direct`, as "domain/folder/direct=count".
+    func mxInboxBreakdown(org: String) -> [String] {
+        queue.sync {
+            run("""
+                SELECT COALESCE(domain_key, '-') || '/' || COALESCE(json_extract(payload, '$.folder'), '-') || '/'
+                       || COALESCE(json_extract(payload, '$.direct'), 0) || '=' || COUNT(*)
+                FROM mx_conversations WHERE organization_id = ? AND status NOT IN ('trash', 'spam', 'archived')
+                GROUP BY domain_key, json_extract(payload, '$.folder'), json_extract(payload, '$.direct')
+                """, binds: [org], Self.payload)
+        }
+    }
+
     private static func marks(_ n: Int) -> String { Array(repeating: "?", count: n).joined(separator: ",") }
 
     private static func payload(_ stmt: OpaquePointer) -> String { String(cString: sqlite3_column_text(stmt, 0)) }

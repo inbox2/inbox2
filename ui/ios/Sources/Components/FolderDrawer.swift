@@ -14,6 +14,7 @@ struct FolderDrawer: View {
     @State private var shown = false
     /// An MX domain chip's address folders: its Inbox row becomes the folder tree.
     @ObservedObject private var addressFolders = AddressFolderStore.shared
+    @EnvironmentObject private var chrome: ChromeModel
 
     private var metaFolders: [MailFolder]? { provider.flatMap { MailFolder.meta(for: $0) } }
 
@@ -64,6 +65,7 @@ struct FolderDrawer: View {
                                         AddressFolderTree(selection: $selection, onPick: close)
                                     } else {
                                         folderRow(folder)
+                                        if folder == .inbox { unifiedFolders }
                                     }
                                 }
 
@@ -113,6 +115,79 @@ struct FolderDrawer: View {
             .padding(.horizontal, Space.s5)
             .padding(.vertical, Space.s3 + 2)
             .background(active ? accent.opacity(0.12) : .clear)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Unified Inbox: each MX domain's folders not already in Inbox, like the iPad
+    /// sidebar (a domain with none is left out). Domains start collapsed; a plus
+    /// address sits under its parent when that is listed, else shows in full. A tap
+    /// on a folder opens that domain's tab with the folder selected.
+    @ViewBuilder private var unifiedFolders: some View {
+        if provider == nil, addressFolders.scope == nil, let org = CloudSession.shared.currentOrg {
+            ForEach(org.domains ?? [], id: \.id) { d in
+                let list = (addressFolders.trees[d.id] ?? []).filter { ($0.kind == .own || $0.kind == .shared || $0.kind == .tag) && !$0.inInbox }
+                if !list.isEmpty { domainSection(d.id, d.name, list) }
+            }
+        }
+    }
+
+    @AppStorage("drawer.unifiedDomainsOpen") private var openDomainIds = ""
+
+    @ViewBuilder private func domainSection(_ id: String, _ name: String, _ list: [AddressFolder]) -> some View {
+        let open = openDomainIds.split(separator: ",").contains(Substring(id))
+        Button {
+            var ids = openDomainIds.split(separator: ",").map(String.init).filter { $0 != id }
+            if !open { ids.append(id) }
+            withAnimation(.easeInOut(duration: 0.15)) { openDomainIds = ids.joined(separator: ",") }
+        } label: {
+            HStack(spacing: Space.s3) {
+                Image(systemName: open ? "chevron.down" : "chevron.right")
+                    .font(AppFont.glyph(11, .semibold)).foregroundStyle(p.textTertiary).frame(width: 28)
+                Text(name).font(AppFont.body(.regular)).foregroundStyle(p.textSecondary).lineLimit(1)
+                Spacer()
+                let unread = list.reduce(0) { $0 + $1.unread }
+                if unread > 0 { Text("\(unread)").font(AppFont.xs(.semibold)).monospacedDigit().foregroundStyle(p.textTertiary) }
+            }
+            .padding(.leading, Space.s5 + Space.s4).padding(.trailing, Space.s5)
+            .padding(.vertical, Space.s2)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(open ? "Collapse" : "Expand") \(name)")
+        if open {
+            let listed = Set(list.map(\.key))
+            ForEach(list.filter { $0.kind != .tag || !listed.contains($0.parent ?? "") }) { f in
+                unifiedRow(f, domain: id, depth: 1, label: f.key)
+                if f.kind != .tag {
+                    ForEach(list.filter { $0.kind == .tag && $0.parent == f.key }) { unifiedRow($0, domain: id, depth: 2, label: $0.treeLabel) }
+                }
+            }
+        }
+    }
+
+    private func unifiedRow(_ f: AddressFolder, domain: String, depth: Int, label: String) -> some View {
+        let icon = f.kind == .shared ? "tray" : f.kind == .tag ? "tag" : "person"
+        let indent = Space.s4 * CGFloat(depth + 1)
+        return Button {
+            addressFolders.pendingSelect = (domain: domain, key: f.key)
+            chrome.pendingChannel = domain
+            chrome.focusChannel = domain
+            selection = .inbox
+            close()
+        } label: {
+            HStack(spacing: Space.s3) {
+                Image(systemName: icon)
+                    .font(AppFont.base(.medium)).foregroundStyle(p.textSecondary).frame(width: 28)
+                Text(label).font(AppFont.body(.regular)).foregroundStyle(p.textSecondary).lineLimit(1)
+                Spacer()
+                if f.unread > 0 {
+                    Text("\(f.unread)").font(AppFont.xs(.semibold)).monospacedDigit().foregroundStyle(p.textTertiary)
+                }
+            }
+            .padding(.leading, Space.s5 + indent).padding(.trailing, Space.s5)
+            .padding(.vertical, Space.s2)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

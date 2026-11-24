@@ -18,11 +18,18 @@ struct TouchStripView: View {
     @State private var keyboardUp = false
 
     private var p: ThemePalette { theme.palette }
+    /// The window's home-indicator inset (the view's own would shrink as it moves down).
+    private var bottomInset: CGFloat {
+        (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.keyWindow?.safeAreaInsets.bottom ?? 0
+    }
 
     var body: some View {
         Group {
             if keyboardUp { EmptyView() } else if model.mode == .hidden { edgeTab } else { bar }
         }
+        // Into the home-indicator band: the strip sat a full inset above the edge,
+        // leaving an empty band under it. A few points stay clear of the indicator.
+        .padding(.bottom, -max(0, bottomInset - 6))
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
         .onChange(of: scenePhase, initial: true) { StripFeedStore.shared.active = scenePhase != .background }
@@ -69,16 +76,17 @@ struct TouchStripView: View {
             Image(systemName: "chevron.up")
                 .font(AppFont.glyph(10, .semibold))
                 .foregroundStyle(p.textSecondary)
-                .frame(width: 56, height: 16)
+                .frame(width: 64, height: 24)
                 .background(UnevenRoundedRectangle(topLeadingRadius: 8, topTrailingRadius: 8).fill(p.isDark ? p.bgBase.opacity(0.85) : p.bgPanel))
                 .overlay(UnevenRoundedRectangle(topLeadingRadius: 8, topTrailingRadius: 8).stroke(p.borderSubtle, lineWidth: 1))
-                // The tab stays small; the tap area around it is finger-sized.
-                .padding(.horizontal, 32).padding(.top, 20)
+                // Trailing, clear of the centred home indicator; the tap area is finger-sized.
+                .padding(.horizontal, 20).padding(.top, 20)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Show Touch Strip")
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding(.trailing, 24)
     }
 }
 

@@ -160,6 +160,9 @@ struct ChannelAvatar: View {
     var size: CGFloat = 58
     var online: Bool = false
     var selected: Bool = false
+    /// Selected via a unified folder: the selection ring is the spinning brand gradient.
+    var focused: Bool = false
+    @State private var spin = false
 
     /// Provider → brand logo asset (single source for the switcher + settings).
     static func brandLogo(for provider: String) -> String {
@@ -229,7 +232,17 @@ struct ChannelAvatar: View {
                         selected ? theme.palette.accentViolet : theme.palette.textTertiary.opacity(0.55),
                         lineWidth: selected ? 2 : 0.5
                     )
+                    .opacity(focused ? 0 : 1)
                 )
+                .overlay {
+                    if focused {
+                        Circle().strokeBorder(theme.palette.ringGradient, lineWidth: 2.5)
+                            .rotationEffect(.degrees(spin ? 360 : 0))
+                            .onAppear { withAnimation(.linear(duration: 2.4).repeatForever(autoreverses: false)) { spin = true } }
+                            .onDisappear { spin = false }
+                            .transition(.scale(scale: 0.85).combined(with: .opacity))
+                    }
+                }
 
             if online {
                 Circle()
@@ -388,32 +401,53 @@ struct ChannelsRow: View {
     @Environment(\.theme) private var theme
     let channels: [Channel]
     @Binding var selection: String
+    /// Arrived from a unified folder (ChromeModel.focusChannel): the chip scrolls into
+    /// view and spins the brand ring; the others dim further. Any chip tap ends it.
+    @Binding var focus: Bool
 
     var body: some View {
         // Unified = all channels, so nothing is "unselected" — keep everything at
         // full opacity. Once an individual channel is selected, fade the others
-        // back so the active one stands out.
+        // back so the active one stands out (further in focus).
         let unifiedSelected = selection == "unified"
-        return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(alignment: .top, spacing: Space.s4) {
-                ForEach(channels) { ch in
-                    let active = ch.id == selection
-                    VStack(spacing: Space.s1 + 2) {
-                        ChannelAvatar(logoAsset: ch.logoAsset, icon: ch.icon, initials: ch.initials, avatarURL: ch.avatarURL, size: 58, online: ch.online, selected: active)
-                        Text(ch.label)
-                            .font(AppFont.xs3(active ? .semibold : .regular))
-                            .foregroundStyle(active ? theme.palette.textPrimary : theme.palette.textTertiary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                            .frame(maxWidth: 64)
+        return ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: Space.s4) {
+                    ForEach(channels) { ch in
+                        let active = ch.id == selection
+                        VStack(spacing: Space.s1 + 2) {
+                            ChannelAvatar(logoAsset: ch.logoAsset, icon: ch.icon, initials: ch.initials, avatarURL: ch.avatarURL, size: 58, online: ch.online, selected: active, focused: active && focus)
+                            Text(ch.label)
+                                .font(AppFont.xs3(active ? .semibold : .regular))
+                                .foregroundStyle(active ? theme.palette.textPrimary : theme.palette.textTertiary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                                .frame(maxWidth: 64)
+                        }
+                        .opacity(unifiedSelected || active ? 1 : (focus ? 0.3 : 0.75))
+                        .saturation(focus && !active ? 0.4 : 1)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation(.easeOut(duration: 0.15)) { selection = ch.id }
+                            withAnimation(.easeInOut(duration: 0.45)) { focus = false }
+                        }
+                        .id(ch.id)
                     }
-                    .opacity(unifiedSelected || active ? 1 : 0.75)
-                    .contentShape(Rectangle())
-                    .onTapGesture { withAnimation(.easeOut(duration: 0.15)) { selection = ch.id } }
+                }
+                .padding(.horizontal, Space.s4)
+                .padding(.vertical, Space.s2)
+            }
+            .onChange(of: focus, initial: true) { _, on in
+                withAnimation(.spring(response: 0.55, dampingFraction: 0.85)) {
+                    // Back on Unified: the start of the row; another chip: keep it in view.
+                    if on { proxy.scrollTo(selection, anchor: .center) }
+                    else if selection == "unified" { proxy.scrollTo(channels.first?.id ?? selection, anchor: .leading) }
+                    else { proxy.scrollTo(selection) }
                 }
             }
-            .padding(.horizontal, Space.s4)
-            .padding(.vertical, Space.s2)
+            .onChange(of: selection) { _, sel in
+                if focus { withAnimation(.spring(response: 0.55, dampingFraction: 0.85)) { proxy.scrollTo(sel, anchor: .center) } }
+            }
         }
     }
 }

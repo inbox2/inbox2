@@ -74,7 +74,10 @@ struct IPadShell: View {
     var body: some View {
         shell
             // The Touch Strip (TouchStrip/): clocks, weather, markets, news, IP.
-            .safeAreaInset(edge: .bottom, spacing: 0) { TouchStripView() }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                TouchStripView()
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { chrome.stripHeight = $0 }
+            }
             .sheet(isPresented: $showSettings) { SettingsView(onClose: { showSettings = false }) }
             .overlay {
                 if chrome.showPalette {
@@ -495,6 +498,7 @@ struct IPadShell: View {
             // Opened when that domain's chip is on screen (AddressFolderStore.show).
             addressFolders.pendingSelect = (domain: domain, key: f.key)
             chrome.pendingChannel = domain
+            chrome.focusChannel = domain
             selectedFolder = .inbox
             if !wide { sidebarPath = inboxPath }
         }

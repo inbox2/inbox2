@@ -21,8 +21,15 @@ import BackgroundTasks
     /// iPad command palette (CommandPaletteView): open state, the inbox's account
     /// chips it lists (published by InboxListView), and a chip it asks the list to open.
     @Published var showPalette = false
+    /// iPad Touch Strip height. The split-view columns don't get the shell's bottom
+    /// inset, so content that floats at the bottom adds this itself.
+    @Published var stripHeight: CGFloat = 0
     @Published var channelChoices: [(id: String, label: String)] = []
     @Published var pendingChannel: String?
+    /// Arrived in a channel from a folder in the unified Inbox: its chip spins the
+    /// brand ring, the others dim, and a back button returns to Unified.
+    /// The channel that focus belongs to; any other selection ends it.
+    @Published var focusChannel: String?
     /// "New event" from the palette, held until the calendar is up and knows it can create.
     @Published var pendingCalendarCreate = false
     /// Set by a meeting-invite banner tap — RootTabs switches to the Calendar tab

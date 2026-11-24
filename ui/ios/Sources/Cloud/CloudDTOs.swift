@@ -580,8 +580,8 @@ struct CloudBrandResponse: Decodable { let brand: CloudBrand? }
 /// by the address it came in to. Inbox is mail for you; under it your own address
 /// and its +tags, the shared addresses (info@, support@) and Other. Mirrors
 /// `ui/web/src/lib/addressFolders.js` + `hooks/useAddressFolders.js`.
-struct AddressFolder: Decodable, Identifiable, Equatable, Sendable {
-    enum Kind: String, Decodable, Sendable { case inbox, own, tag, shared, other }
+struct AddressFolder: Codable, Identifiable, Equatable, Sendable {
+    enum Kind: String, Codable, Sendable { case inbox, own, tag, shared, other }
 
     let id: String
     /// "inbox", "vince", "vince+receipts", "info" or "other" — also the mirror row's `folder`.

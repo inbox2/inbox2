@@ -110,6 +110,21 @@ final class MxMirror {
         }
     }
 
+    /// Diagnostics: the org's open threads as "domain/folder/direct=count".
+    func breakdown(orgId: String) async -> String {
+        guard let userKey else { return "no-user" }
+        let store = self.store
+        return await store.read { store in
+            guard let org = store.mxOrg(orgId, userKey: userKey) else { return "no-mirror-org" }
+            return store.mxInboxBreakdown(org: org).map { line in
+                // "domain/folder/direct=n": hash the folder part.
+                var parts = line.split(separator: "/", maxSplits: 2).map(String.init)
+                if parts.count == 3, parts[1] != "-" { parts[1] = InboxFilterLog.redactNonisolated(parts[1]) }
+                return parts.joined(separator: "/")
+            }.joined(separator: " ")
+        }
+    }
+
     func conversationDetail(orgId: String, id: String) async -> CloudConversationDetail? {
         guard let userKey else { return nil }
         let store = self.store

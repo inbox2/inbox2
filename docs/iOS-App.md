@@ -547,6 +547,22 @@ retried), `cloud.perform` with the push's `organization_id` for MX. If the engin
 or session isn't up yet (cold background launch) the queue is drained by
 `Inbox2App`'s launch task instead, so an action is never lost.
 
+**Unread widget (home screen, medium + large).** A stack of unread mail you work
+through without opening the app: the newest unread on top with up to two cards under
+it, and Read / Archive / In 3 h / Trash as glass buttons in their own colours; the large
+size adds the "Move to" quadrants (Priority / Schedule / Delegate / Later). Quadrants are
+channel-only and snooze is MX-only, so the button that doesn't apply to the top card is
+dimmed. "Move to" also marks the thread read, because a thread on the stack is one
+still to handle. The icon follows the chosen app icon (`BrandMark`). Flow:
+`UnreadStackFeed` (app) writes the top six unread (channels + MX, newest first) into the
+App Group (`UnreadStack`, `LiveActivity/UnreadStack.swift`) on every
+`MailActivityManager.refresh`, and reloads the timeline only when the snapshot changes.
+The buttons are `UnreadStackIntent`, a `LiveActivityIntent`, so they run in the app's
+process: the card drops off the top at once, then the action goes through the
+notification-action queue (snooze straight to the API). A handled thread stays out of the
+stack for 180 s so a stale sync can't put it back. The widget itself only renders
+(`Widgets/UnreadStackWidget.swift`).
+
 **Mail Live Activity.** The EasyPark-style card: a lock-screen / Dynamic Island
 Live Activity (`Inbox2Widgets` WidgetKit extension, `Widgets/Inbox2Widgets.swift`)
 showing the newest unread message with inline **Archive / Read / Trash** buttons

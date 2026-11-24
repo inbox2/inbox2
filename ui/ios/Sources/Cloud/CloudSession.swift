@@ -41,7 +41,16 @@ struct DomainThread {
 final class CloudSession: ObservableObject {
     enum State: Equatable { case loading, signedOut, signedIn }
 
-    @Published var state: State = .loading
+    @Published var state: State = .loading {
+        // Every path to signed-out (sign-out, revoked token) takes MX mail off the Unread widget.
+        didSet {
+            guard state == .signedOut else { return }
+            UnreadStack.dropDomain(channelUnread: AppBadge.channelUnread)
+            // Every way out (sign-out, expired or revoked token): the saved folder
+            // trees belong to the user who was signed in.
+            AddressFolderStore.shared.reset()
+        }
+    }
     @Published var user: CloudUser?
     @Published var orgs: [CloudOrg] = []
     @Published var currentOrgId: String?
@@ -260,6 +269,12 @@ final class CloudSession: ObservableObject {
         catch { Log.cloud.info("domain unread refresh failed: \(String(describing: error), privacy: .public)") }
     }
 
+    /// One org's inbox unread count (the Unread widget totals every org); nil on failure.
+    func unreadCount(orgId: String) async -> Int? {
+        guard isSignedIn else { return nil }
+        return try? await client.unreadCount(orgId: orgId)
+    }
+
     /// One domain's address-folder tree; nil when it can't be read (offline, 404).
     func addressFolders(orgId: String, domain: String) async -> [AddressFolder]? {
         do { return try await client.addressFolders(orgId: orgId, domain: domain) }
@@ -329,18 +344,31 @@ final class CloudSession: ObservableObject {
             // Search and Lore span the whole pool, like the web's Space drill-down.
             let byFolder = folder == .inbox && query.isEmpty && !labeledOnly
             let folderKey = byFolder ? (addressFolder ?? AddressFolder.inboxKey) : nil
+            if byFolder, addressFolder == nil { await AddressFolderStore.shared.ensureLoaded(orgId: orgId) }
             let localFolder: MxFolderFilter? = byFolder ? (addressFolder.map { .address($0) } ?? AddressFolderStore.shared.inboxFilter) : nil
             // The local mirror answers what it can evaluate — instantly, and offline.
             // Search, Sent (direction) and the assignee views are the server's.
             if query.isEmpty, direction == nil, assignee == nil,
                let local = await MxMirror.shared.conversations(orgId: orgId, status: status(for: folder), read: read, domain: domain, folder: localFolder,
                                                                     page: page, perPage: labeledOnly ? 50 : 200, labeledOnly: labeledOnly) {
+                #if DEBUG
+                if byFolder {
+                    InboxFilterLog.note("list|\(orgId)|\(domain ?? "*")|\(view)",
+                        "list org=\(orgId) domain=\(domain ?? "all") view=\(view) path=mirror rows=\(local.count) \(InboxFilterLog.describe(localFolder)) mirror=\(await MxMirror.shared.breakdown(orgId: orgId))")
+                }
+                #endif
                 return local.map { Conversation(cloud: $0, orgId: orgId) }
             }
             let rows = try await client.conversations(orgId: orgId, status: status(for: folder),
                                                       read: read, direction: direction, assignee: assignee,
                                                       search: query.isEmpty ? nil : query, domain: domain, folder: folderKey, page: page,
                                                       labeled: labeledOnly)
+            #if DEBUG
+            if byFolder {
+                InboxFilterLog.note("list|\(orgId)|\(domain ?? "*")|\(view)",
+                    "list org=\(orgId) domain=\(domain ?? "all") view=\(view) path=rest folder=\(folderKey.map(InboxFilterLog.redact) ?? "-") rows=\(rows.count)")
+            }
+            #endif
             return rows.map { Conversation(cloud: $0, orgId: orgId) }
         } catch { await handleAuthError(error); return [] }
     }

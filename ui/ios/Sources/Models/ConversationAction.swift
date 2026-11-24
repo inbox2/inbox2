@@ -1,35 +1,5 @@
 import SwiftUI
 
-
-/// Eisenhower triage quadrant — matches the desktop `lib/priority.js` keys. Carries
-/// its own menu label + glyph so the "Move to" submenus are data-driven.
-enum Quadrant: String, CaseIterable, Identifiable {
-    case doFirst = "DO_FIRST"
-    case schedule = "SCHEDULE"
-    case delegate = "DELEGATE"
-    case later = "LATER"
-
-    var id: String { rawValue }
-    var label: String {
-        switch self {
-        case .doFirst: return "Priority"
-        case .schedule: return "Schedule"
-        case .delegate: return "Delegate"
-        case .later: return "Later"
-        }
-    }
-    /// Glyphs match the desktop Eisenhower quadrants (web lib/priority.js) and
-    /// MailFolder's triage views, so the same quadrant never wears two icons.
-    var systemImage: String {
-        switch self {
-        case .doFirst: return "flame.fill"
-        case .schedule: return "calendar.badge.clock"
-        case .delegate: return "person.badge.plus"
-        case .later: return "clock"
-        }
-    }
-}
-
 /// Every conversation-level action the inbox + reader can apply. Single source for
 /// the engine/cloud verb string, the inverse (for optimistic undo), and whether the
 /// action removes the row from the current list — so views stop hardcoding verb
@@ -48,11 +18,11 @@ enum ConversationAction: Equatable {
     /// The verb the engine FFI (`perform_action`) and the cloud action mapping expect.
     var verb: String {
         switch self {
-        case .archive: return "archive"
+        case .archive: return MailVerb.archive
         case .unarchive: return "unarchive"
-        case .trash: return "trash"
+        case .trash: return MailVerb.trash
         case .untrash: return "untrash"
-        case .markRead: return "mark_read"
+        case .markRead: return MailVerb.markRead
         case .markUnread: return "mark_unread"
         case .flag: return "flag"
         case .unflag: return "unflag"
