@@ -92,6 +92,7 @@
 
 .grid2 { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: var(--space-3h); align-items: stretch; }
 .mt { margin-top: var(--space-3h); }
+.mb { margin-bottom: var(--space-3h); }
 
 /* ── Stat cards ──────────────────────────────────────────────────────────── */
 .statGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3h); margin-bottom: var(--space-3h); }

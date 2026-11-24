@@ -99,7 +99,7 @@ export default function ConsoleHome() {
       </div>
 
       {loading ? (
-        <div className={`${styles.card} ${styles.cardLoading}`}><Spinner size={18} color="#2f7ad6" /></div>
+        <div className={`${styles.card} ${styles.cardLoading} ${styles.mb}`}><Spinner size={18} color="#2f7ad6" /></div>
       ) : (
         <div className={styles.statGrid}>
           <div className={`${styles.card} ${styles.stat}`}>
