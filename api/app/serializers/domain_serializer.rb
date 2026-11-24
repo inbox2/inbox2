@@ -34,6 +34,7 @@ class DomainSerializer < ::ApplicationSerializer
 
   def self.brand_url(dom)
     base = ENV.fetch("API_PUBLIC_URL", "http://localhost:4000")
-    "#{base}/api/v1/orgs/#{dom.organization.key}/domains/#{dom.key}/brand/icon"
+    # ?v= changes with each upload: the endpoint is cached a day, so a fixed URL kept the old icon.
+    "#{base}/api/v1/orgs/#{dom.organization.key}/domains/#{dom.key}/brand/icon?v=#{Digest::SHA1.hexdigest(dom.icon_url.to_s)[0, 10]}"
   end
 end

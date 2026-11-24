@@ -10,6 +10,6 @@ class OauthAppSerializer < ::ApplicationSerializer
 
   def self.icon_url(app)
     base = ENV.fetch("API_PUBLIC_URL", "http://localhost:4000")
-    "#{base}/api/v1/oauth/apps/#{app.key}/icon"
+    "#{base}/api/v1/oauth/apps/#{app.key}/icon?v=#{Digest::SHA1.hexdigest(app.icon_url.to_s)[0, 10]}"
   end
 end

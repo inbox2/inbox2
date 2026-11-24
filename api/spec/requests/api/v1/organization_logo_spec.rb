@@ -22,7 +22,7 @@ RSpec.describe "Api::V1::Organizations upload_logo", type: :request do
         stub_storage!
         post "/api/v1/orgs/#{org.key}/logo", params: { file: image }, headers: headers
         expect(response).to have_http_status(:ok)
-        expect(response.parsed_body["organization"]["logo_url"]).to end_with("/orgs/#{org.key}/brand/logo")
+        expect(response.parsed_body["organization"]["logo_url"]).to match(%r{/orgs/#{org.key}/brand/logo\?v=\h{10}\z})
         expect(org.reload.logo_url).to eq("logos/logome/logo.png")
       end
     end

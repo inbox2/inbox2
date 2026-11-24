@@ -96,7 +96,7 @@ RSpec.describe "Api::V1::Domains", type: :request do
 
       d.update!(icon_url: "orgs/#{org.key}/icons/abc.png")
       get "/api/v1/orgs/#{org.key}/domains/#{d.key}", headers: headers
-      expect(response.parsed_body["domain"]["icon_url"]).to end_with("/orgs/#{org.key}/domains/#{d.key}/brand/icon")
+      expect(response.parsed_body["domain"]["icon_url"]).to match(%r{/orgs/#{org.key}/domains/#{d.key}/brand/icon\?v=\h{10}\z})
     end
 
     it "422s an icon upload with no file" do

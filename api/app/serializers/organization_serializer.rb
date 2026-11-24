@@ -91,6 +91,8 @@ class OrganizationSerializer < ::ApplicationSerializer
 
   def self.brand_url(org, kind)
     base = ENV.fetch("API_PUBLIC_URL", "http://localhost:4000")
-    "#{base}/api/v1/orgs/#{org.key}/brand/#{kind}"
+    # ?v= changes with each upload: the endpoint is cached a day, so a fixed URL kept the old image.
+    key = kind == "logo" ? org.logo_url : org.resolved_icon_key
+    "#{base}/api/v1/orgs/#{org.key}/brand/#{kind}?v=#{Digest::SHA1.hexdigest(key.to_s)[0, 10]}"
   end
 end

@@ -17,7 +17,7 @@ RSpec.describe "Api::V1::Organizations fetch_icon", type: :request do
         post "/api/v1/orgs/#{org.key}/icon/fetch", headers: headers
         expect(response).to have_http_status(:ok)
         # Serialized icon_url is the public brand endpoint; favicon_url holds the key.
-        expect(response.parsed_body["organization"]["icon_url"]).to end_with("/orgs/#{org.key}/brand/icon")
+        expect(response.parsed_body["organization"]["icon_url"]).to match(%r{/orgs/#{org.key}/brand/icon\?v=\h{10}\z})
         expect(response.parsed_body["organization"]["icon_source"]).to eq("favicon")
         expect(org.reload.favicon_url).to eq("icons/iconme/favicon.png")
         expect(org.icon_url).to be_nil
