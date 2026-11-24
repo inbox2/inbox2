@@ -208,6 +208,9 @@ struct ChannelAvatar: View {
                             // non-square source is center-cropped (not drifted/overflowing).
                             Image(uiImage: avatarImage).resizable().scaledToFill()
                                 .frame(width: size, height: size)
+                                // Icons are often rounded squares with a clear margin: crop past
+                                // it, or the tile behind shows at the circle's edge.
+                                .scaleEffect(1.1)
                         } else if let avatarURL, let url = URL(string: avatarURL) {
                             // Remote provider photo / domain icon — fills the circle; the
                             // brand logo shows while it loads and if it fails. The frame
@@ -216,6 +219,7 @@ struct ChannelAvatar: View {
                                 if let img = phase.image {
                                     img.resizable().scaledToFill()
                                         .frame(width: size, height: size)
+                                        .scaleEffect(1.1)
                                 } else {
                                     fallbackContent
                                 }
