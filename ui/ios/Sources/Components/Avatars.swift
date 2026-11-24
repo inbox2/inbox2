@@ -236,8 +236,11 @@ struct ChannelAvatar: View {
                 )
                 .overlay {
                     if focused {
+                        // Outside the picture with a clear gap (the page shows through),
+                        // so the avatar never shows past the ring (it sat on the edge before).
                         Circle().strokeBorder(theme.palette.ringGradient, lineWidth: 2.5)
                             .rotationEffect(.degrees(spin ? 360 : 0))
+                            .padding(-4.5)
                             .onAppear { withAnimation(.linear(duration: 2.4).repeatForever(autoreverses: false)) { spin = true } }
                             .onDisappear { spin = false }
                             .transition(.scale(scale: 0.85).combined(with: .opacity))
