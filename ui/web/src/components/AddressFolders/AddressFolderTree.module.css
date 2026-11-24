@@ -56,7 +56,7 @@
   margin-left: 0;
 }
 
-/* The bell always shows, right-aligned; … joins it on hover / keyboard focus. */
+/* The bell always shows, right-aligned; … joins it on hover / keyboard focus, left of the bell so the bell stays put. */
 .ctl {
   display: inline-flex;
   align-items: center;

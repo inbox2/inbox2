@@ -57,16 +57,6 @@ function FolderRow({ folder, label, icon, active, indent, onSelect, onSetPref, e
         {/* Plain words like iOS and Android; the pen and eye icons read as noise (2026-11-23). */}
         {readOnly && <span className={styles.readOnly}>Read only</span>}
       </button>
-      {hasPrefs && <button
-        type="button"
-        className={`${styles.ctl} ${styles.ctlShown} ${folder.notify ? styles.ctlOn : ''}`}
-        aria-label={folder.notify ? 'Notifications on' : 'Notifications off'}
-        aria-pressed={!!folder.notify}
-        title={folder.notify ? 'Notifications on' : 'Notifications off'}
-        onClick={() => onSetPref(folder, { notify: !folder.notify })}
-      >
-        <Icon name={folder.notify ? 'bell' : 'bell.slash'} size={11} />
-      </button>}
       {!isInbox && hasPrefs && (
         <button
           type="button"
@@ -78,6 +68,16 @@ function FolderRow({ folder, label, icon, active, indent, onSelect, onSetPref, e
           <Icon name="ellipsis" size={11} />
         </button>
       )}
+      {hasPrefs && <button
+        type="button"
+        className={`${styles.ctl} ${styles.ctlShown} ${folder.notify ? styles.ctlOn : ''}`}
+        aria-label={folder.notify ? 'Notifications on' : 'Notifications off'}
+        aria-pressed={!!folder.notify}
+        title={folder.notify ? 'Notifications on' : 'Notifications off'}
+        onClick={() => onSetPref(folder, { notify: !folder.notify })}
+      >
+        <Icon name={folder.notify ? 'bell' : 'bell.slash'} size={11} />
+      </button>}
       {folder.unread > 0 && <span className={styles.badge}>{folder.unread}</span>}
       <ContextMenu
         open={!!menuAt}

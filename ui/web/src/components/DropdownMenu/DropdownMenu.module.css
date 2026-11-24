@@ -157,10 +157,41 @@
   margin-left: auto;
 }
 
-.submenuWrap:hover > .submenu,
-.submenuWrap:focus-within > .submenu {
+.submenuWrap:not(.moreRow):hover > .submenu,
+.submenuWrap:not(.moreRow):focus-within > .submenu {
   display: block;
 }
+
+/* A row with a trailing …: the menu opens from the … alone (MoreItem). */
+.moreRow { display: flex; align-items: center; }
+.moreRow > .menuItem { flex: 1; min-width: 0; }
+.moreButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin-right: var(--space-1);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+}
+.moreRow:hover .moreButton,
+.moreButton:focus-visible,
+.moreButton:hover { opacity: 1; }
+.moreButton:hover,
+.moreButton:focus-visible { color: var(--text-primary); background: var(--overlay-6); }
+/* No hover on touch: the … stays visible. */
+@media (pointer: coarse) { .moreButton { opacity: 1; } }
+.moreRow[data-open] > .submenu,
+.moreRow > .submenu:focus-within { display: block; }
+.moreRow[data-open] .moreButton,
+.moreRow:focus-within .moreButton { opacity: 1; }
 
 .submenu {
   display: none;

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import Icon from '../Icon'
-import SubmenuItem from './SubmenuItem'
+import SubmenuItem, { MoreItem } from './SubmenuItem'
 import styles from './DropdownMenu.module.css'
 
 const EDGE = 8
@@ -95,14 +95,18 @@ export default function ContextMenu({ open, position, items, onClose, variant })
     const level = active?.closest('[role="menu"]')
     if (!level) return
     const list = levelItems(level)
-    const i = list.indexOf(active)
+    // On a row's …: Up/Down move from its row; Left goes back to the row.
+    const row = active.previousElementSibling?.hasAttribute('data-more-row') ? active.previousElementSibling : null
+    const i = list.indexOf(row || active)
     const to = {
       ArrowDown: list[(i + 1) % list.length],
       ArrowUp: list[(i - 1 + list.length) % list.length],
       Home: list[0],
       End: list[list.length - 1],
-      ArrowRight: active.getAttribute('aria-haspopup') ? active.nextElementSibling?.querySelector('button') : null,
-      ArrowLeft: level !== menuRef.current ? level.previousElementSibling : null,
+      // A row with a trailing …: Right moves to the …, Right again into its menu.
+      ArrowRight: active.hasAttribute('data-more-row') ? active.nextElementSibling
+        : active.getAttribute('aria-haspopup') ? active.nextElementSibling?.querySelector('button') : null,
+      ArrowLeft: row || (level !== menuRef.current ? level.previousElementSibling : null),
     }[e.key]
     if (to) { e.preventDefault(); to.focus(); return }
     if (e.key === 'Escape' || e.key === 'Tab') {
@@ -126,6 +130,7 @@ export default function ContextMenu({ open, position, items, onClose, variant })
         if (item.separator) return <div key={i} className={styles.separator} />
         if (item.heading) return <div key={i} className={styles.menuHeading}>{item.heading}</div>
         if (item.submenu) return <SubmenuItem key={item.value ?? i} item={item} onClose={() => close(true)} />
+        if (item.more) return <MoreItem key={item.value ?? i} item={item} onClose={() => close(true)} />
         return (
           <button
             key={item.value ?? i}
