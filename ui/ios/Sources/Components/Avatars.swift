@@ -197,8 +197,9 @@ struct ChannelAvatar: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            Circle()
-                .fill(Color.unifiedLogoTile)
+            // One clip over tile + picture: clipped separately, the light tile's
+            // smoothed edge showed as a rim around every picture.
+            Color.unifiedLogoTile
                 .overlay(
                     Group {
                         if let avatarImage {
@@ -206,7 +207,7 @@ struct ChannelAvatar: View {
                             // The explicit frame bounds scaledToFill to the circle so a
                             // non-square source is center-cropped (not drifted/overflowing).
                             Image(uiImage: avatarImage).resizable().scaledToFill()
-                                .frame(width: size, height: size).clipShape(Circle())
+                                .frame(width: size, height: size)
                         } else if let avatarURL, let url = URL(string: avatarURL) {
                             // Remote provider photo / domain icon — fills the circle; the
                             // brand logo shows while it loads and if it fails. The frame
@@ -214,7 +215,7 @@ struct ChannelAvatar: View {
                             AsyncImage(url: url) { phase in
                                 if let img = phase.image {
                                     img.resizable().scaledToFill()
-                                        .frame(width: size, height: size).clipShape(Circle())
+                                        .frame(width: size, height: size)
                                 } else {
                                     fallbackContent
                                 }
@@ -225,6 +226,7 @@ struct ChannelAvatar: View {
                     }
                 )
                 .frame(width: size, height: size)
+                .clipShape(Circle())
                 // Selection reads as a solid violet ring, not a bloom: a hairline when
                 // idle, a 2pt violet band once selected. No outer glow either way.
                 .overlay(
