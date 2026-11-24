@@ -9,6 +9,7 @@ import useAuth from '../../hooks/useAuth';
 import { isAdminRole } from '../../lib/orgRoles';
 import { cleanSignatureHtml, imageToDataUrl, loadSignatures, reloadSignatures } from '../../lib/signatures';
 import api from '../../lib/api';
+import { domainIconUrl } from '../../lib/initialsIcon';
 import styles from './settings.module.css';
 import own from './SignaturesSettings.module.css';
 
@@ -46,6 +47,12 @@ export default function SignaturesSettings({ orgId }) {
   const mine = (data?.signatures || []).filter((s) => s.scope === 'personal');
   const shared = (data?.signatures || []).filter((s) => s.scope !== 'personal');
   const addresses = org?.from_addresses || [];
+  // The domain's own icon (or its initials) beside each address, as in the tabs.
+  const addressIcon = (a) => {
+    const host = a.split('@')[1]?.toLowerCase();
+    const dom = (org?.domains || []).find((d) => d.name?.toLowerCase() === host);
+    return domainIconUrl(dom || { name: host }, org);
+  };
 
   const remove = async () => {
     const s = removing;
@@ -86,32 +93,50 @@ export default function SignaturesSettings({ orgId }) {
 
   return (
     <>
-      <h1 className={styles.settingsTitle}>Signatures</h1>
+      <div className={styles.settingsTitleRow}>
+        <h1 className={styles.settingsTitle}>Signatures</h1>
+        <Button onClick={() => setEditing({ shared: false })}>New signature</Button>
+      </div>
       <ErrorMessage>{error}</ErrorMessage>
 
       <div className={styles.settingsSection}>
         <div className={styles.settingsSectionTitle}>Your addresses</div>
+        <div className={own.tableScroll}>
         <table className={styles.settingsTable}>
-          <thead><tr><th>Address</th><th>Signature</th></tr></thead>
+          <thead><tr><th>Address</th><th>Signature</th><th><span className={own.srOnly}>Actions</span></th></tr></thead>
           <tbody>
             {addresses.map((a) => {
               const applied = data.applied?.[a.toLowerCase()];
+              // Edit opens the signature shown when it is your own for this address; else Add starts one.
+              const shown = applied && byId[applied.id];
+              const ownSig = shown?.editable && shown.scope === 'personal' && shown.from_address?.toLowerCase() === a.toLowerCase() ? shown : null;
               return (
                 <tr key={a}>
-                  <td className={styles.tablePrimary}>{a}</td>
-                  <td className={applied ? undefined : styles.tableSecondary}>{applied ? byId[applied.id]?.name : 'No signature'}</td>
+                  <td>
+                    <span className={own.address}>
+                      <img className={own.addressIcon} src={addressIcon(a)} alt="" />
+                      <span className={styles.tablePrimary}>{a}</span>
+                    </span>
+                  </td>
+                  <td>{applied ? byId[applied.id]?.name : <span className={styles.tableSecondary}>No signature</span>}</td>
+                  <td>
+                    <Button variant="secondary" aria-label={`${ownSig ? 'Edit' : 'Add'} the signature for ${a}`}
+                      onClick={() => setEditing(ownSig ? { sig: ownSig, shared: false } : { shared: false, address: a })}>
+                      {ownSig ? 'Edit' : 'Add'}
+                    </Button>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+        </div>
         <p className={`${styles.settingsHint} ${own.hint}`}>Your signature for an address comes first. Then the domain’s, then your default.</p>
       </div>
 
       <div className={styles.settingsSection}>
         <div className={own.sectionHead}>
           <div className={styles.settingsSectionTitle}>Your signatures</div>
-          <Button variant="secondary" onClick={() => setEditing({ shared: false })}>New signature</Button>
         </div>
         {mine.length ? mine.map(card) : <p className={styles.tableEmpty}>Add a signature for your mail.</p>}
       </div>
@@ -152,7 +177,7 @@ export default function SignaturesSettings({ orgId }) {
 function SignatureEditor({ orgId, editing, addresses, domains, onClose, onSaved }) {
   const { sig, shared } = editing;
   const [name, setName] = useState(sig?.name || '');
-  const [target, setTarget] = useState(shared ? (sig?.domain_id || domains[0]?.id || '') : (sig?.from_address || ''));
+  const [target, setTarget] = useState(shared ? (sig?.domain_id || domains[0]?.id || '') : (sig?.from_address || editing.address || ''));
   const [html, setHtml] = useState(sig?.body_html || '');
   const [editor, setEditor] = useState(null);
   const [busy, setBusy] = useState(false);

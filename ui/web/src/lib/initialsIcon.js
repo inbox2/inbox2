@@ -105,3 +105,10 @@ export function initialsDataUri(name, { radius = 7, ring = true } = {}) {
     `</svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
+
+/** A domain's icon: its own, else the org's for the org's main domain, else initials. */
+export function domainIconUrl(dom, org, fallbackName) {
+  const isPrimary = dom?.name && dom.name === org?.domain;
+  return dom?.icon_url
+    || (isPrimary && org.icon_url ? org.icon_url : initialsDataUri(dom?.name || org?.name || fallbackName || ''));
+}

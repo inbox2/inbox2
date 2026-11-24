@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { isTauri } from '../lib/tauri';
 import { PROVIDER } from '../lib/providerTypes';
-import { initialsDataUri } from '../lib/initialsIcon';
+import { domainIconUrl } from '../lib/initialsIcon';
 import useAccountOrder, { setAccountOrder } from '../lib/accountOrderPref';
 import { scrubIfDemo } from '../lib/demoData';
 import log from '../lib/log';
@@ -68,9 +68,7 @@ export default function useAccounts(organizations, opts = {}) {
         // Icon per tab: the domain's own uploaded icon wins; else the org's
         // custom icon on its primary domain; else a deterministic name-initials
         // icon so the tabs stay distinguishable.
-        const isPrimary = dom.name && dom.name === org.domain;
-        const iconUrl = dom.icon_url
-          || (isPrimary && org.icon_url ? org.icon_url : initialsDataUri(dom.name || org.name || slug));
+        const iconUrl = domainIconUrl(dom, org, slug);
         return {
           key: dom.id,
           domainKey: dom.id,

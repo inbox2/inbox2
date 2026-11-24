@@ -104,3 +104,33 @@
 .hint {
   margin-top: var(--space-3);
 }
+
+/* Read by screen readers only (the actions column header). */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Address cell: the domain's icon, then the address. */
+.address {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.addressIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: var(--radius-xs);
+  object-fit: cover;
+}
+
+/* Narrow screens: the address table scrolls sideways, so the buttons stay reachable. */
+.tableScroll {
+  overflow-x: auto;
+}
