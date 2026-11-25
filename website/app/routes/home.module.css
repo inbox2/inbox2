@@ -95,11 +95,12 @@
 }
 
 .tags li {
-  display: grid;
-  grid-template-columns: auto 0fr;
+  /* ponytail: flex, not a grid with an auto track — iOS Safari sized that
+     track narrower than the wdth-118 label and the clause drew over it. */
+  display: flex;
   align-items: baseline;
   padding: 8px 16px;
-  transition: grid-template-columns 0.28s ease, background 0.18s ease;
+  transition: background 0.18s ease;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.06);
@@ -108,34 +109,34 @@
   white-space: nowrap;
 }
 
-/* The clause is folded shut and slides out on hover (0fr → 1fr animates,
+/* The clause is folded shut and slides out on hover (max-width animates,
    width: auto doesn't). Touch has no hover, so there it stays open. */
 .tags span {
-  min-width: 0;
+  max-width: 0;
   overflow: hidden;
   white-space: nowrap;
   opacity: 0;
-  transition: opacity 0.2s ease, padding-left 0.28s ease;
+  transition: max-width 0.28s ease, opacity 0.2s ease, padding-left 0.28s ease;
 }
 
 .tags li:hover,
 .tags li:focus-within {
-  grid-template-columns: auto 1fr;
   background: rgba(255, 255, 255, 0.1);
 }
 
 .tags li:hover span,
 .tags li:focus-within span {
+  max-width: 20em;
   opacity: 1;
   padding-left: 6px;
 }
 
 @media (hover: none) {
-  .tags li { grid-template-columns: auto 1fr; }
-  .tags span { opacity: 1; padding-left: 6px; }
+  .tags span { max-width: none; opacity: 1; padding-left: 6px; }
 }
 
 .tags b {
+  flex-shrink: 0;
   font-family: var(--display);
   font-variation-settings: "wdth" 118;
   font-weight: 800;
