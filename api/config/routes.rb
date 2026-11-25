@@ -715,6 +715,7 @@ Rails.application.routes.draw do
       # Mobile push device tokens (APNs/FCM) — see docs/Cloud-Push.md "Mobile push"
       post "push-devices", to: "push_devices#create"
       post "push-devices/unread", to: "push_devices#unread"
+      post "push-devices/clear-notifications", to: "push_devices#clear_notifications"
       post "push-devices/live-activity", to: "push_devices#live_activity"
       post "push-devices/live-activity/start", to: "push_devices#live_activity_start"
       delete "push-devices", to: "push_devices#destroy"

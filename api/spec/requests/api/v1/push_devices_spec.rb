@@ -165,6 +165,37 @@ RSpec.describe "Api::V1::PushDevices", type: :request do
     end
   end
 
+  describe "POST /api/v1/push-devices/clear-notifications" do
+    let(:tag) { "0123456789abcdef0123456789abcdef" }
+
+    it "fans a tagged removal push to the caller's devices, dropping malformed tags" do
+      allow(MobilePushConfig).to receive(:configured?).and_return(true)
+      device = create(:push_device, user: user, token: "mine")
+      other = create(:user, username: "otherclear")
+      create(:push_device, user: other, token: "theirs")
+      ActiveJob::Base.queue_adapter.enqueued_jobs.clear
+
+      post "/api/v1/push-devices/clear-notifications", params: { tags: [ tag, "nope", tag ] }, headers: headers
+
+      expect(response).to have_http_status(:accepted)
+      jobs = ActiveJob::Base.queue_adapter.enqueued_jobs.select { |j| j["job_class"] == "MobilePushDeliveryJob" }
+      expect(jobs.size).to eq(1)
+      id, spec = ActiveJob::Arguments.deserialize(jobs.first["arguments"])
+      expect(id).to eq(device.id)
+      expect(spec["data"]).to eq("type" => "remove_notification", "tags" => tag)
+    end
+
+    it "422s without a valid tag" do
+      post "/api/v1/push-devices/clear-notifications", params: { tags: [ "conv_abc" ] }, headers: headers
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "requires authentication" do
+      post "/api/v1/push-devices/clear-notifications", params: { tags: [ tag ] }
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
   describe "DELETE /api/v1/push-devices" do
     it "removes the caller's device by token" do
       create(:push_device, user: user, token: "mine")

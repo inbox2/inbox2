@@ -532,6 +532,29 @@ final class InboxStore: @unchecked Sendable {
 
     /// Load a single conversation by key (e.g. to open from the Activity feed or a
     /// notification). Reuses the same projection as the list query.
+    /// The ids other devices of this mailbox may tag this thread with: the
+    /// mailbox address plus its provider thread id, and plus every message's
+    /// Message-ID (brackets trimmed).
+    /// Mirrors `SyncStore::notification_tag_id` in the Rust core; hashed by
+    /// `NotificationManager.notificationTag`.
+    func notificationTagIds(conversationKey key: String) -> [String] {
+        queue.sync {
+            guard db != nil else { return [] }
+            let sql = """
+            SELECT lower(a.email_address) || ':' || c.provider_thread_id
+              FROM conversations c
+              JOIN messages m ON m.conversation_key = c.key
+              JOIN external_accounts a ON a.key = m.account_key
+             WHERE c.key = ?1 AND IFNULL(c.provider_thread_id, '') != ''
+            UNION
+            SELECT lower(a.email_address) || ':' || trim(m.message_id_header, '<> ')
+              FROM messages m JOIN external_accounts a ON a.key = m.account_key
+             WHERE m.conversation_key = ?1 AND trim(IFNULL(m.message_id_header, ''), '<> ') != ''
+            """
+            return run(sql, binds: [key]) { text($0, 0) }
+        }
+    }
+
     func conversation(key: String) -> Conversation? {
         queue.sync {
             guard db != nil else { return nil }

@@ -23,6 +23,8 @@ impl SyncEngine {
         // TokenManager + reqwest::Client (and re-querying account/credentials)
         // per action was pure waste.
         let mut interactive: Option<Box<dyn crate::sync::interactive::InteractiveProvider>> = None;
+        // Threads whose banners are now stale on the user's other devices.
+        let mut clear_targets: Vec<crate::sync::store::BannerTarget> = Vec::new();
 
         for action in &actions {
             let provider_info = self
@@ -114,6 +116,12 @@ impl SyncEngine {
                 }
             };
 
+            if result.is_ok() && action.action_type.clears_banner() {
+                if let Ok(Some(target)) = self.store.banner_target(&action.key) {
+                    clear_targets.push(target);
+                }
+            }
+
             match result {
                 Ok(()) => {
                     log::info!(
@@ -172,6 +180,25 @@ impl SyncEngine {
                     );
                     self.writeback.mark_failed(action, &e)?;
                 }
+            }
+        }
+
+        // A conversation with a banner-clearing write-back that has not landed
+        // (this drain's failures, older retries, given-up actions) is not
+        // finished: its banners on other devices stay up.
+        if !clear_targets.is_empty() {
+            match self.store.unsettled_banner_actions(account_key) {
+                Ok(unsettled) => {
+                    let tags = clear_targets
+                        .iter()
+                        .filter(|t| !crate::sync::store::holds_banner(&unsettled, t))
+                        .map(|t| crate::sync::push::notification_tag(&t.tag_id))
+                        .collect();
+                    self.clear_notifications_elsewhere(tags).await;
+                }
+                // Can't tell what is still due: clear nothing, the phones
+                // reconcile on their next sync.
+                Err(e) => log::warn!("[writeback] {account_key}: unsettled lookup failed, no banner clear: {e}"),
             }
         }
 

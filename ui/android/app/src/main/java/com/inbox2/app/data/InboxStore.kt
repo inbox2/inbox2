@@ -375,6 +375,27 @@ class InboxStore(private val dbPath: String) {
         mapAll(d, sql, listOf(key)) { mapConversation(it).copy(summariesCurrent = it.getInt(20) == 1) }.firstOrNull()
     }
 
+    /** The ids other devices of this mailbox may tag this thread with: the
+     *  mailbox address plus its provider thread id, and plus every message's
+     *  Message-ID (brackets trimmed).
+     *  Mirrors `SyncStore::notification_tag_id` in the Rust core; hashed by
+     *  `NotificationHelper.notificationTag`. */
+    fun notificationTagIds(key: String): List<String> = synchronized(lock) {
+        val d = db ?: return emptyList()
+        val sql = """
+            SELECT lower(a.email_address) || ':' || c.provider_thread_id
+              FROM conversations c
+              JOIN messages m ON m.conversation_key = c.key
+              JOIN external_accounts a ON a.key = m.account_key
+             WHERE c.key = ? AND IFNULL(c.provider_thread_id, '') != ''
+            UNION
+            SELECT lower(a.email_address) || ':' || trim(m.message_id_header, '<> ')
+              FROM messages m JOIN external_accounts a ON a.key = m.account_key
+             WHERE m.conversation_key = ? AND trim(IFNULL(m.message_id_header, ''), '<> ') != ''
+        """
+        mapAll(d, sql, listOf(key, key)) { it.getString(0) }
+    }
+
     fun recentActivity(limit: Int = 40): List<ActivityEntry> = synchronized(lock) {
         val d = db ?: return emptyList()
         val sql = """

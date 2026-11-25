@@ -61,6 +61,7 @@ mod vault;
 
 pub use ai_triage::{EvalSeedMessage, TriageInput, TriageMeta, TriageProgress};
 pub use lore_triage::{LoreAutoSettings, LoreRetriage, LORE_RETRIAGE_MARKER};
+pub use messages::{holds_banner, BannerTarget, UnsettledBannerAction};
 pub use lore::{LoreTodo, LORE_SOURCE_MANUAL, LORE_SOURCE_VOICE};
 
 impl SyncStore {
@@ -108,6 +109,26 @@ impl SyncStore {
         // Queued drafts share the outbox with sends (see OutboxKind).
         let _ = conn.execute("ALTER TABLE outbox_messages ADD COLUMN kind TEXT NOT NULL DEFAULT 'send'", []);
         let _ = conn.execute("ALTER TABLE outbox_messages ADD COLUMN draft_key TEXT", []);
+        // What a write-back needs for the cross-device banner clear, stamped on
+        // the row at enqueue so it survives sync pruning the message
+        // (docs/Cloud-Push.md, Path C). Backfilled once, on the open that adds
+        // each column; the queue is small.
+        if conn.execute("ALTER TABLE writeback_actions ADD COLUMN conversation_key TEXT", []).is_ok() {
+            conn.execute(
+                "UPDATE writeback_actions SET conversation_key =
+                   (SELECT m.conversation_key FROM messages m WHERE m.key = writeback_actions.message_key)",
+                [],
+            )?;
+        }
+        if conn.execute("ALTER TABLE writeback_actions ADD COLUMN notification_tag_id TEXT", []).is_ok() {
+            conn.execute(
+                &format!(
+                    "UPDATE writeback_actions SET notification_tag_id = ({})",
+                    messages::NOTIFICATION_TAG_ID_SQL.replace("?1", "writeback_actions.message_key")
+                ),
+                [],
+            )?;
+        }
         // `pending_changes` was written on every local-first mutation as an
         // "offline will catch up" queue that nothing ever drained — its rows
         // just accumulated (weeks of them, all synced=0) while the failures

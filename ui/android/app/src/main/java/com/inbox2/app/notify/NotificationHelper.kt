@@ -265,6 +265,25 @@ object NotificationHelper {
         mgr.activeNotifications.mapNotNull { it.tag }.distinct()
     }.getOrDefault(emptyList())
 
+    /** Cross-device tag for a local-channel thread: the first 16 bytes of
+     *  sha256("inbox2-clear:" + id), hex. Same as `notification_tag` in the Rust
+     *  core (shared vector: "me@example.com:18c2f0a1b3d4e5f6" → c00deed116dc085094d2bd171051f9ac). */
+    fun notificationTag(id: String): String =
+        java.security.MessageDigest.getInstance("SHA-256")
+            .digest("inbox2-clear:$id".toByteArray())
+            .take(16).joinToString("") { "%02x".format(it) }
+
+    /** Clear the tray banners whose thread matches one of these tags — a
+     *  `remove_notification` push for local-channel mail read or filed on
+     *  another device (Path C). Our conversation keys are local, so match by
+     *  the opaque tags (docs/Cloud-Push.md). */
+    fun removeTagged(context: Context, store: com.inbox2.app.data.InboxStore, tags: Set<String>) {
+        val hits = deliveredConversationKeys(context).filter { key ->
+            store.notificationTagIds(key).any { notificationTag(it) in tags }
+        }
+        removeDelivered(context, hits)
+    }
+
     /** Clear any tray notification(s) for these conversations — drives both a
      *  Rails `remove_notification` push (MX mail dealt with elsewhere) and the
      *  post-sync reconciliation for local channels. Cancels by the exact (tag,

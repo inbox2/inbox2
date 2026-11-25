@@ -273,6 +273,57 @@ impl SyncEngine {
     }
 }
 
+/// Opaque tag for a local-channel thread that every device of the mailbox
+/// computes the same way, so one device can ask the others (through Rails) to
+/// clear a banner without Rails learning the thread. `id` comes from
+/// `SyncStore::notification_tag_id`. iOS (`NotificationManager.notificationTag`)
+/// and Android (`NotificationHelper.notificationTag`) hash the same way; the test
+/// vector below is shared with them.
+/// The id starts with the mailbox address, so one mail delivered to two
+/// connected mailboxes gets two tags.
+/// ponytail: unkeyed hash. Rails can only confirm a thread id it already
+/// holds; a per-user key shared across devices only if that ever matters.
+pub fn notification_tag(id: &str) -> String {
+    use sha2::Digest;
+    let digest = sha2::Sha256::digest(format!("inbox2-clear:{id}").as_bytes());
+    digest.iter().take(16).map(|b| format!("{b:02x}")).collect()
+}
+
+impl SyncEngine {
+    /// Ask the user's other devices to drop the banners for these tags.
+    /// Best-effort: without an inbox2 session there is no push anyway, and a
+    /// failed call only means the phones clear on their next sync instead.
+    pub(crate) async fn clear_notifications_elsewhere(&self, mut tags: Vec<String>) {
+        tags.sort();
+        tags.dedup();
+        if tags.is_empty() {
+            return;
+        }
+        let has_auth = matches!(
+            self.api_context().read().await.as_ref(),
+            Some(c) if !c.rails_jwt.is_empty()
+        );
+        if !has_auth {
+            return;
+        }
+        // Rails takes at most 100 tags per call (CLEAR_TAGS_MAX).
+        for chunk in tags.chunks(100) {
+            let body = serde_json::json!({ "tags": chunk });
+            let call = self.rails_request(
+                reqwest::Method::POST,
+                "push-devices/clear-notifications",
+                Some(&body),
+                "clear notifications",
+            );
+            match tokio::time::timeout(std::time::Duration::from_secs(5), call).await {
+                Ok(Ok(_)) => log::info!("[push] asked other devices to clear {} banner(s)", chunk.len()),
+                Ok(Err(e)) => log::warn!("[push] clear-notifications failed: {e}"),
+                Err(_) => log::warn!("[push] clear-notifications timed out"),
+            }
+        }
+    }
+}
+
 /// Shared HTTP client for Rails push calls — owns the connection pool / TLS config,
 /// so we don't rebuild it per request.
 fn rails_client() -> &'static reqwest::Client {

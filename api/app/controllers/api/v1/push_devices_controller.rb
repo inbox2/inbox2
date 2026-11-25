@@ -70,6 +70,23 @@ module Api
         head :accepted
       end
 
+      # POST /api/v1/push-devices/clear-notifications — a device acted on
+      # local-channel mail (read/archive/trash) and asks the user's other devices
+      # to drop the matching banners. `tags` are opaque hashes (docs/Cloud-Push.md
+      # "Clearing channel banners"); anything else is dropped (E4).
+      CLEAR_TAG = /\A[0-9a-f]{32}\z/
+      CLEAR_TAGS_MAX = 100
+
+      def clear_notifications
+        tags = Array(params[:tags]).map(&:to_s).grep(CLEAR_TAG).uniq.first(CLEAR_TAGS_MAX)
+        if tags.empty?
+          return render json: ErrorSerializer.serialize("tags required", status: 422), status: :unprocessable_content
+        end
+
+        MobilePushSender.clear_channel_notifications(current_user, tags: tags)
+        head :accepted
+      end
+
       # DELETE /api/v1/push-devices
       # Idempotent; user-scoped lookup so one user can never remove another's device.
       def destroy

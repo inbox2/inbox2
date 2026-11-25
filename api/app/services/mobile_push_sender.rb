@@ -259,6 +259,26 @@ class MobilePushSender
     fan_out(user, spec)
   end
 
+  # Silent push clearing local-channel (Gmail/Microsoft/IMAP) banners the user
+  # dealt with on another device. Rails never sees channel mail, and each device
+  # keys its local conversations at random, so the acting device sends opaque
+  # tags instead: sha256 of the provider thread id or Message-ID (see
+  # `notification_tag` in the Rust core). Each phone hashes the conversations it
+  # has on screen and clears the ones that match. Same kind as the MX removal so
+  # older apps ignore it (no `conversation_id`).
+  def self.clear_channel_notifications(user, tags:)
+    return if tags.empty?
+
+    spec = {
+      "kind" => KIND_REMOVE_NOTIFICATION,
+      # Comma-joined: FCM data values must be strings.
+      "data" => { "type" => KIND_REMOVE_NOTIFICATION, "tags" => tags.join(",") },
+      "alert" => nil,
+      "collapse_id" => "rmt-#{Digest::SHA1.hexdigest(tags.join(","))[0, 20]}"
+    }
+    fan_out(user, spec)
+  end
+
   # App-icon badge refresh, no notification of any kind: another device changed
   # this user's MX unread (mark read/unread, spam, trash, archive, restore), so
   # the count on their other devices is stale. The push carries nothing — the

@@ -1,6 +1,9 @@
 package com.inbox2.app.fcm
 
 import android.util.Log
+import com.inbox2.app.data.InboxStore
+import com.inbox2.app.engine.EngineModel
+import java.io.File
 import com.inbox2.app.notify.NotificationHelper
 import com.inbox2.app.notify.SyncWorker
 import com.inbox2.app.notify.ZoneAlerts
@@ -57,9 +60,16 @@ class FcmService : FirebaseMessagingService() {
             }
             "remove_notification" -> {
                 // An MX conversation left the inbox on another device — clear its
-                // stale tray/lockscreen banner here (Path A).
+                // stale tray/lockscreen banner here (Path A). A `tags` list instead
+                // means local-channel mail dealt with elsewhere (Path C).
                 val key = message.data["conversation_id"]
-                if (key.isNullOrEmpty()) {
+                val tags = message.data["tags"]?.split(",")?.filter { it.isNotEmpty() }?.toSet()
+                if (!tags.isNullOrEmpty()) {
+                    Log.i(TAG, "remove_notification push — ${tags.size} channel tag(s)")
+                    val store = EngineModel.peek()?.store
+                        ?: InboxStore(File(File(applicationContext.filesDir, "inbox2"), "inbox2.db").path)
+                    NotificationHelper.removeTagged(applicationContext, store, tags)
+                } else if (key.isNullOrEmpty()) {
                     Log.w(TAG, "remove_notification push missing conversation_id")
                 } else {
                     Log.i(TAG, "remove_notification push — clearing $key")

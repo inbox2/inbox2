@@ -2,6 +2,47 @@
 
 use super::*;
 
+/// The id every device of a mailbox knows a message's thread by, for message
+/// `?1`: `<mailbox address>:<provider thread id>` (Gmail threadId / Microsoft
+/// conversationId), else `<mailbox address>:<Message-ID>` without its angle
+/// brackets (IMAP). The address keeps one mail delivered to two connected
+/// mailboxes apart. Stamped on each write-back at enqueue; hashed by
+/// [`crate::sync::push::notification_tag`]. iOS/Android `notificationTagIds`
+/// list the same ids for a conversation.
+pub(crate) const NOTIFICATION_TAG_ID_SQL: &str = "SELECT lower(a.email_address) || ':' ||
+        COALESCE(NULLIF(c.provider_thread_id, ''), NULLIF(trim(m.message_id_header, '<> '), ''))
+     FROM messages m
+     JOIN conversations c ON c.key = m.conversation_key
+     JOIN external_accounts a ON a.key = m.account_key
+     WHERE m.key = ?1";
+
+/// See [`SyncStore::banner_target`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct BannerTarget {
+    pub conversation_key: String,
+    pub tag_id: String,
+    pub queued_at: String,
+}
+
+/// See [`SyncStore::unsettled_banner_actions`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct UnsettledBannerAction {
+    pub conversation_key: String,
+    /// Set when the action was given up (failed for good), to when.
+    pub given_up_at: Option<String>,
+}
+
+/// Whether `unsettled` keeps `target`'s banners up on other devices: an action
+/// on the conversation is still due, or one was given up after `target` was
+/// queued. One given up before it was superseded: the user acted again.
+pub fn holds_banner(unsettled: &[UnsettledBannerAction], target: &BannerTarget) -> bool {
+    unsettled.iter().any(|u| {
+        u.conversation_key == target.conversation_key
+            && u.given_up_at.as_ref().is_none_or(|at| *at > target.queued_at)
+    })
+}
+
+
 /// The text to store as `body_plain`: the sender's `text/plain` part when there
 /// is one, else the HTML stripped to text. `messages_fts` indexes `body_plain`
 /// only, so an HTML-only mail (order confirmations, newsletters — 12% of a real
@@ -896,6 +937,77 @@ impl SyncStore {
         .map_err(Into::into)
     }
 
+    /// What a successful write-back needs to send its banner clear, read from
+    /// the row (stamped at enqueue, so it outlives the message): its
+    /// conversation, its tag input and when it was queued. `None` when either
+    /// is unknown.
+    pub fn banner_target(&self, action_key: &str) -> Result<Option<BannerTarget>> {
+        let conn = self.conn.lock();
+        conn.query_row(
+            "SELECT conversation_key, notification_tag_id, created_at
+             FROM writeback_actions WHERE key = ?1",
+            params![action_key],
+            |row| {
+                Ok((
+                    row.get::<_, Option<String>>(0)?,
+                    row.get::<_, Option<String>>(1)?,
+                    row.get::<_, String>(2)?,
+                ))
+            },
+        )
+        .optional()
+        .map(|r| {
+            r.and_then(|(conv, id, queued_at)| {
+                Some(BannerTarget { conversation_key: conv?, tag_id: id?, queued_at })
+            })
+        })
+        .map_err(Into::into)
+    }
+
+    /// Banner-clearing write-backs on this account that have not landed:
+    /// pending, in flight, waiting for their retry, or given up. Each holds its
+    /// conversation's banners on other devices (see `holds_banner`).
+    pub fn unsettled_banner_actions(&self, account_key: &str) -> Result<Vec<UnsettledBannerAction>> {
+        use crate::sync::model::{ActionStatus, ActionType};
+        let conn = self.conn.lock();
+        let mut stmt = conn.prepare(
+            "SELECT payload, conversation_key, status, updated_at
+             FROM writeback_actions
+             WHERE account_key = ?1 AND conversation_key IS NOT NULL AND status IN (?2, ?3, ?4)",
+        )?;
+        let rows = stmt.query_map(
+            params![
+                account_key,
+                ActionStatus::Pending.as_str(),
+                ActionStatus::InProgress.as_str(),
+                ActionStatus::Failed.as_str()
+            ],
+            |row| {
+                Ok((
+                    row.get::<_, Option<String>>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                ))
+            },
+        )?;
+        let mut out = Vec::new();
+        for row in rows {
+            let (payload, conversation_key, status, updated_at) = row?;
+            let clears = payload
+                .and_then(|p| serde_json::from_str::<ActionType>(&p).ok())
+                // Unreadable payload: hold, never clear early.
+                .is_none_or(|a| a.clears_banner());
+            if clears {
+                out.push(UnsettledBannerAction {
+                    conversation_key,
+                    given_up_at: (status == ActionStatus::Failed.as_str()).then_some(updated_at),
+                });
+            }
+        }
+        Ok(out)
+    }
+
     pub fn first_folder_key(&self, account_key: &str) -> Result<Option<String>> {
         let conn = self.conn.lock();
         conn.query_row(
@@ -1306,3 +1418,104 @@ impl SyncStore {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod notification_tag_tests {
+    use super::*;
+    use crate::sync::model::{ActionStatus, ActionType, WritebackAction};
+
+    fn store() -> SyncStore {
+        let store = SyncStore::new_in_memory().unwrap();
+        store
+            .conn
+            .lock()
+            .execute_batch(
+                "INSERT INTO external_accounts (key, display_name, email_address, provider_type, created_at, updated_at)
+                   VALUES ('acc', 'Me', 'Me@Example.com', 'gmail', '2024-01-01', '2024-01-01');
+                 INSERT INTO conversations (key, organization_id, provider_thread_id, updated_at)
+                   VALUES ('cg', 'org', '18c2f0a1b3d4e5f6', '2024-01-01'), ('ci', 'org', NULL, '2024-01-01');
+                 INSERT INTO messages (key, conversation_key, organization_id, message_id_header, account_key, created_at)
+                   VALUES ('mg', 'cg', 'org', '<x@y>', 'acc', '2024-01-01'),
+                          ('mi', 'ci', 'org', ' <abc@example.com> ', 'acc', '2024-01-01');",
+            )
+            .unwrap();
+        store
+    }
+
+    fn enqueue(store: &SyncStore, key: &str, message: &str, action_type: ActionType) {
+        store
+            .enqueue_action(&WritebackAction {
+                key: key.into(),
+                account_key: "acc".into(),
+                action_type,
+                message_key: message.into(),
+                folder_key: None,
+                provider_snapshot: None,
+                status: ActionStatus::Pending,
+                retry_count: 0,
+                max_retries: 3,
+                next_retry_at: None,
+                error_message: None,
+            })
+            .unwrap();
+    }
+
+    fn set(store: &SyncStore, key: &str, status: &str, at: &str) {
+        store
+            .conn
+            .lock()
+            .execute(
+                "UPDATE writeback_actions SET status = ?2, created_at = ?3, updated_at = ?3 WHERE key = ?1",
+                params![key, status, at],
+            )
+            .unwrap();
+    }
+
+    #[test]
+    fn enqueue_stamps_thread_id_then_message_id_and_outlives_the_message() {
+        let store = store();
+        enqueue(&store, "w1", "mg", ActionType::MarkRead);
+        enqueue(&store, "w2", "mi", ActionType::Archive);
+        store.conn.lock().execute("DELETE FROM messages", []).unwrap();
+        let t1 = store.banner_target("w1").unwrap().unwrap();
+        assert_eq!((t1.conversation_key.as_str(), t1.tag_id.as_str()), ("cg", "me@example.com:18c2f0a1b3d4e5f6"));
+        let t2 = store.banner_target("w2").unwrap().unwrap();
+        assert_eq!((t2.conversation_key.as_str(), t2.tag_id.as_str()), ("ci", "me@example.com:abc@example.com"));
+        assert_eq!(store.banner_target("missing").unwrap(), None);
+    }
+
+    #[test]
+    fn holds_while_due_or_given_up_after_the_target_was_queued() {
+        let store = store();
+        enqueue(&store, "done", "mg", ActionType::MarkRead);
+        set(&store, "done", "completed", "2024-01-02T00:00:00+00:00");
+        let target = store.banner_target("done").unwrap().unwrap();
+
+        // A pending flag never holds; nothing else is due yet.
+        enqueue(&store, "flag", "mg", ActionType::Flag);
+        assert!(!holds_banner(&store.unsettled_banner_actions("acc").unwrap(), &target));
+
+        // A read given up before the target was queued: superseded.
+        enqueue(&store, "old", "mg", ActionType::MarkRead);
+        set(&store, "old", "failed", "2024-01-01T00:00:00+00:00");
+        assert!(!holds_banner(&store.unsettled_banner_actions("acc").unwrap(), &target));
+
+        // Given up after it (same drain): holds.
+        set(&store, "old", "failed", "2024-01-03T00:00:00+00:00");
+        assert!(holds_banner(&store.unsettled_banner_actions("acc").unwrap(), &target));
+
+        // A pending archive on the conversation: holds.
+        set(&store, "old", "completed", "2024-01-03T00:00:00+00:00");
+        enqueue(&store, "arch", "mg", ActionType::Archive);
+        assert!(holds_banner(&store.unsettled_banner_actions("acc").unwrap(), &target));
+    }
+
+    /// Shared vector: iOS and Android hash the same way (see `notification_tag`).
+    #[test]
+    fn tag_matches_shared_vector() {
+        use crate::sync::push::notification_tag;
+        assert_eq!(notification_tag("me@example.com:18c2f0a1b3d4e5f6"), "c00deed116dc085094d2bd171051f9ac");
+        assert_eq!(notification_tag("me@example.com:abc@example.com"), "2b4a9bfd1e00d3511e4f9336843b4e6b");
+    }
+}
+

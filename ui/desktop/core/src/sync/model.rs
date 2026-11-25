@@ -275,6 +275,17 @@ impl ActionType {
         }
     }
 
+    /// Whether a banner for this message's thread is stale once the action
+    /// lands: it was read or it left the inbox. Drives the cross-device clear
+    /// (docs/Cloud-Push.md "Clearing channel banners").
+    pub fn clears_banner(&self) -> bool {
+        match self {
+            Self::MarkRead | Self::Archive | Self::Trash | Self::Delete | Self::Move { .. } => true,
+            Self::Interactive { verb } => matches!(verb.as_str(), "spam" | "trash" | "archive" | "delete"),
+            _ => false,
+        }
+    }
+
     /// Parse a write-back action name + its optional fields. The inverse of
     /// [`as_str`]; single source for both the Tauri command and the bus RPC.
     pub fn from_request(

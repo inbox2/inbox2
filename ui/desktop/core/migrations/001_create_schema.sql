@@ -409,6 +409,11 @@ CREATE TABLE IF NOT EXISTS writeback_actions (
   account_key TEXT NOT NULL,
   action_type TEXT NOT NULL,
   message_key TEXT,
+  -- The message's conversation and its cross-device tag input
+  -- (SyncStore::notification_tag_id) at enqueue time: they survive the message
+  -- row being pruned, for the cross-device banner clear (docs/Cloud-Push.md).
+  conversation_key TEXT,
+  notification_tag_id TEXT,
   folder_key TEXT,
   target_folder_key TEXT,
   payload TEXT,

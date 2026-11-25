@@ -1,6 +1,7 @@
 //! `SyncStore` — write-back action queue, outbox, and integrity report.
 
 use super::*;
+use super::messages::NOTIFICATION_TAG_ID_SQL;
 
 impl SyncStore {
 
@@ -17,10 +18,16 @@ impl SyncStore {
             .as_ref()
             .and_then(|p| serde_json::to_string(p).ok());
         conn.execute(
-            "INSERT INTO writeback_actions
-             (key, account_key, action_type, message_key, folder_key, payload,
-              provider_snapshot, status, retry_count, max_retries, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+            &format!(
+                "INSERT INTO writeback_actions
+                 (key, account_key, action_type, message_key, folder_key, payload,
+                  provider_snapshot, status, retry_count, max_retries, created_at, updated_at,
+                  conversation_key, notification_tag_id)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12,
+                         (SELECT conversation_key FROM messages WHERE key = ?4),
+                         ({}))",
+                NOTIFICATION_TAG_ID_SQL.replace("?1", "?4")
+            ),
             params![
                 action.key,
                 action.account_key,

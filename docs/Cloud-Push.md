@@ -175,6 +175,36 @@ platform push. Same privacy split as everything above:
   `SyncWorker.reconcileNotifications` (Android). Caveat: silent delivery is
   best-effort (throttled when locked / Low Power), so removal is timely-but-not-
   guaranteed on iOS; FCM data messages are more reliable on Android.
+- **Clearing channel banners (Path C, 2026-11-25)** — the faster path for channel
+  mail. When the core's write-back lands a read/archive/trash/delete/move (or the
+  `spam`/`trash`/`archive`/`delete` verbs) on a Gmail/Microsoft/IMAP message
+  (`ActionType::clears_banner`, `engine/queues.rs`), it POSTs
+  `push-devices/clear-notifications` with opaque **tags**:
+  `hex(sha256("inbox2-clear:" + id))[..32]`, where `id` is the lower-cased mailbox
+  address, `:`, then the conversation's `provider_thread_id` (Gmail threadId /
+  Microsoft conversationId), else the message's Message-ID without brackets
+  (`NOTIFICATION_TAG_ID_SQL`). The address keeps one mail delivered to two
+  connected mailboxes apart. The conversation key and that id are stamped on the
+  `writeback_actions` row at enqueue (`conversation_key`, `notification_tag_id`), so
+  they survive sync pruning the message. A conversation is held back
+  (`holds_banner`) while another banner-clearing write-back on it is pending, in
+  flight or waiting for its retry, or was given up after this one was queued; one
+  given up before is superseded, since the user acted again. A held pending action
+  sends the clear itself when it lands. If the lookup fails, nothing is sent. Tags
+  go up in batches of 100.
+  Conversation keys are random per device, so the tag is the only thing two devices
+  share. Rails validates the tags (32 hex, max 100) and fans out a
+  `remove_notification` push carrying `tags` (comma-joined, since FCM data values
+  are strings) and no `conversation_id`, so older apps ignore it. Each phone hashes
+  the thread id and Message-IDs of the conversations it has on screen
+  (`InboxStore.notificationTagIds`) and clears the matches — iOS `PushRegistrar`,
+  Android `FcmService` → `NotificationHelper.removeTagged`. This skips the Gmail →
+  Pub/Sub → full wake-sync round trip; it rides the same silent lane, so iOS
+  throttling still applies, and the reconcile above stays as the backstop. The
+  hash is unkeyed: Rails can confirm a thread id only if it already holds it. The
+  tag format is fixed in three places (Rust `push::notification_tag`, Swift
+  `NotificationManager.notificationTag`, Kotlin `NotificationHelper.notificationTag`)
+  with a shared test vector — change all three together.
 
 ### App-icon unread badge
 

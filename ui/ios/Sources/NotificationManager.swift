@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import UIKit
 import Intents
@@ -202,6 +203,14 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
         if let key = info["conversation_id"] as? String { return key }
         let thread = note.request.content.threadIdentifier
         return thread.isEmpty ? nil : thread
+    }
+
+    /// Cross-device tag for a local-channel thread: the first 16 bytes of
+    /// sha256("inbox2-clear:" + id), hex. Same as `notification_tag` in the Rust
+    /// core (shared vector: "me@example.com:18c2f0a1b3d4e5f6" → c00deed116dc085094d2bd171051f9ac).
+    nonisolated static func notificationTag(_ id: String) -> String {
+        SHA256.hash(data: Data("inbox2-clear:\(id)".utf8)).prefix(16)
+            .map { String(format: "%02x", $0) }.joined()
     }
 
     /// Clear any delivered notification(s) for these conversations from the

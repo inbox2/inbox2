@@ -212,6 +212,25 @@ final class PushRegistrar: NSObject, UIApplicationDelegate {
                 completionHandler(synced ? .newData : .noData)
             }
         case "remove_notification":
+            if let tagList = userInfo["tags"] as? String {
+                // Path C: local-channel mail read or filed on another device. Our
+                // conversation keys are local, so match the opaque tags against
+                // the threads that have a banner up (docs/Cloud-Push.md).
+                let tags = Set(tagList.split(separator: ",").map(String.init))
+                Log.cloud.info("remove_notification push — \(tags.count) channel tag(s)")
+                Task { @MainActor in
+                    let onScreen = await NotificationManager.shared.deliveredConversationKeys()
+                    let hits: [String] = await engine.store.read { store in
+                        onScreen.filter { key in
+                            store.notificationTagIds(conversationKey: key)
+                                .contains { tags.contains(NotificationManager.notificationTag($0)) }
+                        }
+                    }
+                    NotificationManager.shared.removeDelivered(conversationKeys: hits)
+                    completionHandler(.noData)
+                }
+                return
+            }
             // Path A: an MX conversation left the inbox on another device.
             Log.cloud.info("remove_notification push — clearing banner")
             guard let key = userInfo["conversation_id"] as? String else {
