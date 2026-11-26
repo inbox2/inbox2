@@ -75,7 +75,7 @@ schedules:
     branch: main
     run: scripts/ci/tests.sh
     runner: { cpu: 8, memory: 24GiB, disk: 80GiB }
-    timeout: 2h
+    timeout: 4h  # rspec 27 min, pytest 9, the Disk e2e ~100 (one worker) on 8 shared cores
     cache: [.ci-cache]
     tests:
       results: [reports/junit/*.xml]
