@@ -55,6 +55,8 @@ end
 
 group :test do
   gem "database_cleaner-active_record", "~> 2.0"
+  # JUnit XML for the Pushleft test run (scripts/ci/tests.sh).
+  gem "rspec_junit_formatter", require: false
 end
 
 group :development do

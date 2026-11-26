@@ -11,7 +11,8 @@ import net from 'node:net'
 import path from 'node:path'
 import { API, BUCKET, DB, ENGINE_PORT, FAKE_PORT, GARAGE_PORT, RAILS_PORT, SAMPLES, SEED, STATE, WEB_PORT, railsEnv } from './env.js'
 
-const SPIKE = path.resolve(API, '../docs/plans/disk-design/engine-spike/samples')
+// Office and broken-PDF samples, kept beside the suite (they came from the engine spike).
+const SPIKE = path.join(path.dirname(SEED), '../fixtures')
 
 const portOpen = (port) => new Promise((resolve) => {
   const s = net.connect(port, '127.0.0.1')
@@ -105,9 +106,12 @@ async function main() {
   if (!fs.existsSync(path.join(STATE, 'engine', 'manifest.json'))) run('node', [path.resolve(API, '../ui/web/scripts/disk-engine-pack.mjs'), path.join(STATE, 'engine')])
 
   // The e2e bucket, made the way bin/garage-init makes the dev ones (the app key may not create buckets).
-  const garage = (...args) => execFileSync('docker', ['compose', '-f', path.resolve(API, '../docker/docker-compose.yml'), 'exec', '-T', 'garage', '/garage', ...args], { stdio: 'pipe' })
-  try { garage('bucket', 'info', BUCKET) } catch { garage('bucket', 'create', BUCKET) }
-  garage('bucket', 'allow', '--read', '--write', '--owner', BUCKET, '--key', process.env.S3_ACCESS_KEY || 'GK1b0a5c9d3e7f2a8b4c6d0e12')
+  // CI makes the bucket from outside (scripts/ci/tests.sh): no docker in its container.
+  if (!process.env.E2E_DISK_BUCKET_READY) {
+    const garage = (...args) => execFileSync('docker', ['compose', '-f', path.resolve(API, '../docker/docker-compose.yml'), 'exec', '-T', 'garage', '/garage', ...args], { stdio: 'pipe' })
+    try { garage('bucket', 'info', BUCKET) } catch { garage('bucket', 'create', BUCKET) }
+    garage('bucket', 'allow', '--read', '--write', '--owner', BUCKET, '--key', process.env.S3_ACCESS_KEY || 'GK1b0a5c9d3e7f2a8b4c6d0e12')
+  }
 
   const env = railsEnv()
   run('dropdb', ['--if-exists', '--force', DB])

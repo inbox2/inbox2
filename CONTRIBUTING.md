@@ -9,6 +9,10 @@ clients, server, docs.
   the direction before you invest time.
 - Local dev setup, repo layout, and per-component guides live in
   [CLAUDE.md](CLAUDE.md) and [docs/](docs/).
+- Turn on the repository's pre-push hook once per clone:
+  `git config core.hooksPath .githooks`. It lints, then runs the tests of the
+  files you changed (`.push-tests`, through `push-tests`). The full suite runs
+  on Pushleft (`scripts/ci/tests.sh`, the `tests` schedule in `.pl.yaml`).
 
 ## Ground rules
 

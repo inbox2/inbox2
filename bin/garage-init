@@ -31,10 +31,10 @@ g() { "${COMPOSE[@]}" exec -T garage /garage "$@"; }
 
 echo "waiting for Garage :$PORT ..."
 for _ in $(seq 1 120); do
-  nc -z localhost "$PORT" 2>/dev/null && break
+  (echo >"/dev/tcp/localhost/$PORT") 2>/dev/null && break
   sleep 0.5
 done
-nc -z localhost "$PORT" 2>/dev/null || {
+(echo >"/dev/tcp/localhost/$PORT") 2>/dev/null || {
   echo "Garage never came up on :$PORT — is the storage profile running?" >&2
   echo "  docker compose -f docker/docker-compose.yml --profile storage up -d" >&2
   exit 1
@@ -84,4 +84,6 @@ echo "Garage ready — s3://$BUCKET and ${DISK_BUCKETS[*]} on http://localhost:$
 echo "Rails reads these from config/storage.yml; no environment needed locally."
 echo
 
+# CI (scripts/ci/tests.sh) sets GARAGE_INIT_NO_FOLLOW: set up, then return.
+[ -n "${GARAGE_INIT_NO_FOLLOW:-}" ] && exit 0
 exec "${COMPOSE[@]}" logs -f garage

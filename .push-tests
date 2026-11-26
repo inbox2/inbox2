@@ -1,0 +1,6 @@
+# push-tests (~/Development/tools/push-tests): before a push, only the tests of the
+# changed files; the full suite runs on Pushleft after the push (.pl.yaml `tests`).
+rspec   api
+vitest  ui/web
+pytest  ui/cli
+after-push . empire tests

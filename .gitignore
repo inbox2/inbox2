@@ -54,3 +54,7 @@ ui/ios/Vendor/*.xcframework/
 brand/icon-concepts/
 __pycache__/
 CLAUDE.local.md
+
+# CI test run (scripts/ci/tests.sh)
+.ci-cache/
+reports/

@@ -1,0 +1,10 @@
+#!/bin/sh
+# Tracked pre-push hook (git config core.hooksPath .githooks). Lint is fast, so it
+# stays here; then push-tests runs the tests of the changed files only. The full
+# suite (rspec, vitest, pytest, the Disk e2e) runs on Pushleft: scripts/ci/tests.sh.
+ROOT="$(git rev-parse --show-toplevel)"
+if [ "${PUSH_TESTS:-}" != skip ]; then
+  (cd "$ROOT/ui/web" && yarn -s lint) || { echo "FAILED: frontend lint. Push aborted."; exit 1; }
+  (cd "$ROOT/api" && bin/rubocop) || { echo "FAILED: API lint (bin/rubocop -a autocorrects most). Push aborted."; exit 1; }
+fi
+exec push-tests
