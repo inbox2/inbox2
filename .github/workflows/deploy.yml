@@ -29,8 +29,8 @@ jobs:
       group: pushleft-production
       cancel-in-progress: false
     env:
-      PL_VERSION: 0.1.0-a6ff5f3
-      PL_SHA256: 62aba640cdee25bd2129098758166123ea3db037f94088b8ee605a7e3ba39d7d
+      PL_VERSION: 0.1.0-0513860
+      PL_SHA256: 9abb9ba25414f3d15bb1aee8d72ad6d07677c491b48ed7ee97c4d6a0d15ea9fc
     steps:
       - uses: actions/checkout@v4
       - name: Install pl
