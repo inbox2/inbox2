@@ -20,16 +20,18 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/inbox2/mta/internal/errreport"
 	"github.com/inbox2/mta/internal/metrics"
 	"github.com/inbox2/mta/internal/outbound"
 )
 
 func main() {
+	defer errreport.Init("smtp")()
 	logFile := os.Getenv("SMTP_LOG_FILE")
 	logger, err := outbound.NewLogger(logFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to open log file %s: %v\n", logFile, err)
-		os.Exit(1)
+		errreport.Exit(1)
 	}
 	defer logger.Close()
 
@@ -54,7 +56,7 @@ func main() {
 	consumer, err := outbound.NewConsumer(natsURL)
 	if err != nil {
 		logger.Error("nats.error", "error", err.Error())
-		os.Exit(1)
+		errreport.Exit(1)
 	}
 	defer consumer.Close()
 	logger.NATSConnected(natsURL)
@@ -70,11 +72,11 @@ func main() {
 		raw, err := base64.StdEncoding.DecodeString(dk)
 		if err != nil {
 			logger.Error("delivery_key.invalid", "error", err.Error())
-			os.Exit(1)
+			errreport.Exit(1)
 		}
 		if err := sender.SetDeliveryKey(raw); err != nil {
 			logger.Error("delivery_key.invalid", "error", err.Error())
-			os.Exit(1)
+			errreport.Exit(1)
 		}
 		logger.Info("delivery_key.loaded")
 	}
@@ -95,7 +97,7 @@ func main() {
 		t, err := time.Parse("2006-01-02", ws)
 		if err != nil {
 			logger.Error("warmup.invalid_start", "value", ws, "error", err.Error())
-			os.Exit(1)
+			errreport.Exit(1)
 		}
 		warmupStart = t
 		logger.Info("warmup.enabled", "start", ws)

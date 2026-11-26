@@ -18,6 +18,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/inbox2/mta/internal/errreport"
 	"github.com/inbox2/mta/internal/metrics"
 	"github.com/inbox2/mta/internal/mxlog"
 	"github.com/inbox2/mta/internal/queue"
@@ -26,11 +27,12 @@ import (
 )
 
 func main() {
+	defer errreport.Init("mx")()
 	logFile := os.Getenv("MX_LOG_FILE")
 	logger, err := mxlog.New(logFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to open log file %s: %v\n", logFile, err)
-		os.Exit(1)
+		errreport.Exit(1)
 	}
 	defer logger.Close()
 
@@ -86,7 +88,7 @@ func main() {
 	pub, err := queue.NewPublisher(natsURL)
 	if err != nil {
 		logger.NATSError(err)
-		os.Exit(1)
+		errreport.Exit(1)
 	}
 	defer pub.Close()
 	logger.NATSConnected(natsURL)
@@ -108,12 +110,12 @@ func main() {
 		store, err := spool.NewStore(cfg.SpoolDir)
 		if err != nil {
 			logger.Error("spool.init_failed", "error", err.Error())
-			os.Exit(1)
+			errreport.Exit(1)
 		}
 		s3client, err := spool.NewS3Client(s3cfg)
 		if err != nil {
 			logger.Error("spool.s3_init_failed", "error", err.Error())
-			os.Exit(1)
+			errreport.Exit(1)
 		}
 		uploader = spool.NewUploader(store, s3client, 5*time.Second, func(event string, kv ...any) {
 			logger.Info(event, kv...)
@@ -139,14 +141,14 @@ func main() {
 	listener, err := backend.Listen()
 	if err != nil {
 		logger.Error("server.listen_failed", "error", err.Error())
-		os.Exit(1)
+		errreport.Exit(1)
 	}
 
 	// Start SMTP server in background
 	go func() {
 		if err := server.Serve(listener); err != nil {
 			logger.Error("server.fatal", "error", err.Error())
-			os.Exit(1)
+			errreport.Exit(1)
 		}
 	}()
 

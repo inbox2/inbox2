@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"os"
 	"time"
+
+	"github.com/inbox2/mta/internal/errreport"
 )
 
 // Logger provides structured logging for the SMTP outbound sender.
@@ -32,6 +34,7 @@ func NewLogger(logFile string) (*Logger, error) {
 		l.s = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	}
 
+	l.s = slog.New(errreport.Handler(l.s.Handler()))
 	return l, nil
 }
 

@@ -47,6 +47,7 @@
     "@matbee/libreoffice-converter": "2.7.2",
     "@mlc-ai/web-llm": "^0.2.84",
     "@rails/actioncable": "^8.1.300",
+    "@sentry/react": "^11.19.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.4.2",
     "@tauri-apps/plugin-http": "^2.4.0",
     "@tauri-apps/plugin-notification": "^2.3.3",

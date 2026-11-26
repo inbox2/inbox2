@@ -41,7 +41,10 @@ jobs:
       - name: pl up --production
         env:
           PUSHLEFT_TOKEN: ${{ secrets.PUSHLEFT_TOKEN }}
-        run: pl up --production
+        # api/REVISION: the release of every error report (deploy/pushleft/run).
+        run: |
+          git rev-parse HEAD > api/REVISION
+          pl up --production
 
   web:
     runs-on: ubuntu-24.04
@@ -56,6 +59,8 @@ jobs:
       - run: corepack enable
       - name: Build (prod API origin baked in via --mode pages)
         working-directory: ui/web
+        env:
+          VITE_SENTRY_RELEASE: ${{ github.sha }}
         run: |
           yarn install --frozen-lockfile --ignore-scripts
           yarn build:pages

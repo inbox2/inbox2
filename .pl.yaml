@@ -52,6 +52,8 @@ env:
   WEB_APP_URL: https://mail.inbox2.com
   WEB_BOT_AUTH_AGENT: https://api.inbox2.com
   MX_DOMAIN: mx.inbox2.com
+  # Errors page (SENTRY_DSN secret): Rails reads RAILS_ENV, the Go mail binaries this.
+  SENTRY_ENVIRONMENT: production
 # Pushleft makes the Cloudflare Turnstile widget (waitlist on inbox2.com and
 # mail.inbox2.com, meet on visit.inbox2.com) and writes both keys as secrets.
 turnstile:
@@ -121,6 +123,7 @@ roles:
       - RAILS_MASTER_KEY
       - S3_ACCESS_KEY
       - S3_SECRET_KEY
+      - SENTRY_DSN
       - TURNSTILE_SECRET
       - TURNSTILE_SITE_KEY
       - TYPESAFE_API_KEY
@@ -231,7 +234,7 @@ roles:
       IMAP_LISTEN: ":9930"
       SUBMISSION_LISTEN: ":4651"
     certificates: [mx.inbox2.com]
-    secrets: [MX_THREADING_HMAC_KEY, RELAY_PASSWORD]
+    secrets: [MX_THREADING_HMAC_KEY, RELAY_PASSWORD, SENTRY_DSN]
   # https://mx.inbox2.com → 301 https://inbox2.com. Spamhaus wants the EHLO
   # host to serve a page (docs/Mail-Deliverability.md). Not a route.redirects
   # rule: pl refuses a whole-site redirect while `admin:` is declared.

@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import StatusPage from '../StatusPage/StatusPage';
 import log from '../../lib/log';
+import { reportError } from '../../lib/sentry';
 
 // Top-level error boundary: a render/lifecycle throw anywhere below this point
 // (e.g. an unexpected-shape API field reaching a component) would otherwise
@@ -18,6 +19,7 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     log.error('ErrorBoundary', `${error?.message || error}\n${info?.componentStack || ''}`);
+    reportError(error, info?.componentStack);
   }
 
   render() {

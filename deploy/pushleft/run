@@ -13,4 +13,6 @@ done
 [ -n "$PUSHLEFT_ROLE_NATS_HOST" ] && export NATS_URL="nats://$PUSHLEFT_ROLE_NATS_HOST:4222"
 [ -n "$PUSHLEFT_ROLE_RSPAMD_HOST" ] && export RSPAMD_URL="http://$PUSHLEFT_ROLE_RSPAMD_HOST:11334" \
   MX_RSPAMD_URL="http://$PUSHLEFT_ROLE_RSPAMD_HOST:11334"
+# The deployed commit, written by CI (deploy.yml): the release on the Errors page.
+[ -f /rails/REVISION ] && export SENTRY_RELEASE="$(cat /rails/REVISION)"
 exec "$@"

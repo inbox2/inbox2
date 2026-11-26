@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/inbox2/mta/internal/errreport"
 	"github.com/inbox2/mta/internal/mailclient"
 )
 
@@ -23,10 +24,11 @@ func env(key, fallback string) string {
 }
 
 func main() {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	defer errreport.Init("imap")()
+	log := slog.New(errreport.Handler(slog.NewJSONHandler(os.Stdout, nil)))
 	fatal := func(msg string, args ...any) {
 		log.Error(msg, args...)
-		os.Exit(1)
+		errreport.Exit(1)
 	}
 
 	backendURL := os.Getenv("MAILCLIENT_BACKEND_URL")
@@ -79,5 +81,5 @@ func main() {
 	defer cancel()
 	smtpSrv.Shutdown(shutdownCtx)
 	imapSrv.Close()
-	os.Exit(code)
+	errreport.Exit(code)
 }

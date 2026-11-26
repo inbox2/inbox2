@@ -16,6 +16,7 @@ import { openLink } from './lib/openLink';
 import { THEME } from './lib/storageKeys';
 import { applyTheme, DEFAULT_THEME_ID } from './lib/themes';
 import { startAmbientMotion } from './lib/ambientMotion';
+import { initSentry } from './lib/sentry';
 import './styles/tokens.css';
 import './styles/reset.css';
 import './styles/management.css';
@@ -75,6 +76,8 @@ if (isTauri()) {
     win.onResized(sync);
   });
 }
+
+initSentry();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
