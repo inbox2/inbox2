@@ -74,7 +74,7 @@ schedules:
     cron: "0 2 * * *"
     branch: main
     run: scripts/ci/tests.sh
-    runner: { cpu: 16, memory: 24GiB, disk: 80GiB }
+    runner: { cpu: 8, memory: 24GiB, disk: 80GiB }
     timeout: 2h
     cache: [.ci-cache]
     tests:

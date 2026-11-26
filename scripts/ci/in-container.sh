@@ -25,7 +25,7 @@ setup() {
   corepack enable --install-directory "$CACHE/bin"
   [ -x "$CACHE/bin/uv" ] || curl -fsSL https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="$CACHE/bin" INSTALLER_NO_MODIFY_PATH=1 sh >/dev/null
   (cd $ROOT/api && bundle install --quiet --jobs 8)
-  (cd $ROOT/ui/web && yarn install --frozen-lockfile --ignore-scripts --silent && npx playwright install --with-deps chromium firefox webkit >/dev/null)
+  (cd $ROOT/ui/web && yarn install --frozen-lockfile --ignore-scripts --silent --network-timeout 600000 && npx playwright install --with-deps chromium firefox webkit >/dev/null)
   (cd $ROOT/ui/cli && uv sync --quiet --extra test)
   # The Disk MCP smoke spec drives the MCP SDK from the Android MCP tool's node_modules.
   (cd $ROOT/ui/android/tools/android-mcp && npm install --silent --no-audit --no-fund)
