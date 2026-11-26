@@ -58,7 +58,7 @@ jobs:
       # multi-arch test IMAP server that runs anywhere with zero config.
       - name: Start GreenMail test server
         run: |
-          docker compose -f docker/docker-compose.yml --profile test up -d
+          docker compose -f "$GITHUB_WORKSPACE/docker/docker-compose.yml" --profile test up -d
           for i in $(seq 1 20); do
             (echo > /dev/tcp/localhost/3993) >/dev/null 2>&1 && break
             sleep 2
@@ -73,7 +73,7 @@ jobs:
 
       - name: Stop GreenMail
         if: always()
-        run: docker compose -f docker/docker-compose.yml --profile test down -v
+        run: docker compose -f "$GITHUB_WORKSPACE/docker/docker-compose.yml" --profile test down -v
 
       # The native ONNX Tier A engine (sentiment/intent/embeddings). These tests
       # download ~180MB of quantized models from HuggingFace, so they're
