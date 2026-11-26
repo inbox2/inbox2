@@ -623,12 +623,11 @@ pub fn run_with_timeout(mut cmd: Command, timeout: Duration) -> ExecResult {
                 if start.elapsed() >= timeout {
                     // Kill the whole process group (negative pid) so grandchildren
                     // holding the pipes die too; then reap the direct child.
+                    // The syscall, never the `kill` binary: procps-ng 4.0.4 reads
+                    // `-458` as `-4`, and a pid starting with 1 became kill(-1).
                     #[cfg(unix)]
-                    {
-                        let _ = std::process::Command::new("kill")
-                            .arg("-KILL")
-                            .arg(format!("-{}", child.id()))
-                            .status();
+                    unsafe {
+                        libc::kill(-(child.id() as libc::pid_t), libc::SIGKILL);
                     }
                     let _ = child.kill();
                     let _ = child.wait();

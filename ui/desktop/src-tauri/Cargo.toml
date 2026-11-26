@@ -127,6 +127,12 @@ block2 = "0.6"
 objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSError", "NSURL", "NSArray", "NSProgress"] }
 objc2-file-provider = { version = "0.3", default-features = false, features = ["std", "block2", "NSFileProviderDomain", "NSFileProviderItem", "Extension"] }
 
+[target.'cfg(unix)'.dependencies]
+# kill(2) on the agent's process group. Not `Command::new("kill")`: Ubuntu 24.04's
+# procps-ng 4.0.4 parses `kill -KILL -458` as kill(-4), and kill(-1) took down the
+# whole CI runner (every desktop-rust job died at ~50 min, "lost communication").
+libc = "0.2"
+
 [target.'cfg(target_os = "windows")'.dependencies]
 # Shell file-type icons (SHGetFileInfo). Windows only: on Linux the crate's GTK
 # path hardcodes `*const i8` and does not compile on aarch64 (c_char is u8), and

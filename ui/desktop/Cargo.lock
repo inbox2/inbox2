@@ -3202,6 +3202,7 @@ dependencies = [
  "imap",
  "inbox2-core",
  "lettre",
+ "libc",
  "log",
  "mailparse",
  "nanoid",
