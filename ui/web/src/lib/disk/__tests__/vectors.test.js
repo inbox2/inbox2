@@ -129,7 +129,7 @@ describe('section 6.13 vectors', () => {
     const g = byName['key grant (open)'].inputs
     const id = S.crypto_box_seed_keypair(unhex(g.identitySeed))
     expect(hex(X.openGrant(unhex(g.sealed), id.publicKey, id.privateKey))).toBe(IN.Ks1)
-  })
+  }, 60_000) // the password vector runs Argon2id: 8 s on the 8 shared cores of the Pushleft runner
 
   it('opens what it seals', () => {
     X.setRandomForTests(null)
