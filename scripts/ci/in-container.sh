@@ -25,7 +25,7 @@ setup() {
   corepack enable --install-directory "$CACHE/bin"
   [ -x "$CACHE/bin/uv" ] || curl -fsSL https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="$CACHE/bin" INSTALLER_NO_MODIFY_PATH=1 sh >/dev/null
   (cd $ROOT/api && bundle install --quiet --jobs 8)
-  (cd $ROOT/ui/web && yarn install --frozen-lockfile --ignore-scripts --silent --network-timeout 600000 && npx playwright install --with-deps chromium firefox webkit >/dev/null)
+  (cd $ROOT/ui/web && yarn install --frozen-lockfile --ignore-scripts --silent --network-timeout 600000 && npx playwright install --with-deps chromium >/dev/null)
   (cd $ROOT/ui/cli && uv sync --quiet --extra test)
   # The Disk MCP smoke spec drives the MCP SDK from the Android MCP tool's node_modules.
   (cd $ROOT/ui/android/tools/android-mcp && npm install --silent --no-audit --no-fund)
@@ -55,11 +55,13 @@ pytest_lane() {
 }
 
 disk_lane() {
+  # Chromium only (Waseem, 2026-11-27): Firefox and WebKit ran only the @smoke subset,
+  # and on the shared runner every extra engine is more timeouts, not more coverage.
   cd $ROOT/ui/web
   E2E_DISK_BUCKET_READY=1 PLAYWRIGHT_JUNIT_OUTPUT_NAME=$ROOT/reports/junit/e2e-disk.xml \
     node e2e/disk/prepare.mjs && \
   E2E_DISK_BUCKET_READY=1 PLAYWRIGHT_JUNIT_OUTPUT_NAME=$ROOT/reports/junit/e2e-disk.xml \
-    npx playwright test -c e2e/disk/playwright.config.js --project=chromium --project=firefox --project=webkit --reporter=list,junit "$@"
+    npx playwright test -c e2e/disk/playwright.config.js --project=chromium --reporter=list,junit "$@"
 }
 
 # One failed test again. Pushleft passes the JUnit testcase's file, classname and
