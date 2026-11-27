@@ -1,8 +1,32 @@
 name: CI
 
+# The Pushleft CI standard (pushleft docs/ci-pipelines.md, 2026-11-27):
+#
+#   test:rust, test:frontend, test:backend  fast tests, every push
+#   build:production   main: `pl up --production --hold` next to the tests
+#   deploy:production  main: `pl release` of that same commit once every test passed
+#
+# The full suite (rspec, vitest, pytest, the Disk e2e) runs nightly in the
+# Pushleft `tests` schedule (.pl.yaml). The Pages sites deploy in site.yml.
+#
+# Secrets: PUSHLEFT_TOKEN (an admin service token of the inbox2 organization)
+# lives in the `production` environment, which only main may use.
+
 on:
   push:
-  pull_request:
+    branches: ['**']   # branches only, not tags
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# The newest push wins: it cancels this run, and its build cancels the older held one.
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+env:
+  PL_GIT_BRANCH: ${{ github.ref_name }}
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -10,7 +34,8 @@ jobs:
   # OAuth, calendar, interactive ops). Runs the full suite, then the live IMAP
   # integration tests against a Dovecot container.
   # ---------------------------------------------------------------------------
-  desktop-rust:
+  test-rust:
+    name: test:rust
     runs-on: ubuntu-24.04
     env:
       # No debug info in test builds: --all-targets links many binaries, and
@@ -93,7 +118,8 @@ jobs:
   # Frontend: lint + the remaining JS tests (AI tests; the sync JS tests were
   # ported to Rust and removed).
   # ---------------------------------------------------------------------------
-  web:
+  test-frontend:
+    name: test:frontend
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -119,7 +145,8 @@ jobs:
   # ---------------------------------------------------------------------------
   # API: Rails request specs.
   # ---------------------------------------------------------------------------
-  api:
+  test-backend:
+    name: test:backend
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -146,3 +173,35 @@ jobs:
           bundler-cache: true
       - run: bin/rails db:create db:schema:load
       - run: bundle exec rspec
+
+  # ---------------------------------------------------------------------------
+  # Pushleft production (docs/Deployment.md): builds deploy/pushleft/Dockerfile,
+  # scans it and holds it; deploy:production rolls out every role in .pl.yaml
+  # (api.inbox2.com, workers, mail) once the tests pass. The release role runs
+  # `rails db:prepare` first, so migrations apply themselves.
+  # ---------------------------------------------------------------------------
+  build-production:
+    name: build:production
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    environment: production
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: ci/install-pl.sh && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      # api/REVISION: the release of every error report (deploy/pushleft/run).
+      - run: |
+          git rev-parse HEAD > api/REVISION
+          pl up --production --hold
+        env: { PUSHLEFT_TOKEN: "${{ secrets.PUSHLEFT_TOKEN }}" }
+
+  deploy-production:
+    name: deploy:production
+    needs: [build-production, test-rust, test-frontend, test-backend]
+    concurrency: { group: pushleft-production }
+    environment: production
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: ci/install-pl.sh && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: pl release --production --commit "$GITHUB_SHA"
+        env: { PUSHLEFT_TOKEN: "${{ secrets.PUSHLEFT_TOKEN }}" }

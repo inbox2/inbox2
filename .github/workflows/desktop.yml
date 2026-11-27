@@ -195,11 +195,10 @@ jobs:
   publish:
     needs: [version, build]
     runs-on: ubuntu-24.04
+    # PUSHLEFT_TOKEN is a secret of the `production` environment (main only).
+    environment: production
     env:
       V: ${{ needs.version.outputs.v }}
-      # `pl storage` needs a newer CLI than deploy.yml's pin.
-      PL_VERSION: 0.1.0-6e5dc8d
-      PL_SHA256: 5961f84d5bed6cacdbe4af41f36708a0ca0600e00ff4e0c6935c6ffadcfaa92a
       PUSHLEFT_TOKEN: ${{ secrets.PUSHLEFT_TOKEN }}
     steps:
       - uses: actions/checkout@v4
@@ -217,10 +216,7 @@ jobs:
             --base-url "$API_ORIGIN/downloads/desktop/$V" --mac-arch aarch64
           cat out/latest.json
       - name: Install pl
-        run: |
-          curl -fsSL -o "$RUNNER_TEMP/pl" "https://releases.pushleft.dev/cli/$PL_VERSION/pl-linux-amd64"
-          echo "$PL_SHA256  $RUNNER_TEMP/pl" | sha256sum -c -
-          sudo install -m 0755 "$RUNNER_TEMP/pl" /usr/local/bin/pl
+        run: ci/install-pl.sh && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Upload (latest.json last)
         run: |
           for f in out/*; do

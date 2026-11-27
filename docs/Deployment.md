@@ -40,29 +40,39 @@ role was dropped 2026-11-17). Disk files live in Cloudflare R2 (`DISK_S3_*`).
 
 ## CI auto-deploy
 
-> **Every push to `main` deploys prod.** There is no path filter — even a
-> docs-only commit on `main` redeploys. A push is the deploy.
+> **Every push to `main` deploys prod once its tests pass.** There is no path
+> filter — even a docs-only commit on `main` redeploys.
 
-`.github/workflows/deploy.yml`:
+The Pushleft CI standard (pushleft `docs/ci-pipelines.md`, 2026-11-27).
+`.github/workflows/ci.yml`, on every push:
 
-1. **pushleft** — downloads a pinned, checksummed `pl` and runs
-   `pl up --production`. Pushleft uploads the checkout (minus `.plignore`),
-   builds `deploy/pushleft/Dockerfile`, scans the image (production is gated on
-   fixable criticals), runs the `release` role, then rolls every role. A
-   concurrency group keeps one production rollout at a time.
-2. **web** / **website** — the web app and marketing site to Cloudflare Pages
-   (see Frontend below); the website only when `website/` changed.
+1. **test:rust**, **test:frontend**, **test:backend** — the fast tests (cargo
+   test of the desktop engine, lint + vitest, rspec). The full suite (rspec,
+   vitest, pytest, the Disk e2e) runs nightly in the Pushleft `tests` schedule.
+2. **build:production** (main) — `ci/install-pl.sh` installs the newest signed
+   `pl`, then `pl up --production --hold` runs next to the tests: Pushleft
+   uploads the checkout (minus `.plignore`), builds `deploy/pushleft/Dockerfile`,
+   scans the image and holds the release. The live release keeps serving.
+3. **deploy:production** (main) — needs build:production and every test:* job,
+   then `pl release --production --commit $GITHUB_SHA`: the `release` role runs,
+   then every role rolls. A failed test leaves the build held (expires in 24 h).
+   A newer push cancels the older run and its held build.
 
-The other workflows: `ci.yml` (tests on every push and PR), `desktop.yml`
+`.github/workflows/site.yml`: **deploy:site** — the web app and marketing site
+to Cloudflare Pages (see Frontend below); the website only when `website/`
+changed.
+
+The other workflows: `desktop.yml`
 (desktop release on every push, docs/Desktop-Release.md), `ios.yml` (TestFlight),
 `android.yml` (Firebase App Distribution), `cli-release.yml`. Source scanning is
 Pushleft's (`SECURITY.md`, "Automated scanning").
 
-Repository secrets (Settings → Secrets and variables → Actions):
+Secrets (Settings → Secrets and variables → Actions; `PUSHLEFT_TOKEN` is in the
+`production` environment, which only `main` may use; the rest are repository secrets):
 
 | Variable | Content |
 |---|---|
-| `PUSHLEFT_TOKEN` | member service token of the Pushleft production organization (masked, protected) |
+| `PUSHLEFT_TOKEN` | admin service token `github-ci inbox2 production` of the Pushleft organization `inbox2` (environment `production`; build:production, deploy:production, desktop publish) |
 | `CLOUDFLARE_API_TOKEN` | token with **Pages:Edit** on the inbox2 account (Pages deploy) |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id owning the Pages projects |
 | `TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | desktop updater key |

@@ -1,17 +1,14 @@
-name: Deploy
+name: Site
 
-# Every push to main goes to production (trunk-based; docs/Deployment.md):
+# The Cloudflare Pages sites, every push to main (Pushleft production deploys in
+# ci.yml, after the tests). Its own workflow: CI cancels an older run, and a
+# cancelled run here could skip a website/ change.
 #
-#   pushleft  → Pushleft production: builds deploy/pushleft/Dockerfile from the
-#               checkout, scans it and rolls out every role in .pl.yaml
-#               (api.inbox2.com, workers, mail). The release role runs
-#               `rails db:prepare` first, so migrations apply themselves.
-#   web       → Cloudflare Pages project `inbox2` (mail.inbox2.com)
-#   website   → Cloudflare Pages project `inbox2-marketing` (inbox2.com), only
-#               when website/ changed
+#   deploy:site (mail.inbox2.com) → Pages project `inbox2`
+#   deploy:site (inbox2.com)      → Pages project `inbox2-marketing`, only
+#                                   when website/ changed
 #
-# Secrets: PUSHLEFT_TOKEN (a member service token of the production
-# organization), CLOUDFLARE_API_TOKEN (Pages:Edit), CLOUDFLARE_ACCOUNT_ID.
+# Secrets: CLOUDFLARE_API_TOKEN (Pages:Edit), CLOUDFLARE_ACCOUNT_ID.
 
 on:
   push:
@@ -22,31 +19,8 @@ permissions:
   contents: read
 
 jobs:
-  pushleft:
-    runs-on: ubuntu-24.04
-    # One production rollout at a time; a newer push waits, it does not cancel.
-    concurrency:
-      group: pushleft-production
-      cancel-in-progress: false
-    env:
-      PL_VERSION: 0.1.0-0513860
-      PL_SHA256: 9abb9ba25414f3d15bb1aee8d72ad6d07677c491b48ed7ee97c4d6a0d15ea9fc
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install pl
-        run: |
-          curl -fsSL -o "$RUNNER_TEMP/pl" "https://releases.pushleft.dev/cli/$PL_VERSION/pl-linux-amd64"
-          echo "$PL_SHA256  $RUNNER_TEMP/pl" | sha256sum -c -
-          sudo install -m 0755 "$RUNNER_TEMP/pl" /usr/local/bin/pl
-      - name: pl up --production
-        env:
-          PUSHLEFT_TOKEN: ${{ secrets.PUSHLEFT_TOKEN }}
-        # api/REVISION: the release of every error report (deploy/pushleft/run).
-        run: |
-          git rev-parse HEAD > api/REVISION
-          pl up --production
-
-  web:
+  deploy-site:
+    name: deploy:site (mail.inbox2.com)
     runs-on: ubuntu-24.04
     concurrency:
       group: pages-web
@@ -95,7 +69,8 @@ jobs:
             echo "yes=1" >> "$GITHUB_OUTPUT"
           fi
 
-  website:
+  deploy-site-website:
+    name: deploy:site (inbox2.com)
     needs: website-changed
     if: needs.website-changed.outputs.yes
     runs-on: ubuntu-24.04
