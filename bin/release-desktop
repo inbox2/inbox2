@@ -174,7 +174,7 @@ fi
 # client polling mid-upload keeps getting the previous release.
 # `pl storage` (pl login as an Admin) uploads in retried 16 MiB parts with a
 # one-hour key scoped to this bucket; a rerun simply replaces what is there.
-BUCKET="${INBOX2_DESKTOP_BUCKET:-pl-205eb939-desktop-downloads-34b0b1f9}"
+BUCKET="${INBOX2_DESKTOP_BUCKET:-pl-5329d773-desktop-downloads-acfdda72}"
 for f in "$OUT"/*; do
   [ "$(basename "$f")" = latest.json ] && continue
   pl storage cp "$f" "$BUCKET:$V/" --production

@@ -42,7 +42,7 @@ env:
   # with a volume deploys stop-before-start (2026-11-17). Every garage object
   # (83) was copied into it before this switch and checked (sizes, read-back);
   # the bucket's key is already in the S3_ACCESS_KEY/S3_SECRET_KEY secrets.
-  S3_BUCKET: pl-205eb939-attachments-fb4e50cc
+  S3_BUCKET: pl-5329d773-attachments-e82fa98f
   S3_ENDPOINT: https://s3.pushleft.dev
   S3_FORCE_PATH_STYLE: "true"
   S3_REGION: garage
@@ -142,7 +142,7 @@ roles:
       RAILS_MAX_THREADS: "10"
       DESKTOP_S3_ENDPOINT: https://s3.pushleft.dev
       DESKTOP_S3_REGION: garage
-      DESKTOP_S3_BUCKET: pl-205eb939-desktop-downloads-34b0b1f9
+      DESKTOP_S3_BUCKET: pl-5329d773-desktop-downloads-acfdda72
     resources: { cpu: 1, memory: 2GiB }
     databases: [inbox2]
     secrets: *app_secrets

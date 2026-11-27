@@ -39,7 +39,7 @@ concurrency:
 
 env:
   API_ORIGIN: https://api.inbox2.com
-  BUCKET: pl-205eb939-desktop-downloads-34b0b1f9
+  BUCKET: pl-5329d773-desktop-downloads-acfdda72
 
 jobs:
   version:

@@ -3,4 +3,4 @@
 rspec   api
 vitest  ui/web
 pytest  ui/cli
-after-push . empire tests
+after-push . inbox2 tests

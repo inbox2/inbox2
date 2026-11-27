@@ -31,7 +31,7 @@ and auto-updated in place.
 | Updater plugin + commands | `src-tauri/src/updater.rs`, registered conditionally in `lib.rs` |
 | Update UI | `stores/updateStore.js`, bell tag in `Chrome/ChromeBar.jsx`, row in `NotificationPanel`, `pages/settings/AboutSettings.jsx` |
 | Rails serving | `DesktopReleasesController`, `app/services/desktop_releases.rb` |
-| Release store on prod | Pushleft bucket `pl-205eb939-desktop-downloads-34b0b1f9` (20 GiB quota; `DESKTOP_S3_*` in `.pl.yaml`, key in the secrets `DESKTOP_S3_ACCESS_KEY`/`_SECRET_KEY` for Rails; the release script uses `pl storage` and needs no key) |
+| Release store on prod | Pushleft bucket `pl-5329d773-desktop-downloads-acfdda72` (20 GiB quota; `DESKTOP_S3_*` in `.pl.yaml`, key in the secrets `DESKTOP_S3_ACCESS_KEY`/`_SECRET_KEY` for Rails; the release script uses `pl storage` and needs no key) |
 | `/console` download card | `components/StoreBadges/StoreBadges.jsx` |
 
 ---
@@ -122,7 +122,7 @@ Secrets stay on the Mac: the updater key in `~/.inbox2-updater-key/` (a copy of
 Publishing needs `pl login` as an Admin of the Pushleft organization. Never
 `pl storage bucket create --set-secret` for this kind of bucket: it writes
 `S3_ENDPOINT`/`S3_BUCKET`, which would repoint attachments. Look inside with
-`pl storage ls pl-205eb939-desktop-downloads-34b0b1f9[:<version>/]`. Never put a
+`pl storage ls pl-5329d773-desktop-downloads-acfdda72[:<version>/]`. Never put a
 test `latest.json` in the bucket: any `<version>/latest.json` is live for every
 client within a minute.
 

@@ -218,7 +218,7 @@ RSpec.describe "Pushleft admin", type: :request do
     end
 
     it "answers on any host, with no redirect, cookie or session" do
-      host! "inbox2--205eb939.apps.pushleft.dev"
+      host! "inbox2--5329d773.apps.pushleft.dev"
       call("GET", "/schema")
       expect(response).to have_http_status(:ok)
       expect(response.headers["Set-Cookie"]).to be_nil
