@@ -68,8 +68,8 @@ data:
   valkey:
     plan: dev
     databases: [{ name: rspamd }]
-# The full test suite (scripts/ci/tests.sh): every night, and 30 s after each push
-# (push-tests, .push-tests). Pushleft reads the JUnit files, runs each failed test
+# The full test suite (scripts/ci/tests.sh), every night; a push runs only the
+# tests of the changed files (push-tests, .push-tests). Pushleft reads the JUnit files, runs each failed test
 # again on its own and marks one that then passes as flaky.
 schedules:
   tests:
