@@ -169,6 +169,10 @@ Vista Aero atmosphere × modern operational SaaS. Deep navy-charcoal surfaces, w
 - Commit message: short summary, then bullet list of changes.
 - Always include `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`.
 
+### Tests
+
+Run the tests for the code you changed. `git push` runs push-tests for the changed files; the full suite runs nightly on Pushleft. Fix real failures from `pl --org inbox2 schedules tests tests --prompt`. Leave flaky tests alone unless the task is the flakiness.
+
 ### No duplicated enums
 
 Status values, roles, kinds, and other enum-like strings MUST be defined as constants on their model and referenced everywhere — never hardcoded as raw strings.
